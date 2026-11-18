@@ -1,4 +1,4 @@
-import { Menu, Tray, app, nativeImage } from 'electron'
+import { Menu, Tray, app, nativeImage, nativeTheme } from 'electron'
 import { join } from 'node:path'
 import { tr } from './settings'
 
@@ -19,7 +19,9 @@ function icon(recording: boolean): Electron.NativeImage {
     img.setTemplateImage(true)
     return img
   }
-  return nativeImage.createFromPath(join(trayDir(), `${name}-win.png`))
+  // Windows: ícone branco na barra de tarefas escura, preto na clara.
+  const darkBar = nativeTheme.shouldUseDarkColorsForSystemIntegratedUI ?? nativeTheme.shouldUseDarkColors
+  return nativeImage.createFromPath(join(trayDir(), darkBar ? `${name}-win.png` : `${name}-win-dark.png`))
 }
 
 export class AppTray {
@@ -30,6 +32,7 @@ export class AppTray {
     this.tray = new Tray(icon(false))
     this.tray.setToolTip('TalkFlowBy')
     this.tray.on('click', () => (process.platform === 'win32' ? actions.open() : undefined))
+    nativeTheme.on('updated', () => this.tray.setImage(icon(this.recording)))
     this.render()
   }
 

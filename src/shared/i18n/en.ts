@@ -187,7 +187,8 @@ export const en = {
   main: {
     missingWhisper: 'Transcription unavailable: Whisper or the model is missing. The audio was kept.',
     newNote: 'New note',
-    untitled: 'Untitled'
+    untitled: 'Untitled',
+    stillInTray: 'TalkFlowBy keeps running in the system tray, ready to ask when a meeting starts. Right-click the tray icon to quit.'
   },
 
   doc: {

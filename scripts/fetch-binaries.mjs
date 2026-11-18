@@ -41,7 +41,15 @@ async function win() {
     if (/\.(exe|dll)$/i.test(f)) cpSync(join(release, f), join(BIN, f))
   }
   if (!existsSync(join(BIN, 'whisper-cli.exe'))) throw new Error('whisper-cli.exe não veio no pacote.')
-  console.log('whisper-cli.exe pronto.')
+  // O whisper.cpp do Windows usa o runtime do Visual C++ (MSVCP140, VCRUNTIME140, VCOMP140).
+  // Nem todo PC tem o Redistributable instalado; a Microsoft permite levar essas DLLs junto do app.
+  const system32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32')
+  for (const dll of ['msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'vcomp140.dll']) {
+    const src = join(system32, dll)
+    if (!existsSync(src)) throw new Error(`${dll} não encontrada em ${system32}; instale o Visual C++ Redistributable para gerar o pacote.`)
+    cpSync(src, join(BIN, dll))
+  }
+  console.log('whisper-cli.exe pronto, com o runtime do Visual C++.')
 }
 
 if (process.platform === 'darwin') await mac()

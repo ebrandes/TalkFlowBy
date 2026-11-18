@@ -28,7 +28,8 @@ async function isExecutable(path: string): Promise<boolean> {
 /** Procura um programa no PATH e nas pastas comuns de instalação. */
 export async function findExecutable(name: string): Promise<string | null> {
   const dirs = [...(process.env.PATH ?? '').split(delimiter).filter(Boolean), ...extraDirs()]
-  const names = isWin ? [`${name}.exe`, name] : [name]
+  // No Windows só um .exe roda direto; o atalho do npm (sem extensão ou .cmd) não.
+  const names = isWin ? [`${name}.exe`] : [name]
   for (const dir of dirs) {
     for (const n of names) {
       const full = join(dir, n)

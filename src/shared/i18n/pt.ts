@@ -188,7 +188,8 @@ export const pt: Dict = {
   main: {
     missingWhisper: 'Transcrição indisponível: falta o Whisper ou o modelo. O áudio ficou guardado.',
     newNote: 'Nova nota',
-    untitled: 'Sem título'
+    untitled: 'Sem título',
+    stillInTray: 'O TalkFlowBy continua na bandeja do sistema, pronto para perguntar quando uma reunião começar. Clique com o botão direito no ícone para sair.'
   },
 
   doc: {

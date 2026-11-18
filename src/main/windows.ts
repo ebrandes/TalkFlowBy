@@ -1,4 +1,5 @@
-import { BrowserWindow, app, screen, shell } from 'electron'
+import { BrowserWindow, Notification, app, nativeTheme, screen, shell } from 'electron'
+import { tr } from './settings'
 import { join } from 'node:path'
 
 const preload = (): string => join(__dirname, '../preload/index.cjs')
@@ -22,7 +23,9 @@ export function createMainWindow(): BrowserWindow {
     title: 'TalkFlowBy',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 16, y: 18 },
-    backgroundColor: '#EEF1EC',
+    // Mesma cor do fundo do app, para não piscar branco no tema escuro.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#15181A' : '#F6F8F5',
+    autoHideMenuBar: true,
     // A gravação roda nesta janela mesmo escondida; sem freio de segundo plano.
     webPreferences: { preload: preload(), sandbox: false, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
   })
@@ -31,11 +34,19 @@ export function createMainWindow(): BrowserWindow {
   win.once('ready-to-show', () => {
     if (!atLogin) win.show()
   })
+  // Windows não tem a barra de menu do Mac; sem isto aparece "File Edit View" em inglês.
+  if (process.platform !== 'darwin') win.removeMenu()
   // Fechar a janela só esconde; o app continua na bandeja ouvindo reuniões.
+  let toldAboutTray = false
   win.on('close', (e) => {
     if (quitting) return
     e.preventDefault()
     win.hide()
+    // No Windows o X costuma fechar o programa; avisa uma vez que ele segue na bandeja.
+    if (process.platform === 'win32' && !toldAboutTray && Notification.isSupported()) {
+      toldAboutTray = true
+      new Notification({ title: 'TalkFlowBy', body: tr().main.stillInTray, silent: true }).show()
+    }
   })
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) void shell.openExternal(url)
@@ -65,9 +76,10 @@ export function createPromptWindow(appId: string, appName: string, lang: string)
     alwaysOnTop: true,
     show: false,
     transparent: process.platform === 'darwin',
-    backgroundColor: process.platform === 'darwin' ? '#00000000' : '#F7F9F6',
+    backgroundColor: process.platform === 'darwin' ? '#00000000' : nativeTheme.shouldUseDarkColors ? '#202528' : '#FBFCFA',
     webPreferences: { preload: preload(), sandbox: false, contextIsolation: true }
   })
+  if (process.platform !== 'darwin') win.removeMenu()
   win.setAlwaysOnTop(true, 'floating')
   // skipTransformProcessType: sem isso o macOS some com a janela principal e o ícone do Dock
   // por um instante (e às vezes de vez), parecendo que o app fechou.

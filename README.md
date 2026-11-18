@@ -144,7 +144,8 @@ source: Google Meet (Chrome)
 - About 1 GB of free space for the app and the transcription model.
 - For summaries, one of:
   - [Claude Code](https://github.com/anthropics/claude-code) installed and signed in
-    with your Claude account (uses your subscription, no extra cost), or
+    with your Claude account (uses your subscription, no extra cost). On Windows, use the
+    native installer (`claude.exe`); the npm version is not detected. Or
   - an [Anthropic API key](https://console.anthropic.com/) (pay per use; a meeting costs cents).
 
   Without either, you still get the full transcript; only the summary is skipped.
@@ -170,7 +171,10 @@ prompt reminds you to tell the other participants.
 - Meeting detection recognizes Microsoft Teams, Zoom and Google Meet in Chrome, Edge,
   Safari, Arc, Firefox and Brave. You can always start a recording manually.
 - Windows support is new. If something does not work on your machine, please
-  [open an issue](https://github.com/ebrandes/TalkFlowBy/issues).
+  [open an issue](https://github.com/ebrandes/TalkFlowBy/issues). There is a short
+  [Windows test checklist](docs/TESTING-WINDOWS.md) if you want to help.
+- On Windows, transcription runs on the CPU, so it takes longer than on a Mac with
+  Apple Silicon.
 
 ## FAQ
 

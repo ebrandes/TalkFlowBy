@@ -1,7 +1,7 @@
 {
   "name": "talkflowby",
   "productName": "TalkFlowBy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Free, open-source meeting recorder and markdown notepad. Records both sides of your Teams or Google Meet call without a bot, transcribes locally with Whisper and summarizes with Claude Haiku.",
   "keywords": [
     "meeting-notes",
