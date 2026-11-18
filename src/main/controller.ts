@@ -12,13 +12,16 @@ import { WHISPER_MODELS, type WhisperModel } from '../shared/models'
 import { downloadModel, findModel } from './setup/models'
 import { whisperPath } from './setup/binaries'
 import { AppTray } from './tray'
-import { createMainWindow, createPromptWindow } from './windows'
+import { createMainWindow, createPromptWindow, createWidgetWindow } from './windows'
+import { IDLE, type RecordingState } from '../shared/recording'
 
 /** Estado do app inteiro: janelas, bandeja, detector, gravação e fila de processamento. */
 export class Controller {
   main: BrowserWindow | null = null
   tray: AppTray | null = null
   prompt: BrowserWindow | null = null
+  /** Widget flutuante enquanto grava: tempo, pausar e encerrar. */
+  widget: BrowserWindow | null = null
   promptFor: DetectedMeeting | null = null
   model: ModelStatus = { ready: false }
   status: PipelineStatus = { stage: 'idle' }
@@ -63,9 +66,41 @@ export class Controller {
     if (s.stage === 'done') this.send('library:changed', { open: s.notePath })
   }
 
+  recordingState(): RecordingState {
+    const s = this.store.current
+    if (!s) return IDLE
+    return {
+      recording: true,
+      startedAt: s.startedAt.toISOString(),
+      origin: s.origin ?? null,
+      paused: Boolean(s.pausedAt),
+      pausedMs: s.pausedMs,
+      pausedAt: s.pausedAt?.toISOString() ?? null
+    }
+  }
+
+  /** Avisa a janela principal e o widget; abre o widget ao começar e fecha ao terminar. */
   setRecording(recording: boolean): void {
     this.tray?.setRecording(recording)
-    this.send('recording:state', { recording, startedAt: this.store.current?.startedAt ?? null, origin: this.store.current?.origin ?? null })
+    const state = this.recordingState()
+    this.send('recording:state', state)
+    if (recording && !this.widget) {
+      this.widget = createWidgetWindow(getSettings().uiLanguage)
+      this.widget.on('closed', () => (this.widget = null))
+    }
+    this.widget?.webContents.send('recording:state', state)
+    if (!recording) this.widget?.close()
+  }
+
+  setPaused(paused: boolean): void {
+    this.store.setPaused(paused)
+    this.setRecording(Boolean(this.store.current))
+  }
+
+  /** Botões do widget: a gravação mora na janela principal, então a ordem vai para lá. */
+  widgetCommand(cmd: 'pause' | 'resume' | 'stop'): void {
+    if (!this.store.current) return
+    this.send(`command:${cmd}`, {})
   }
 
   private selectedModel(): WhisperModel {

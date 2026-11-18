@@ -56,11 +56,9 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('rec:autoStopped', (_e, info: { reason: 'silence'; minutes: number } | { reason: 'meeting'; app: string }) =>
     c.notify(info.reason === 'silence' ? tr().autoStop.silence(info.minutes) : tr().autoStop.meetingEnded(info.app))
   )
-  ipcMain.handle('rec:state', () => ({
-    recording: Boolean(c.store.current),
-    startedAt: c.store.current?.startedAt ?? null,
-    origin: c.store.current?.origin ?? null
-  }))
+  ipcMain.handle('rec:state', () => c.recordingState())
+  ipcMain.handle('rec:setPaused', (_e, paused: boolean) => c.setPaused(paused))
+  ipcMain.handle('widget:command', (_e, cmd: 'pause' | 'resume' | 'stop') => c.widgetCommand(cmd))
   ipcMain.handle('pipeline:status', () => c.status)
 
   ipcMain.handle('model:status', () => c.refreshModel())

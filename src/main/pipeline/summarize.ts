@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import Anthropic from '@anthropic-ai/sdk'
 import type { Summary, SummaryProvider } from '../../shared/types'
-import { findExecutable } from '../setup/binaries'
+import { claudePath } from '../setup/binaries'
 import {
   SUMMARY_SCHEMA,
   SYSTEM_PROMPT,
@@ -58,7 +58,7 @@ export async function summarizeWithApi(transcript: string, apiKey: string): Prom
 
 /** Escolhe o caminho: assinatura primeiro (se houver Claude Code), chave como reserva. */
 export async function summarize(transcript: string, opts: SummarizeOptions): Promise<Summary> {
-  const claude = opts.provider === 'api' ? null : await findExecutable('claude')
+  const claude = opts.provider === 'api' ? null : await claudePath()
   const errors: string[] = []
   if (claude) {
     try {

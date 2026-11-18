@@ -1,0 +1,117 @@
+/* A janela é transparente; a pílula é o único desenho. */
+html,
+body.widget-body,
+.widget-body #root {
+  background: transparent;
+  overflow: hidden;
+}
+
+.widget {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: calc(100vh - 8px);
+  margin: 4px;
+  padding: 0 6px 0 var(--space-1);
+  background: var(--raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+.widget-grip {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.widget button {
+  -webkit-app-region: no-drag;
+}
+
+.widget-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rec);
+  animation: widget-pulse 1.6s ease-in-out infinite;
+}
+
+.widget.paused .widget-dot {
+  background: var(--ink-3);
+  animation: none;
+}
+
+@keyframes widget-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--rec) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--rec) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-dot {
+    animation: none;
+  }
+}
+
+.widget-time {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+}
+
+.widget-state {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.widget-clock {
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.widget-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hover);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--fast) var(--ease);
+}
+
+.widget-btn:hover {
+  background: var(--rule);
+}
+
+.widget-btn.stop {
+  background: var(--rec);
+  color: var(--rec-ink);
+}
+
+.widget-btn.stop:hover {
+  background: color-mix(in srgb, var(--rec) 85%, black);
+}
+
+.widget-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

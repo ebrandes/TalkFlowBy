@@ -1,4 +1,4 @@
-import { AlertTriangle, Circle, Square } from 'lucide-react'
+import { AlertTriangle, Circle, Pause, Play, Square } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { PipelineStatus } from '../../../shared/types'
 import type { Dict } from '../../../shared/i18n'
@@ -46,7 +46,11 @@ export function TopBar({ crumbs, rec, status, blockedReason }: Props): React.JSX
         )}
         {rec.recording ? (
           <>
-            <Stamp live parts={[clock(rec.elapsed)]} state={t.recording} />
+            <Stamp live={!rec.paused} parts={[clock(rec.elapsed)]} state={rec.paused ? t.paused : t.recording} />
+            <button className="btn" onClick={() => void (rec.paused ? rec.resume() : rec.pause())} disabled={rec.busy}>
+              {rec.paused ? <Play size={14} strokeWidth={2} fill="currentColor" aria-hidden /> : <Pause size={14} strokeWidth={2} fill="currentColor" aria-hidden />}
+              {rec.paused ? t.resume : t.pause}
+            </button>
             <button className="btn danger" onClick={() => void rec.stop()} disabled={rec.busy}>
               <Square size={14} strokeWidth={2} fill="currentColor" aria-hidden />
               {t.stop}

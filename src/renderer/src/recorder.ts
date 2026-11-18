@@ -67,6 +67,25 @@ export class Recorder {
     this.recorders.push(rec)
   }
 
+  get paused(): boolean {
+    return this.recorders.some((r) => r.state === 'paused')
+  }
+
+  /** Pausa as duas trilhas juntas, para continuarem alinhadas no tempo. */
+  async pause(): Promise<void> {
+    if (!this.active || this.paused) return
+    this.recorders.forEach((r) => r.state === 'recording' && r.pause())
+    this.silence.setPaused(true)
+    await window.talkflow.recording.setPaused(true)
+  }
+
+  async resume(): Promise<void> {
+    if (!this.active || !this.paused) return
+    this.recorders.forEach((r) => r.state === 'paused' && r.resume())
+    this.silence.setPaused(false)
+    await window.talkflow.recording.setPaused(false)
+  }
+
   msSinceSound(): number {
     return this.silence.msSinceSound()
   }

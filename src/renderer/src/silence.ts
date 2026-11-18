@@ -33,12 +33,20 @@ export class SilenceWatch {
         return Math.sqrt(sum / buf.length) > SOUND_LEVEL
       })
       const now = Date.now()
-      if (loud) this.lastSound = now
+      if (loud || this.paused) this.lastSound = now
       else if (!this.fired && now - this.lastSound >= limitMs) {
         this.fired = true
         onSilence()
       }
     }, CHECK_MS)
+  }
+
+  private paused = false
+
+  /** Em pausa não conta silêncio: ao voltar, o relógio recomeça. */
+  setPaused(paused: boolean): void {
+    this.paused = paused
+    this.lastSound = Date.now()
   }
 
   /** Quanto tempo faz que alguma trilha teve som (Infinity se não está observando). */
@@ -47,6 +55,7 @@ export class SilenceWatch {
   }
 
   stop(): void {
+    this.paused = false
     if (this.timer) clearInterval(this.timer)
     this.timer = null
     void this.ctx?.close()

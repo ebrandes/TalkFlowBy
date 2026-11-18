@@ -25,9 +25,13 @@ async function isExecutable(path: string): Promise<boolean> {
   }
 }
 
+function searchDirs(): string[] {
+  return [...(process.env.PATH ?? '').split(delimiter).filter(Boolean), ...extraDirs()]
+}
+
 /** Procura um programa no PATH e nas pastas comuns de instalação. */
 export async function findExecutable(name: string): Promise<string | null> {
-  const dirs = [...(process.env.PATH ?? '').split(delimiter).filter(Boolean), ...extraDirs()]
+  const dirs = searchDirs()
   // No Windows só um .exe roda direto; o atalho do npm (sem extensão ou .cmd) não.
   const names = isWin ? [`${name}.exe`] : [name]
   for (const dir of dirs) {
@@ -44,6 +48,21 @@ export function bundledBinDir(): string {
   const res = process.resourcesPath ?? ''
   const isDev = !res || res.includes('node_modules')
   return isDev ? join(process.cwd(), 'resources', 'bin') : join(res, 'bin')
+}
+
+/**
+ * O Claude Code. Instalado pelo npm no Windows, o PATH só tem os atalhos (`claude.cmd`, `claude.ps1`),
+ * que não rodam direto; o `claude.exe` de verdade fica dentro do pacote, ao lado do atalho.
+ * Com várias versões do Node (nvm), uma pasta pode ter o atalho e não o .exe: segue procurando.
+ */
+export async function claudePath(): Promise<string | null> {
+  const direct = await findExecutable('claude')
+  if (direct || !isWin) return direct
+  for (const dir of searchDirs()) {
+    const exe = join(dir, 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe')
+    if (await isExecutable(exe)) return exe
+  }
+  return null
 }
 
 export async function whisperPath(): Promise<string | null> {

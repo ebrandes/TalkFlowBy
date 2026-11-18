@@ -9,6 +9,10 @@ export interface ActiveSession {
   startedAt: Date
   origin?: string
   streams: Map<Track, WriteStream>
+  /** Pausas já encerradas, em ms. */
+  pausedMs: number
+  /** Início da pausa atual. */
+  pausedAt: Date | null
 }
 
 /** Recebe os pedaços de áudio que a janela manda e grava em `.audio/<sessão>/`. */
@@ -27,8 +31,19 @@ export class RecordingStore {
     const id = startedAt.toISOString().replace(/[:.]/g, '-')
     const dir = join(this.rootDir(), '.audio', id)
     await mkdir(dir, { recursive: true })
-    this.active = { id, dir, startedAt, origin, streams: new Map() }
+    this.active = { id, dir, startedAt, origin, streams: new Map(), pausedMs: 0, pausedAt: null }
     return this.active
+  }
+
+  /** Marca a pausa; o áudio para de chegar porque o gravador da janela também pausa. */
+  setPaused(paused: boolean, now = new Date()): void {
+    const s = this.active
+    if (!s || paused === Boolean(s.pausedAt)) return
+    if (paused) s.pausedAt = now
+    else {
+      s.pausedMs += now.getTime() - s.pausedAt!.getTime()
+      s.pausedAt = null
+    }
   }
 
   append(track: Track, chunk: ArrayBuffer): void {
@@ -48,7 +63,10 @@ export class RecordingStore {
     if (!s) return null
     this.active = null
     await Promise.all([...s.streams.values()].map((st) => new Promise<void>((r) => st.end(() => r()))))
-    const durationSec = (Date.now() - s.startedAt.getTime()) / 1000
+    s.pausedMs += s.pausedAt ? Date.now() - s.pausedAt.getTime() : 0
+    s.pausedAt = null
+    // A duração da nota é o tempo gravado, sem as pausas.
+    const durationSec = (Date.now() - s.startedAt.getTime() - s.pausedMs) / 1000
     await writeFile(join(s.dir, 'meta.json'), JSON.stringify({ startedAt: s.startedAt, durationSec, origin: s.origin }))
     return { session: s, durationSec }
   }

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
+import type { RecordingState } from '../shared/recording'
 
 type Unsubscribe = () => void
 
@@ -9,11 +10,7 @@ function on<T>(channel: string, cb: (payload: T) => void): Unsubscribe {
   return () => ipcRenderer.removeListener(channel, handler)
 }
 
-export interface RecordingState {
-  recording: boolean
-  startedAt: string | null
-  origin: string | null
-}
+export type { RecordingState }
 
 export interface Permissions {
   microphone: string
@@ -50,7 +47,13 @@ const api = {
     state: (): Promise<RecordingState> => ipcRenderer.invoke('rec:state'),
     onState: (cb: (s: RecordingState) => void): Unsubscribe => on('recording:state', cb),
     onStartCommand: (cb: (p: { origin?: string }) => void): Unsubscribe => on('command:start', cb),
-    onStopCommand: (cb: (p: { reason?: string; app?: string }) => void): Unsubscribe => on('command:stop', cb)
+    onStopCommand: (cb: (p: { reason?: string; app?: string }) => void): Unsubscribe => on('command:stop', cb),
+    setPaused: (paused: boolean): Promise<void> => ipcRenderer.invoke('rec:setPaused', paused),
+    onPauseCommand: (cb: () => void): Unsubscribe => on('command:pause', cb),
+    onResumeCommand: (cb: () => void): Unsubscribe => on('command:resume', cb)
+  },
+  widget: {
+    command: (cmd: 'pause' | 'resume' | 'stop'): Promise<void> => ipcRenderer.invoke('widget:command', cmd)
   },
   pipeline: {
     status: (): Promise<PipelineStatus> => ipcRenderer.invoke('pipeline:status'),

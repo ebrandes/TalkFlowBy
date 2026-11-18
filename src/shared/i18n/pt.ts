@@ -25,6 +25,9 @@ export const pt: Dict = {
     starting: 'Iniciando…',
     stop: 'Parar',
     recording: 'Gravando',
+    paused: 'Pausado',
+    pause: 'Pausar',
+    resume: 'Continuar',
     transcribing: 'Transcrevendo',
     summarizing: 'Resumindo',
     summarized: 'Resumido',
@@ -152,6 +155,15 @@ export const pt: Dict = {
   recorder: {
     micOnly: 'Só o seu microfone está sendo gravado. Libere o áudio da chamada nas configurações do sistema.',
     failed: (msg) => `Não foi possível gravar: ${msg}`
+  },
+
+  widget: {
+    recording: 'Gravando',
+    paused: 'Pausado',
+    pause: 'Pausar',
+    resume: 'Continuar',
+    stop: 'Encerrar e salvar',
+    move: 'Arraste para mover'
   },
 
   prompt: {

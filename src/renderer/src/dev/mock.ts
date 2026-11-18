@@ -170,11 +170,22 @@ window.talkflow = {
     chunk: () => undefined,
     stop: async () => undefined,
     autoStopped: async () => undefined,
-    state: async () => ({ recording, startedAt: recording ? new Date(Date.now() - 767_000).toISOString() : null, origin: null }),
+    state: async () => ({
+      recording,
+      startedAt: recording ? new Date(Date.now() - 767_000).toISOString() : null,
+      origin: null,
+      paused: params.has('paused'),
+      pausedMs: 0,
+      pausedAt: params.has('paused') ? new Date().toISOString() : null
+    }),
     onState: noop,
     onStartCommand: noop,
-    onStopCommand: noop
+    onStopCommand: noop,
+    setPaused: async () => undefined,
+    onPauseCommand: noop,
+    onResumeCommand: noop
   },
+  widget: { command: async () => undefined },
   pipeline: {
     status: async () => (stage ? { stage: stage as never, progress: 0.4, meeting: '17 nov 16:05' } : { stage: 'idle' }),
     onStatus: noop

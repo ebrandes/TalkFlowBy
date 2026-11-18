@@ -24,6 +24,9 @@ export const en = {
     starting: 'Starting…',
     stop: 'Stop',
     recording: 'Recording',
+    paused: 'Paused',
+    pause: 'Pause',
+    resume: 'Resume',
     transcribing: 'Transcribing',
     summarizing: 'Summarizing',
     summarized: 'Summarized',
@@ -151,6 +154,15 @@ export const en = {
   recorder: {
     micOnly: 'Only your microphone is being recorded. Allow call audio in your system settings.',
     failed: (msg: string) => `Could not record: ${msg}`
+  },
+
+  widget: {
+    recording: 'Recording',
+    paused: 'Paused',
+    pause: 'Pause',
+    resume: 'Resume',
+    stop: 'Stop and save',
+    move: 'Drag to move'
   },
 
   prompt: {
