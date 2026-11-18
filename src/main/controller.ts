@@ -1,7 +1,8 @@
-import { BrowserWindow, app } from 'electron'
+import { BrowserWindow, Notification, app } from 'electron'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { DetectedMeeting, ModelStatus, PipelineStatus } from '../shared/types'
+import type { DetectedMeeting, MeetingMeta, ModelStatus, PipelineStatus } from '../shared/types'
+import { findPending } from './recovery'
 import { MeetingDetector } from './detector/index'
 import { processRecording } from './pipeline/run'
 import { ProcessingQueue, RecordingStore } from './recording'
@@ -34,6 +35,7 @@ export class Controller {
     this.detector.on('end', (m) => this.onMeetingEnd(m))
     if (getSettings().detectMeetings) await this.detector.start()
     await this.refreshModel()
+    await this.recoverPending()
   }
 
   show(): void {
@@ -85,6 +87,18 @@ export class Controller {
     const done = await this.store.finish()
     this.setRecording(false)
     if (!done) return
+    const meta = JSON.parse(await readFile(join(done.session.dir, 'meta.json'), 'utf8'))
+    await this.enqueue(done.session.dir, { ...meta, startedAt: new Date(meta.startedAt) })
+  }
+
+  /** Gravações que o app deixou para trás ao fechar: processa agora. */
+  async recoverPending(): Promise<void> {
+    const pending = await findPending(join(getSettings().rootDir, '.audio'))
+    for (const p of pending) await this.enqueue(p.dir, p.meta)
+    if (pending.length) this.notify(tr().autoStop.recovered(pending.length))
+  }
+
+  private async enqueue(sessionDir: string, meta: MeetingMeta): Promise<void> {
     const settings = getSettings()
     const whisper = await whisperPath()
     const model = this.model.path ?? (await findModel(app.getPath('userData')))
@@ -92,10 +106,9 @@ export class Controller {
       this.setStatus({ stage: 'error', message: tr().main.missingWhisper })
       return
     }
-    const meta = JSON.parse(await readFile(join(done.session.dir, 'meta.json'), 'utf8'))
     this.queue.push(() =>
       processRecording(
-        { sessionDir: done.session.dir, meta: { ...meta, startedAt: new Date(meta.startedAt) } },
+        { sessionDir, meta },
         {
           rootDir: settings.rootDir,
           lang: settings.uiLanguage,
@@ -121,10 +134,15 @@ export class Controller {
     })
   }
 
+  /** A chamada acabou: fecha o aviso e para a gravação, tenha ela começado pelo aviso ou pelo botão. */
   private onMeetingEnd(m: DetectedMeeting): void {
     if (this.prompt && this.promptFor?.appId === m.appId) this.prompt.close()
-    const rec = this.store.current
-    if (rec && rec.origin === m.appName) this.send('command:stop', { reason: 'meeting-ended' })
+    if (!this.store.current || this.detector.anyInCall()) return
+    this.send('command:stop', { reason: 'meeting-ended', app: m.appName })
+  }
+
+  notify(body: string): void {
+    if (Notification.isSupported()) new Notification({ title: 'TalkFlowBy', body, silent: true }).show()
   }
 
   async answerPrompt(answer: 'record' | 'later' | 'never'): Promise<void> {

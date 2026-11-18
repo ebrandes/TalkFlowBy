@@ -112,6 +112,10 @@ export const pt: Dict = {
     askAgain: 'Voltar a perguntar',
     keepAudio: 'Guardar o áudio depois de transcrever',
     keepAudioHint: 'Desligado, o áudio é apagado quando a nota fica pronta',
+    silenceStop: 'Parar depois de silêncio',
+    silenceStopHint: 'Encerra a gravação quando ninguém fala por um tempo',
+    silenceNever: 'Nunca',
+    minutes: (n) => `${n} minutos`,
     openAtLogin: 'Abrir junto com o computador',
     openAtLoginHint: 'Fica na bandeja, pronto para perguntar',
     transcription: 'Transcrição',
@@ -168,6 +172,12 @@ export const pt: Dict = {
     bullet: 'Lista',
     ordered: 'Lista numerada',
     task: 'Tarefas'
+  },
+
+  autoStop: {
+    meetingEnded: (app) => `Gravação encerrada: a chamada no ${app} terminou. A nota fica pronta em alguns minutos.`,
+    silence: (min) => `Gravação encerrada depois de ${min} minutos de silêncio. A nota fica pronta em alguns minutos.`,
+    recovered: (n) => (n === 1 ? 'Uma gravação interrompida foi recuperada e está sendo processada.' : `${n} gravações interrompidas foram recuperadas e estão sendo processadas.`)
   },
 
   tray: {

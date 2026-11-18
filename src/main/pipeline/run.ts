@@ -11,6 +11,7 @@ import { mergeTracks, turnsToPlainText } from './merge'
 import { cutChunks, detectSpeech } from './chunks'
 import { peakVolumeDb, toWav16k } from './transcode'
 import { transcribe } from './whisper'
+import { markDone, markProcessing } from '../recovery'
 
 /** Abaixo disso a trilha é silêncio (ninguém falou daquele lado). */
 const SILENCE_DB = -50
@@ -51,6 +52,7 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   const pad = (n: number): string => String(n).padStart(2, '0')
   const meeting = `${d.getDate()} ${t.months[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`
   const onStatus = (s: PipelineStatus): void => deps.onStatus({ ...s, meeting })
+  await markProcessing(input.sessionDir)
   onStatus({ stage: 'converting' })
   const ready: { wav: string; speaker: Speaker }[] = []
   for (const { track, speaker } of TRACKS) {
@@ -104,7 +106,8 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   await mkdir(dirname(full), { recursive: true })
   await writeFile(full, buildMeetingMarkdown(input.meta, summary, turns, t.doc), 'utf8')
 
-  if (!deps.keepAudio) await rm(input.sessionDir, { recursive: true, force: true })
+  if (deps.keepAudio) await markDone(input.sessionDir, rel)
+  else await rm(input.sessionDir, { recursive: true, force: true })
   onStatus({ stage: 'done', notePath: rel, message: warning })
   return rel
 }

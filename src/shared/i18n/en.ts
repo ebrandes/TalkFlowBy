@@ -111,6 +111,10 @@ export const en = {
     askAgain: 'Ask again',
     keepAudio: 'Keep the audio after transcribing',
     keepAudioHint: 'When off, the audio is deleted once the note is ready',
+    silenceStop: 'Stop after silence',
+    silenceStopHint: 'Ends the recording when nobody has spoken for a while',
+    silenceNever: 'Never',
+    minutes: (n: number) => `${n} minutes`,
     openAtLogin: 'Open at login',
     openAtLoginHint: 'Stays in the tray, ready to ask',
     transcription: 'Transcription',
@@ -167,6 +171,12 @@ export const en = {
     bullet: 'Bulleted list',
     ordered: 'Numbered list',
     task: 'To-do list'
+  },
+
+  autoStop: {
+    meetingEnded: (app: string) => `Recording stopped: the ${app} call ended. Your note will be ready in a few minutes.`,
+    silence: (min: number) => `Recording stopped after ${min} minutes of silence. Your note will be ready in a few minutes.`,
+    recovered: (n: number) => (n === 1 ? 'An interrupted recording was recovered and is being processed.' : `${n} interrupted recordings were recovered and are being processed.`)
   },
 
   tray: {

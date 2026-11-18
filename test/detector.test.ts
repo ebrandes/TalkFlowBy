@@ -59,6 +59,20 @@ describe('MeetingDetector', () => {
     expect(events).toEqual(['start:teams', 'end:teams'])
   })
 
+  it('avisa o fim da reunião mesmo de app silenciado', () => {
+    const d = new MeetingDetector((id) => id === 'teams')
+    const events: string[] = []
+    d.on('start', () => events.push('start'))
+    d.on('end', () => events.push('end'))
+    d.update([teams], 0)
+    d.update([teams], START_AFTER_MS)
+    expect(d.anyInCall()).toBe(true)
+    d.update([], START_AFTER_MS + 1)
+    d.update([], START_AFTER_MS + END_AFTER_MS + 1)
+    expect(events).toEqual(['end'])
+    expect(d.anyInCall()).toBe(false)
+  })
+
   it('não pergunta para app silenciado', () => {
     const d = new MeetingDetector((id) => id === 'teams')
     let started = false

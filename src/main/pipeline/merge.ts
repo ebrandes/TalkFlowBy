@@ -10,6 +10,32 @@ const clean = (text: string): string => text.replace(/\s+/g, ' ').trim()
 /** Trechos que o Whisper costuma inventar no silêncio. */
 const NOISE = /^(\[.*\]|\(.*\)|obrigad[oa]\.?|legendas? .*|tchau\.?)$/i
 
+/**
+ * O Whisper às vezes entra em laço em áudio ruim ("que é que é que é..."). Uma sequência de
+ * 1 a 6 palavras repetida 3 vezes ou mais em seguida vira uma só.
+ */
+export function collapseRepeats(text: string): string {
+  const words = clean(text).split(' ')
+  const out: string[] = []
+  let i = 0
+  while (i < words.length) {
+    let skipped = false
+    for (let n = 6; n >= 1 && !skipped; n--) {
+      const unit = words.slice(i, i + n).join(' ').toLowerCase()
+      if (words.length - i < n * 3) continue
+      let reps = 1
+      while (words.slice(i + reps * n, i + (reps + 1) * n).join(' ').toLowerCase() === unit) reps++
+      if (reps >= 3) {
+        out.push(...words.slice(i, i + n))
+        i += reps * n
+        skipped = true
+      }
+    }
+    if (!skipped) out.push(words[i++])
+  }
+  return out.join(' ')
+}
+
 export function isNoise(text: string): boolean {
   const t = clean(text)
   return t.length === 0 || NOISE.test(t)
@@ -27,7 +53,7 @@ export function mergeTracks(mic: Segment[], system: Segment[]): Turn[] {
   const turns: Turn[] = []
   let lastEnd = 0
   for (const seg of all) {
-    const text = clean(seg.text)
+    const text = collapseRepeats(seg.text)
     const prev = turns[turns.length - 1]
     const sameSpeaker = prev && prev.speaker === seg.speaker
     const shortGap = seg.start - lastEnd <= MAX_GAP_SEC

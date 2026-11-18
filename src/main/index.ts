@@ -25,6 +25,16 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   app.on('activate', () => controller.show())
+
+  // Fechar o app no meio de uma gravação (inclusive pelo "Sair e Reabrir" do macOS) salva o que
+  // já foi gravado; na próxima abertura ela é processada.
+  let closingRecording = false
+  app.on('before-quit', (e) => {
+    if (!controller.store.current || closingRecording) return
+    e.preventDefault()
+    closingRecording = true
+    void controller.store.finish().finally(() => app.quit())
+  })
   // Fechar todas as janelas não encerra: o app fica na bandeja.
   app.on('window-all-closed', () => undefined)
 }

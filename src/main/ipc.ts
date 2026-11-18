@@ -38,6 +38,9 @@ export function registerIpc(c: Controller): void {
   })
   ipcMain.on('rec:chunk', (_e, track: Track, chunk: ArrayBuffer) => c.store.append(track, chunk))
   ipcMain.handle('rec:stop', () => c.finishRecording())
+  ipcMain.handle('rec:autoStopped', (_e, info: { reason: 'silence'; minutes: number } | { reason: 'meeting'; app: string }) =>
+    c.notify(info.reason === 'silence' ? tr().autoStop.silence(info.minutes) : tr().autoStop.meetingEnded(info.app))
+  )
   ipcMain.handle('rec:state', () => ({
     recording: Boolean(c.store.current),
     startedAt: c.store.current?.startedAt ?? null,

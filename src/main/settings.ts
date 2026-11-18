@@ -29,6 +29,7 @@ function defaults(): Stored {
     summaryProvider: 'auto',
     keepAudio: false,
     detectMeetings: true,
+    silenceStopMinutes: 5,
     mutedApps: [],
     openAtLogin: true
   }

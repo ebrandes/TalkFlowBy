@@ -43,10 +43,12 @@ const api = {
     begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),
     chunk: (track: Track, data: ArrayBuffer): void => ipcRenderer.send('rec:chunk', track, data),
     stop: (): Promise<void> => ipcRenderer.invoke('rec:stop'),
+    autoStopped: (info: { reason: 'silence'; minutes: number } | { reason: 'meeting'; app: string }): Promise<void> =>
+      ipcRenderer.invoke('rec:autoStopped', info),
     state: (): Promise<RecordingState> => ipcRenderer.invoke('rec:state'),
     onState: (cb: (s: RecordingState) => void): Unsubscribe => on('recording:state', cb),
     onStartCommand: (cb: (p: { origin?: string }) => void): Unsubscribe => on('command:start', cb),
-    onStopCommand: (cb: (p: { reason?: string }) => void): Unsubscribe => on('command:stop', cb)
+    onStopCommand: (cb: (p: { reason?: string; app?: string }) => void): Unsubscribe => on('command:stop', cb)
   },
   pipeline: {
     status: (): Promise<PipelineStatus> => ipcRenderer.invoke('pipeline:status'),

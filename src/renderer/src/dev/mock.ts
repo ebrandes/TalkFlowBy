@@ -122,6 +122,7 @@ let settings: Settings = {
   hasApiKey: false,
   keepAudio: false,
   detectMeetings: true,
+  silenceStopMinutes: 5,
   mutedApps: [],
   openAtLogin: true
 }
@@ -162,6 +163,7 @@ window.talkflow = {
     begin: async () => ({ id: 'x', startedAt: new Date().toISOString() }),
     chunk: () => undefined,
     stop: async () => undefined,
+    autoStopped: async () => undefined,
     state: async () => ({ recording, startedAt: recording ? new Date(Date.now() - 767_000).toISOString() : null, origin: null }),
     onState: noop,
     onStartCommand: noop,

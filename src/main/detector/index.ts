@@ -21,7 +21,9 @@ export interface DetectorEvents {
  */
 export class MeetingDetector extends EventEmitter<DetectorEvents> {
   private since = new Map<string, number>()
-  private announced = new Map<string, DetectedMeeting>()
+  /** Apps que ficaram com o microfone tempo bastante para contar como reunião. */
+  private inCall = new Map<string, DetectedMeeting>()
+  private prompted = new Set<string>()
   private lastSeen = new Map<string, number>()
   private stopFn: (() => void) | null = null
   private timer: NodeJS.Timeout | null = null
@@ -38,19 +40,28 @@ export class MeetingDetector extends EventEmitter<DetectorEvents> {
       if (!this.since.has(app.appId)) this.since.set(app.appId, now)
       this.lastSeen.set(app.appId, now)
       const long = now - this.since.get(app.appId)! >= START_AFTER_MS
-      if (long && !this.announced.has(app.appId) && !this.isMuted(app.appId)) {
-        this.announced.set(app.appId, app)
+      if (!long) continue
+      this.inCall.set(app.appId, app)
+      // O aviso respeita o "nunca para este app"; o fim da reunião vale para qualquer app.
+      if (!this.prompted.has(app.appId) && !this.isMuted(app.appId)) {
+        this.prompted.add(app.appId)
         this.emit('start', app)
       }
     }
     for (const id of [...this.since.keys()]) if (!ids.has(id)) this.since.delete(id)
-    for (const [id, app] of [...this.announced]) {
+    for (const [id, app] of [...this.inCall]) {
       if (ids.has(id)) continue
       if (now - (this.lastSeen.get(id) ?? 0) >= END_AFTER_MS) {
-        this.announced.delete(id)
+        this.inCall.delete(id)
+        this.prompted.delete(id)
         this.emit('end', app)
       }
     }
+  }
+
+  /** Algum app de reunião ainda está com o microfone aberto? */
+  anyInCall(): boolean {
+    return this.inCall.size > 0
   }
 
   async start(): Promise<void> {

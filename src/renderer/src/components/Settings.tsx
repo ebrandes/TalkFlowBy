@@ -73,6 +73,20 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
               </button>
             </div>
           )}
+          <div className="set-row">
+            <label className="set-label" htmlFor="silence">
+              <span>{t.silenceStop}</span>
+              <span className="hint">{t.silenceStopHint}</span>
+            </label>
+            <select id="silence" className="field select" value={settings.silenceStopMinutes} onChange={(e) => void update({ silenceStopMinutes: Number(e.target.value) })}>
+              {[2, 5, 10, 15, 30].map((n) => (
+                <option key={n} value={n}>
+                  {t.minutes(n)}
+                </option>
+              ))}
+              <option value={0}>{t.silenceNever}</option>
+            </select>
+          </div>
           <Toggle label={t.keepAudio} hint={t.keepAudioHint} checked={settings.keepAudio} onChange={(v) => void update({ keepAudio: v })} />
           <Toggle label={t.openAtLogin} hint={t.openAtLoginHint} checked={settings.openAtLogin} onChange={(v) => void update({ openAtLogin: v })} />
         </section>

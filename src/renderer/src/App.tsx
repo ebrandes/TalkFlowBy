@@ -25,7 +25,7 @@ export function App(): React.JSX.Element {
 
 function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Folders }): React.JSX.Element {
   const t = useT()
-  const rec = useRecording(t.recorder)
+  const rec = useRecording(t.recorder, app.settings?.silenceStopMinutes ?? 5)
   const [tab, setTab] = useState<Tab>('meetings')
   const [showSettings, setShowSettings] = useState(false)
   const [preview, setPreview] = useState('')

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { Segment, Summary } from '../src/shared/types'
 import { meetingRelPath, safeName, uniqueName } from '../src/main/pipeline/filename'
 import { buildMeetingMarkdown, escapeInline, formatDuration } from '../src/main/pipeline/markdown'
-import { formatClock, mergeTracks } from '../src/main/pipeline/merge'
+import { collapseRepeats, formatClock, mergeTracks } from '../src/main/pipeline/merge'
 import { extractJson, normalizeSummary } from '../src/main/pipeline/summary-schema'
 import { parseWhisperJson } from '../src/main/pipeline/whisper'
 import { en } from '../src/shared/i18n/en'
@@ -160,5 +160,14 @@ describe('speechIntervals', () => {
   it('soma o início do trecho aos horários do Whisper', () => {
     const segs = parseWhisperJson({ transcription: [{ offsets: { from: 500, to: 1500 }, text: 'Oi' }] }, 'Você', 10)
     expect(segs[0]).toMatchObject({ start: 10.5, end: 11.5 })
+  })
+})
+
+describe('collapseRepeats', () => {
+  it('corta laços do Whisper sem mexer em repetição normal', () => {
+    expect(collapseRepeats('O que é que é que é que é que é a gente')).toBe('O que é a gente')
+    expect(collapseRepeats('a gente que é a gente que é a gente que é')).toBe('a gente que é')
+    expect(collapseRepeats('sim, sim, tudo certo')).toBe('sim, sim, tudo certo')
+    expect(collapseRepeats('muito muito bom')).toBe('muito muito bom')
   })
 })

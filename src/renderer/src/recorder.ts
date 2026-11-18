@@ -1,7 +1,14 @@
 import type { Track } from '../../shared/types'
+import { SilenceWatch } from './silence'
 
 const MIME = 'audio/webm;codecs=opus'
 const SLICE_MS = 5_000
+
+export interface RecorderOptions {
+  /** Minutos sem som para parar sozinho; 0 desliga. */
+  silenceMinutes: number
+  onSilence: () => void
+}
 
 export interface RecorderStart {
   /** false quando o sistema não liberou o áudio da chamada; grava só o microfone. */
@@ -16,12 +23,13 @@ export class Recorder {
   private recorders: MediaRecorder[] = []
   private streams: MediaStream[] = []
   private pending: Promise<void>[] = []
+  private silence = new SilenceWatch()
 
   get active(): boolean {
     return this.recorders.length > 0
   }
 
-  async start(origin?: string): Promise<RecorderStart> {
+  async start(origin: string | undefined, opts: RecorderOptions): Promise<RecorderStart> {
     if (this.active) return { systemAudio: true }
     const mic = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -45,6 +53,7 @@ export class Recorder {
 
     await window.talkflow.recording.begin(origin)
     this.record(mic, 'mic')
+    this.silence.start(this.streams, opts.silenceMinutes * 60_000, opts.onSilence)
     return { systemAudio }
   }
 
@@ -58,8 +67,13 @@ export class Recorder {
     this.recorders.push(rec)
   }
 
+  msSinceSound(): number {
+    return this.silence.msSinceSound()
+  }
+
   /** Para tudo, espera os últimos pedaços chegarem e só então fecha a sessão. */
   async stop(): Promise<void> {
+    this.silence.stop()
     const stopped = this.recorders.map(
       (r) =>
         new Promise<void>((resolve) => {
