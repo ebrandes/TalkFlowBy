@@ -75,7 +75,8 @@ function tasksBlock(summary: Summary): string[] {
 function transcriptBlock(turns: Turn[], d: Doc): string[] {
   const out: string[] = []
   const label = (s: Turn['speaker']): string => (s === 'Você' ? d.you : d.others)
-  for (const t of turns) out.push(`**[${formatClock(t.start)}] ${label(t.speaker)}:** ${escapeInline(t.text)}`, '')
+  // Sem colchetes no horário: o editor escaparia "[00:00]" como "\[00:00]" ao salvar.
+  for (const t of turns) out.push(`**${formatClock(t.start)} · ${label(t.speaker)}:** ${escapeInline(t.text)}`, '')
   if (out[out.length - 1] === '') out.pop()
   return out
 }

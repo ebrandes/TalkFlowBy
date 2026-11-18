@@ -1,5 +1,7 @@
 import { Crepe } from '@milkdown/crepe'
 import '@milkdown/crepe/theme/common/style.css'
+import { remarkStringifyOptionsCtx } from '@milkdown/kit/core'
+import { remarkPreserveEmptyLinePlugin } from '@milkdown/kit/preset/commonmark'
 import { useEffect, useRef } from 'react'
 import { useT } from '../i18n'
 import { CREPE_FEATURES, crepeConfig } from './editor-config'
@@ -11,7 +13,10 @@ interface Props {
   onChange: (markdown: string) => void
 }
 
-/** Editor de blocos sobre markdown puro. Salvar fica com quem usa o componente. */
+/**
+ * Editor de blocos sobre markdown puro. Salvar fica com quem usa o componente.
+ * Só avisa mudança quando o texto muda de verdade: abrir uma nota nunca regrava o arquivo.
+ */
 export function Editor({ docKey, value, onChange }: Props): React.JSX.Element {
   const t = useT()
   const host = useRef<HTMLDivElement>(null)
@@ -21,18 +26,26 @@ export function Editor({ docKey, value, onChange }: Props): React.JSX.Element {
   useEffect(() => {
     if (!host.current) return
     let alive = true
+    let baseline: string | null = null
     const crepe = new Crepe({
       root: host.current,
       defaultValue: value,
       features: CREPE_FEATURES,
       featureConfigs: crepeConfig(t.editor)
     })
+    // Mesmo formato que o TalkFlowBy escreve: listas com "-" e sem <br /> para linha vazia.
+    crepe.editor.config((ctx) => {
+      ctx.update(remarkStringifyOptionsCtx, (prev) => ({ ...prev, bullet: '-' as const, rule: '-' as const, listItemIndent: 'one' as const }))
+    })
+    crepe.editor.remove(remarkPreserveEmptyLinePlugin)
     crepe.on((listener) => {
-      listener.markdownUpdated((_ctx, markdown, prev) => {
-        if (alive && markdown !== prev) changeRef.current(markdown)
+      listener.markdownUpdated((_ctx, markdown) => {
+        if (alive && baseline !== null && markdown !== baseline) changeRef.current(markdown)
       })
     })
-    void crepe.create()
+    void crepe.create().then(() => {
+      if (alive) baseline = crepe.getMarkdown()
+    })
     return () => {
       alive = false
       void crepe.destroy()

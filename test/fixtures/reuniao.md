@@ -30,8 +30,8 @@ origem: Google Meet
 
 ## Transcrição
 
-**[00:00] Você:** Vamos fechar dezembro com oito vídeos. Dois por semana.
+**00:00 · Você:** Vamos fechar dezembro com oito vídeos. Dois por semana.
 
-**[00:08] Outros:** A cota de voz acaba dia 20.
+**00:08 · Outros:** A cota de voz acaba dia 20.
 
-**[01:10] Você:** Testo a capa nova em dois vídeos.
+**01:10 · Você:** Testo a capa nova em dois vídeos.

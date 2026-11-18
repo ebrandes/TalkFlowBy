@@ -36,7 +36,7 @@ describe.skipIf(!session || !root)('ponta a ponta', () => {
     console.log(statuses.map((s) => `${s.stage}${s.progress !== undefined ? ` ${Math.round(s.progress * 100)}%` : ''}${s.message ? ` (${s.message})` : ''}`).join(' → '))
     expect(statuses.at(-1)?.stage).toBe('done')
     expect(statuses.at(-1)?.message).toBeUndefined()
-    expect(md).toContain('**[00:00] Você:**')
+    expect(md).toContain('**00:00 · Você:**')
     expect(md).toContain('Outros:**')
     expect(md).toContain('## Próximos passos')
     expect(existsSync(work)).toBe(false)

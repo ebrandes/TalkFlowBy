@@ -76,8 +76,8 @@ describe('buildMeetingMarkdown', () => {
     expect(out).toContain('date: 2026-11-17 14:30')
     expect(out).toContain('## Topics')
     expect(out).toContain('## Next steps')
-    expect(out).toContain('**[00:00] You:**')
-    expect(out).toContain('**[00:08] Others:**')
+    expect(out).toContain('**00:00 · You:**')
+    expect(out).toContain('**00:08 · Others:**')
     expect(lint({ strings: { n: out }, config: { default: true, MD013: false } }).n).toEqual([])
   })
 

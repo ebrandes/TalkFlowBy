@@ -45,6 +45,13 @@ transcripts on someone else's server. TalkFlowBy does the useful part on your ma
   meeting notes and free notes.
 - **Asks at the right time.** When Teams or Google Meet starts using your microphone,
   a small prompt asks if you want to record. One click and it stays out of your way.
+- **Stops by itself.** Recording ends when the call ends, or after a few minutes of silence
+  (adjustable), so a forgotten recording never runs all day.
+- **Never loses a recording.** If the app is closed mid-recording or mid-transcription, it
+  picks up where it left off the next time it opens.
+- **Send it to Claude.** One click copies the note or just the transcript, or opens Claude with
+  the note ready to ask follow-up questions.
+- **Clean up fast.** Select several meetings and move them to the Trash at once.
 
 ## Download
 
@@ -122,9 +129,9 @@ source: Google Meet (Chrome)
 
 ## Transcript
 
-**[00:00] You:** Let's start with the launch date...
+**00:00 · You:** Let's start with the launch date...
 
-**[00:12] Others:** The migration finishes on the 28th, so December 2 works.
+**00:12 · Others:** The migration finishes on the 28th, so December 2 works.
 ```
 
 ![Recording in progress, dark theme](docs/screenshot-dark.png)
@@ -199,6 +206,8 @@ npm install
 npm run build:micwatch   # macOS only: helper that detects meetings
 npm run dev
 ```
+
+To work on the interface only, with example data in the browser: `npm run dev:ui`.
 
 On macOS, `whisper-cli` from Homebrew (`brew install whisper-cpp`) is used during
 development. Installers:

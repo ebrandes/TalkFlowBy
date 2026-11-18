@@ -41,9 +41,9 @@ origem: Google Meet (Chrome)
 
 ## Transcrição
 
-**[00:00] Você:** Bom dia. Vamos fechar o calendário de dezembro. A minha proposta é publicar oito vídeos, dois por semana, começando no dia 2.
+**00:00 · Você:** Bom dia. Vamos fechar o calendário de dezembro. A minha proposta é publicar oito vídeos, dois por semana, começando no dia 2.
 
-**[00:11] Outros:** Concordo com os oito vídeos. Mas a cota de vozes acaba no dia 20, então precisamos de um plano para os Shorts.
+**00:11 · Outros:** Concordo com os oito vídeos. Mas a cota de vozes acaba no dia 20, então precisamos de um plano para os Shorts.
 `
 const sampleEn = `---
 date: 2026-11-17 14:30
@@ -77,9 +77,9 @@ source: Google Meet (Chrome)
 
 ## Transcript
 
-**[00:00] You:** Let's start with the launch date. The migration finishes on the 28th, so I'd like to move to December 2.
+**00:00 · You:** Let's start with the launch date. The migration finishes on the 28th, so I'd like to move to December 2.
 
-**[00:11] Others:** December 2 works for us. We still need the pricing page reviewed before the press kit goes out.
+**00:11 · Others:** December 2 works for us. We still need the pricing page reviewed before the press kit goes out.
 `
 const titles = lang === 'en'
   ? ['Q4 launch plan', 'Payments squad sync', 'Packaging supplier call', 'Sprint review']
