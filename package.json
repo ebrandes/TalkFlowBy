@@ -20,8 +20,8 @@
     "test": "vitest run",
     "build:micwatch": "node scripts/build-micwatch.mjs",
     "fetch:binaries": "node scripts/fetch-binaries.mjs",
-    "dist:mac": "npm run build:micwatch && npm run fetch:binaries && electron-vite build && electron-builder --mac",
-    "dist:win": "npm run fetch:binaries && electron-vite build && electron-builder --win"
+    "dist:mac": "npm run build:micwatch && npm run fetch:binaries && electron-vite build && electron-builder --mac --publish never",
+    "dist:win": "npm run fetch:binaries && electron-vite build && electron-builder --win --publish never"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.10.0",
