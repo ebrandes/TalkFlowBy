@@ -1,16 +1,17 @@
 import { AlertTriangle, Circle, Square } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { PipelineStatus } from '../../../shared/types'
+import type { Dict } from '../../../shared/i18n'
 import type { RecordingView } from '../hooks/useRecording'
+import { useT } from '../i18n'
 import { Stamp } from './Stamp'
 
 /** As mesmas palavras do carimbo da nota: gravando → transcrevendo → resumindo → resumido. */
-const LABELS: Partial<Record<PipelineStatus['stage'], string>> = {
-  converting: 'Transcrevendo',
-  transcribing: 'Transcrevendo',
-  summarizing: 'Resumindo',
-  saving: 'Resumindo',
-  done: 'Resumido'
+function stageLabel(stage: PipelineStatus['stage'], t: Dict['bar']): string | undefined {
+  if (stage === 'converting' || stage === 'transcribing') return t.transcribing
+  if (stage === 'summarizing' || stage === 'saving') return t.summarizing
+  if (stage === 'done') return t.summarized
+  return undefined
 }
 
 export function clock(sec: number): string {
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export function TopBar({ crumbs, rec, status, blockedReason }: Props): React.JSX.Element {
+  const t = useT().bar
   return (
     <header className="bar">
       {crumbs}
@@ -44,10 +46,10 @@ export function TopBar({ crumbs, rec, status, blockedReason }: Props): React.JSX
         )}
         {rec.recording ? (
           <>
-            <Stamp live parts={[clock(rec.elapsed)]} state="Gravando" />
+            <Stamp live parts={[clock(rec.elapsed)]} state={t.recording} />
             <button className="btn danger" onClick={() => void rec.stop()} disabled={rec.busy}>
               <Square size={14} strokeWidth={2} fill="currentColor" aria-hidden />
-              Parar
+              {t.stop}
             </button>
           </>
         ) : (
@@ -55,7 +57,7 @@ export function TopBar({ crumbs, rec, status, blockedReason }: Props): React.JSX
             {blockedReason && <span className="bar-hint">{blockedReason}</span>}
             <button className="btn primary" onClick={() => void rec.start()} disabled={rec.busy || Boolean(blockedReason)}>
               <Circle size={13} strokeWidth={2} fill="currentColor" aria-hidden />
-              {rec.busy ? 'Iniciando…' : 'Gravar'}
+              {rec.busy ? t.starting : t.record}
             </button>
           </>
         )}
@@ -66,6 +68,7 @@ export function TopBar({ crumbs, rec, status, blockedReason }: Props): React.JSX
 
 /** Andamento do processamento como carimbo, com o horário da gravação; o estado troca no lugar. */
 function PipelineChip({ status }: { status: PipelineStatus }): React.JSX.Element | null {
+  const t = useT().bar
   const [hideDone, setHideDone] = useState(false)
   useEffect(() => {
     setHideDone(false)
@@ -78,7 +81,7 @@ function PipelineChip({ status }: { status: PipelineStatus }): React.JSX.Element
     return (
       <span className="bar-warning error" title={status.message}>
         <AlertTriangle size={15} strokeWidth={1.75} aria-hidden />
-        {status.message ?? 'Algo deu errado ao processar a gravação.'}
+        {status.message ?? t.processingError}
       </span>
     )
   }
@@ -86,12 +89,12 @@ function PipelineChip({ status }: { status: PipelineStatus }): React.JSX.Element
     return (
       <span className="bar-warning" title={status.message}>
         <AlertTriangle size={15} strokeWidth={1.75} aria-hidden />
-        Gravação de {status.meeting} salva sem resumo
+        {t.savedNoSummary(status.meeting ?? '')}
       </span>
     )
   }
-  const label = LABELS[status.stage]
+  const label = stageLabel(status.stage, t)
   if (!label || (status.stage === 'done' && hideDone)) return null
   const pct = status.stage === 'transcribing' && status.progress !== undefined ? `${Math.round(status.progress * 100)}%` : undefined
-  return <Stamp parts={[status.meeting ? `Gravação ${status.meeting}` : undefined, pct]} state={label} />
+  return <Stamp parts={[status.meeting ? t.recordingOf(status.meeting) : undefined, pct]} state={label} />
 }

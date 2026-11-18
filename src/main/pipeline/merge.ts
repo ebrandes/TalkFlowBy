@@ -43,8 +43,8 @@ export function mergeTracks(mic: Segment[], system: Segment[]): Turn[] {
 }
 
 /** Texto corrido para mandar ao modelo de resumo. */
-export function turnsToPlainText(turns: Turn[]): string {
-  return turns.map((t) => `[${formatClock(t.start)}] ${t.speaker}: ${t.text}`).join('\n')
+export function turnsToPlainText(turns: Turn[], labels: Record<Turn['speaker'], string> = { Você: 'Você', Outros: 'Outros' }): string {
+  return turns.map((t) => `[${formatClock(t.start)}] ${labels[t.speaker]}: ${t.text}`).join('\n')
 }
 
 export function formatClock(totalSec: number): string {

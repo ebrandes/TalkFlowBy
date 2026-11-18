@@ -22,7 +22,7 @@ export interface SummarizeOptions {
 /** Usa a assinatura pelo Claude Code (`claude -p`), com o mínimo de contexto possível. */
 export async function summarizeWithCli(transcript: string, claudePath: string): Promise<Summary> {
   const args = [
-    '-p', buildUserPrompt('(a transcrição chega pela entrada padrão)'),
+    '-p', buildUserPrompt('(the transcript arrives on standard input)'),
     '--model', 'haiku',
     '--output-format', 'json',
     '--tools', '',
@@ -36,7 +36,7 @@ export async function summarizeWithCli(transcript: string, claudePath: string): 
   ]
   const stdout = await run(claudePath, args, transcript, CLI_TIMEOUT_MS)
   const out = JSON.parse(stdout) as { is_error?: boolean; result?: string; structured_output?: unknown }
-  if (out.is_error) throw new Error(`Claude Code devolveu erro: ${out.result ?? 'sem detalhe'}`)
+  if (out.is_error) throw new Error(`Claude Code returned an error: ${out.result ?? 'no detail'}`)
   return normalizeSummary(out.structured_output ?? extractJson(out.result ?? ''))
 }
 
@@ -52,7 +52,7 @@ export async function summarizeWithApi(transcript: string, apiKey: string): Prom
     messages: [{ role: 'user', content: buildUserPrompt(transcript) }]
   })
   const block = msg.content.find((b) => b.type === 'tool_use')
-  if (!block || block.type !== 'tool_use') throw new Error('A API não devolveu o resumo.')
+  if (!block || block.type !== 'tool_use') throw new Error('The API did not return a summary.')
   return normalizeSummary(block.input)
 }
 
@@ -67,10 +67,10 @@ export async function summarize(transcript: string, opts: SummarizeOptions): Pro
       errors.push((err as Error).message)
     }
   } else if (opts.provider === 'claude-cli') {
-    errors.push('Claude Code não foi encontrado neste computador.')
+    errors.push('Claude Code was not found on this computer.')
   }
   if (opts.provider !== 'claude-cli' && opts.apiKey) return summarizeWithApi(transcript, opts.apiKey)
-  if (!opts.apiKey && opts.provider !== 'claude-cli') errors.push('Nenhuma chave de API cadastrada.')
+  if (!opts.apiKey && opts.provider !== 'claude-cli') errors.push('No API key saved.')
   throw new Error(errors.join(' '))
 }
 
@@ -81,7 +81,7 @@ function run(cmd: string, args: string[], input: string, timeoutMs: number): Pro
     let err = ''
     const timer = setTimeout(() => {
       child.kill()
-      reject(new Error('O resumo demorou demais e foi cancelado.'))
+      reject(new Error('The summary took too long and was cancelled.'))
     }, timeoutMs)
     child.stdout.on('data', (d) => (out += d))
     child.stderr.on('data', (d) => (err += d))
@@ -92,7 +92,7 @@ function run(cmd: string, args: string[], input: string, timeoutMs: number): Pro
     child.on('close', (code) => {
       clearTimeout(timer)
       if (code === 0) resolve(out)
-      else reject(new Error(err.trim() || out.trim() || `claude saiu com código ${code}`))
+      else reject(new Error(err.trim() || out.trim() || `claude exited with code ${code}`))
     })
     child.stdin.end(input)
   })

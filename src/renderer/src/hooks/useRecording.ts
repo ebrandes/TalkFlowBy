@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Dict } from '../../../shared/i18n'
 import { recorder } from '../recorder'
 
 export interface RecordingView {
@@ -13,7 +14,7 @@ export interface RecordingView {
 }
 
 /** Liga o gravador às ordens que chegam da bandeja, do aviso de reunião e do botão. */
-export function useRecording(): RecordingView {
+export function useRecording(t: Dict['recorder']): RecordingView {
   const [recording, setRecording] = useState(false)
   const [startedAt, setStartedAt] = useState<Date | null>(null)
   const [origin, setOrigin] = useState<string | null>(null)
@@ -29,14 +30,14 @@ export function useRecording(): RecordingView {
     setWarning(null)
     try {
       const { systemAudio } = await recorder.start(from)
-      if (!systemAudio) setWarning('Só o seu microfone está sendo gravado. Libere o áudio da chamada nas configurações do sistema.')
+      if (!systemAudio) setWarning(t.micOnly)
     } catch (err) {
-      setWarning(`Não foi possível gravar: ${(err as Error).message}`)
+      setWarning(t.failed((err as Error).message))
     } finally {
       busyRef.current = false
       setBusy(false)
     }
-  }, [])
+  }, [t])
 
   const stop = useCallback(async () => {
     if (busyRef.current || !recorder.active) return

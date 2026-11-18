@@ -1,7 +1,5 @@
-import type { LibraryNode } from '../../../shared/types'
-
-export const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
-export const MONTHS_LONG = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+import type { Dict } from '../../../shared/i18n'
+import type { Folders, LibraryNode } from '../../../shared/types'
 
 export interface MeetingName {
   year: number
@@ -12,17 +10,17 @@ export interface MeetingName {
   prefix: string
 }
 
-/** "2026-11-17 14h30 - Assunto" → partes. Devolve null para nomes fora do padrão. */
+/** "2026-11-17 14h30 - Assunto" ou "2026-11-17 14.30 - Subject" → partes. Null fora do padrão. */
 export function parseMeetingName(name: string): MeetingName | null {
-  const m = name.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2})h(\d{2}) - (.+)$/)
+  const m = name.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2})([h.])(\d{2}) - (.+)$/)
   if (!m) return null
   return {
     year: Number(m[1]),
     month: Number(m[2]),
     day: Number(m[3]),
-    time: `${m[4]}:${m[5]}`,
-    subject: m[6],
-    prefix: `${m[1]}-${m[2]}-${m[3]} ${m[4]}h${m[5]}`
+    time: `${m[4]}:${m[6]}`,
+    subject: m[7],
+    prefix: `${m[1]}-${m[2]}-${m[3]} ${m[4]}${m[5]}${m[6]}`
   }
 }
 
@@ -46,9 +44,9 @@ const findFolder = (tree: LibraryNode[], name: string): LibraryNode[] =>
   tree.find((n) => n.kind === 'folder' && n.name === name)?.children ?? []
 
 /** Reuniões agrupadas por mês, mais recentes primeiro. */
-export function meetingGroups(tree: LibraryNode[], query = ''): Group[] {
+export function meetingGroups(tree: LibraryNode[], query: string, folders: Folders, t: Dict): Group[] {
   const q = query.trim().toLowerCase()
-  const items = files(findFolder(tree, 'Reuniões'))
+  const items = files(findFolder(tree, folders.meetings))
     .map((f) => {
       const meeting = parseMeetingName(f.name)
       return { path: f.path, title: meeting?.subject ?? f.name, meeting, modifiedAt: f.modifiedAt }
@@ -58,7 +56,7 @@ export function meetingGroups(tree: LibraryNode[], query = ''): Group[] {
 
   const groups: Group[] = []
   for (const item of items) {
-    const label = item.meeting ? `${MONTHS_LONG[item.meeting.month - 1]} ${item.meeting.year}` : 'Outras'
+    const label = item.meeting ? `${t.monthsLong[item.meeting.month - 1]} ${item.meeting.year}` : '—'
     const last = groups[groups.length - 1]
     if (last && last.label === label) last.items.push(item)
     else groups.push({ label, items: [item] })
@@ -66,19 +64,19 @@ export function meetingGroups(tree: LibraryNode[], query = ''): Group[] {
   return groups
 }
 
-export function noteItems(tree: LibraryNode[], query = ''): ListItem[] {
+export function noteItems(tree: LibraryNode[], query: string, folders: Folders): ListItem[] {
   const q = query.trim().toLowerCase()
-  return files(findFolder(tree, 'Notas'))
+  return files(findFolder(tree, folders.notes))
     .map((f) => ({ path: f.path, title: f.name, meeting: null, modifiedAt: f.modifiedAt }))
     .filter((i) => !q || i.title.toLowerCase().includes(q))
     .sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
 }
 
 /** Intervalo de datas das reuniões listadas, como as palavras-guia de um dicionário. */
-export function guideSpan(groups: Group[]): [string, string] | null {
+export function guideSpan(groups: Group[], months: string[]): [string, string] | null {
   const dated = groups.flatMap((g) => g.items).filter((i) => i.meeting)
   if (dated.length === 0) return null
-  const fmt = (m: MeetingName): string => `${m.day} ${MONTHS[m.month - 1]} ${m.year}`
+  const fmt = (m: MeetingName): string => `${m.day} ${months[m.month - 1]} ${m.year}`
   return [fmt(dated[dated.length - 1].meeting!), fmt(dated[0].meeting!)]
 }
 
@@ -104,7 +102,11 @@ export function splitFrontmatter(md: string): { front: string; meta: Frontmatter
         /* mantém como veio */
       }
     }
-    if (kv[1] === 'data' || kv[1] === 'duracao' || kv[1] === 'origem') meta[kv[1]] = value
+    // Aceita as chaves em português e em inglês.
+    const key = ({ data: 'data', date: 'data', duracao: 'duracao', duration: 'duracao', origem: 'origem', source: 'origem' } as const)[
+      kv[1] as 'data'
+    ]
+    if (key) meta[key] = value
   }
   return { front: m[0], meta, body: md.slice(m[0].length).replace(/^\r?\n/, '') }
 }

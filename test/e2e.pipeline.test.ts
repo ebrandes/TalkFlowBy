@@ -21,6 +21,8 @@ describe.skipIf(!session || !root)('ponta a ponta', () => {
       { sessionDir: work, meta: { startedAt: new Date(2026, 10, 17, 14, 30), durationSec: 56, origin: 'Google Meet (Chrome)' } },
       {
         rootDir: root!,
+        lang: 'pt',
+        meetingsFolder: 'Reuniões',
         whisper: (await whisperPath())!,
         model: join(homedir(), '.cache', 'whisper-cpp', 'ggml-large-v3-turbo-q5_0.bin'),
         language: 'pt',

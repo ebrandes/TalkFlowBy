@@ -55,8 +55,18 @@ export interface LibraryNode {
 
 export type SummaryProvider = 'auto' | 'claude-cli' | 'api'
 
+export type UiLang = 'en' | 'pt'
+
+export interface Folders {
+  meetings: string
+  notes: string
+}
+
 export interface Settings {
   rootDir: string
+  uiLanguage: UiLang
+  /** Nomes das pastas, fixados na primeira abertura para não mudar de lugar depois. */
+  folders: Folders
   language: string
   summaryProvider: SummaryProvider
   hasApiKey: boolean

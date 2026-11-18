@@ -8,6 +8,7 @@ import { buildMeetingMarkdown, escapeInline, formatDuration } from '../src/main/
 import { formatClock, mergeTracks } from '../src/main/pipeline/merge'
 import { extractJson, normalizeSummary } from '../src/main/pipeline/summary-schema'
 import { parseWhisperJson } from '../src/main/pipeline/whisper'
+import { en } from '../src/shared/i18n/en'
 import { speechIntervals } from '../src/main/pipeline/chunks'
 
 // Conteúdo sintético, só para teste.
@@ -70,6 +71,16 @@ describe('buildMeetingMarkdown', () => {
     expect(lint({ strings: { n: out }, config: { default: true, MD013: false } }).n).toEqual([])
   })
 
+  it('em inglês usa títulos, falantes e chaves em inglês', () => {
+    const out = buildMeetingMarkdown(meta, summary, mergeTracks(mic, sys), en.doc)
+    expect(out).toContain('date: 2026-11-17 14:30')
+    expect(out).toContain('## Topics')
+    expect(out).toContain('## Next steps')
+    expect(out).toContain('**[00:00] You:**')
+    expect(out).toContain('**[00:08] Others:**')
+    expect(lint({ strings: { n: out }, config: { default: true, MD013: false } }).n).toEqual([])
+  })
+
   it('omite seções vazias', () => {
     const out = buildMeetingMarkdown(meta, { ...summary, decisoes: [], tarefas: [] }, [])
     expect(out).not.toContain('## Decisões')
@@ -91,6 +102,10 @@ describe('escapeInline', () => {
 })
 
 describe('nomes de arquivo', () => {
+  it('em inglês usa a pasta Meetings e hora com ponto', () => {
+    expect(meetingRelPath(meta.startedAt, 'Launch plan', 'Meetings', '.')).toBe('Meetings/2026/11/2026-11-17 14.30 - Launch plan.md')
+  })
+
   it('monta pasta por ano e mês com hora e assunto', () => {
     expect(meetingRelPath(meta.startedAt, 'Planejamento: canal/dez?')).toBe(
       'Reuniões/2026/11/2026-11-17 14h30 - Planejamento canal dez.md'

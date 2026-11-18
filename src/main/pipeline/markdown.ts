@@ -1,3 +1,5 @@
+import type { Dict } from '../../shared/i18n'
+import { pt } from '../../shared/i18n/pt'
 import type { MeetingMeta, Summary, Turn } from '../../shared/types'
 import { formatClock } from './merge'
 
@@ -35,9 +37,12 @@ function yamlValue(value: string): string {
   return /^[\w .,()-]+$/u.test(value) ? value : JSON.stringify(value)
 }
 
-function frontmatter(meta: MeetingMeta): string[] {
-  const out = ['---', `data: ${formatDateTime(meta.startedAt)}`, `duracao: ${formatDuration(meta.durationSec)}`]
-  if (meta.origin) out.push(`origem: ${yamlValue(meta.origin)}`)
+type Doc = Dict['doc']
+
+function frontmatter(meta: MeetingMeta, d: Doc): string[] {
+  const k = d.keys
+  const out = ['---', `${k.date}: ${formatDateTime(meta.startedAt)}`, `${k.duration}: ${formatDuration(meta.durationSec)}`]
+  if (meta.origin) out.push(`${k.source}: ${yamlValue(meta.origin)}`)
   out.push('---')
   return out
 }
@@ -67,9 +72,10 @@ function tasksBlock(summary: Summary): string[] {
     })
 }
 
-function transcriptBlock(turns: Turn[]): string[] {
+function transcriptBlock(turns: Turn[], d: Doc): string[] {
   const out: string[] = []
-  for (const t of turns) out.push(`**[${formatClock(t.start)}] ${t.speaker}:** ${escapeInline(t.text)}`, '')
+  const label = (s: Turn['speaker']): string => (s === 'Você' ? d.you : d.others)
+  for (const t of turns) out.push(`**[${formatClock(t.start)}] ${label(t.speaker)}:** ${escapeInline(t.text)}`, '')
   if (out[out.length - 1] === '') out.pop()
   return out
 }
@@ -80,22 +86,22 @@ function quote(text: string): string[] {
 }
 
 /** Monta a nota da reunião. O formato é fixo; o modelo só fornece o conteúdo. */
-export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null, turns: Turn[]): string {
-  const title = summary?.assunto.trim() || 'Reunião sem assunto'
-  const parts: string[] = [...frontmatter(meta), '', `# ${escapeInline(title)}`, '']
+export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null, turns: Turn[], d: Doc = pt.doc): string {
+  const title = summary?.assunto.trim() || d.untitled
+  const parts: string[] = [...frontmatter(meta, d), '', `# ${escapeInline(title)}`, '']
 
   if (summary) {
     const resumo = quote(summary.resumo)
     if (resumo.length) parts.push(...resumo, '')
-    parts.push(...section('Tópicos', topicsBlock(summary)))
-    parts.push(...section('Decisões', summary.decisoes.filter((d) => d.trim()).map((d) => `- ${escapeInline(d)}`)))
-    parts.push(...section('Próximos passos', tasksBlock(summary)))
+    parts.push(...section(d.topics, topicsBlock(summary)))
+    parts.push(...section(d.decisions, summary.decisoes.filter((x) => x.trim()).map((x) => `- ${escapeInline(x)}`)))
+    parts.push(...section(d.nextSteps, tasksBlock(summary)))
   } else {
-    parts.push('> O resumo não foi gerado. A transcrição completa está abaixo.', '')
+    parts.push(`> ${d.noSummary}`, '')
   }
 
-  parts.push(...section('Transcrição', transcriptBlock(turns)))
-  if (turns.length === 0) parts.push('## Transcrição', '', 'Nenhuma fala foi reconhecida nesta gravação.', '')
+  parts.push(...section(d.transcript, transcriptBlock(turns, d)))
+  if (turns.length === 0) parts.push(`## ${d.transcript}`, '', d.noSpeech, '')
 
   while (parts[parts.length - 1] === '') parts.pop()
   return `${parts.join('\n')}\n`

@@ -14,13 +14,16 @@ export function safeName(raw: string, max = 80): string {
   return name
 }
 
-/** `Reuniões/2026/11/2026-11-17 14h30 - Assunto.md` */
-export function meetingRelPath(startedAt: Date, assunto: string): string {
+/**
+ * `Reuniões/2026/11/2026-11-17 14h30 - Assunto.md` (português) ou
+ * `Meetings/2026/11/2026-11-17 14.30 - Subject.md` (inglês). Dois-pontos não vale no Windows.
+ */
+export function meetingRelPath(startedAt: Date, assunto: string, folder = 'Reuniões', timeSep = 'h'): string {
   const y = startedAt.getFullYear()
   const m = pad(startedAt.getMonth() + 1)
   const d = pad(startedAt.getDate())
-  const time = `${pad(startedAt.getHours())}h${pad(startedAt.getMinutes())}`
-  return `Reuniões/${y}/${m}/${y}-${m}-${d} ${time} - ${safeName(assunto)}.md`
+  const time = `${pad(startedAt.getHours())}${timeSep}${pad(startedAt.getMinutes())}`
+  return `${folder}/${y}/${m}/${y}-${m}-${d} ${time} - ${safeName(assunto)}.md`
 }
 
 /** Acrescenta ` (2)`, ` (3)`… até achar um nome livre. */

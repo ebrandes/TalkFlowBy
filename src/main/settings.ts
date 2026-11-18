@@ -2,6 +2,7 @@ import { app, safeStorage } from 'electron'
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { dict, langFromLocale } from '../shared/i18n'
 import type { Settings } from '../shared/types'
 
 interface Stored extends Omit<Settings, 'hasApiKey'> {
@@ -12,15 +13,18 @@ const file = (): string => join(app.getPath('userData'), 'settings.json')
 
 /** Idioma da transcrição pelo idioma do sistema; dá para trocar nas configurações. */
 function defaultLanguage(): string {
-  const locale = app.getLocale().toLowerCase()
+  const locale = (app.getPreferredSystemLanguages()[0] ?? app.getLocale()).toLowerCase()
   if (locale.startsWith('pt')) return 'pt'
   if (locale.startsWith('es')) return 'es'
   return 'en'
 }
 
 function defaults(): Stored {
+  const uiLanguage = langFromLocale(app.getPreferredSystemLanguages()[0] ?? app.getLocale())
   return {
     rootDir: join(app.getPath('documents'), 'TalkFlowBy'),
+    uiLanguage,
+    folders: { ...dict(uiLanguage).folders },
     language: defaultLanguage(),
     summaryProvider: 'auto',
     keepAudio: false,
@@ -43,6 +47,8 @@ function load(): Stored {
     }
   }
   cache = { ...defaults(), ...stored }
+  // Fixa idioma e nomes de pasta na primeira abertura; trocar o idioma do sistema depois não move as notas.
+  if (!stored.folders || !stored.uiLanguage) void save(cache)
   return cache
 }
 
@@ -72,10 +78,15 @@ export async function setApiKey(key: string | null): Promise<Settings> {
     const { apiKeyEncrypted: _, ...rest } = current
     await save(rest)
   } else {
-    if (!safeStorage.isEncryptionAvailable()) throw new Error('O sistema não oferece cofre para guardar a chave.')
+    if (!safeStorage.isEncryptionAvailable()) throw new Error('Secure storage is not available on this system.')
     await save({ ...current, apiKeyEncrypted: safeStorage.encryptString(key.trim()).toString('base64') })
   }
   return getSettings()
+}
+
+/** Textos no idioma escolhido, para o processo principal (bandeja, avisos, notas). */
+export function tr(): ReturnType<typeof dict> {
+  return dict(load().uiLanguage)
 }
 
 export function getApiKey(): string | null {

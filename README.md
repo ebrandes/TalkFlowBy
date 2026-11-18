@@ -4,7 +4,7 @@
 
 # TalkFlowBy
 
-**The free, open-source meeting recorder that writes your notes for you.**
+**The free, open-source AI meeting notes app that records, transcribes and summarizes your calls on your own computer.**
 
 Record both sides of your Teams or Google Meet call without a bot joining,
 transcribe it on your own computer, and get a clean summary with decisions and next steps,
@@ -96,9 +96,9 @@ A note looks like this:
 
 ```markdown
 ---
-data: 2026-11-17 14:30
-duracao: 42 min
-origem: Google Meet (Chrome)
+date: 2026-11-17 14:30
+duration: 42 min
+source: Google Meet (Chrome)
 ---
 
 # Q4 launch plan
@@ -122,9 +122,9 @@ origem: Google Meet (Chrome)
 
 ## Transcript
 
-**[00:00] Você:** Let's start with the launch date...
+**[00:00] You:** Let's start with the launch date...
 
-**[00:12] Outros:** The migration finishes on the 28th, so December 2 works.
+**[00:12] Others:** The migration finishes on the 28th, so December 2 works.
 ```
 
 ![Recording in progress, dark theme](docs/screenshot-dark.png)
@@ -156,13 +156,39 @@ prompt reminds you to tell the other participants.
 
 ## Good to know
 
-- The interface is currently in **Brazilian Portuguese**. Transcription follows your system
-  language (Portuguese, Spanish or English) and can be changed in Settings. An English
-  interface is planned.
+- The interface is available in **English** and **Brazilian Portuguese**, picked from your
+  system language and changeable in Settings. Notes, section titles and folder names follow
+  the same choice. Transcription and summaries work in the language spoken in the meeting
+  (English, Portuguese, Spanish, or automatic detection).
 - Meeting detection recognizes Microsoft Teams, Zoom and Google Meet in Chrome, Edge,
   Safari, Arc, Firefox and Brave. You can always start a recording manually.
 - Windows support is new. If something does not work on your machine, please
   [open an issue](https://github.com/ebrandes/TalkFlowBy/issues).
+
+## FAQ
+
+**Is TalkFlowBy a free alternative to Otter.ai, Fireflies, Granola or Notion AI Meeting Notes?**
+It covers the core of what they do: record a meeting, transcribe it, and turn it into a
+summary with decisions and action items. It is free and open source, runs on your computer,
+and never sends a bot into your call. It does not offer cloud sync, team workspaces or
+integrations.
+
+**Does it work with Zoom, Microsoft Teams and Google Meet?**
+Yes. It records your microphone and your computer's audio, so it works with any call app.
+It also detects Teams, Zoom and Google Meet (in Chrome, Edge, Safari, Arc, Firefox and Brave)
+and asks if you want to record.
+
+**Does it work offline?**
+Recording and transcription work fully offline. Only the summary step needs internet, to
+reach Claude.
+
+**Do I need to pay for anything?**
+No subscription for TalkFlowBy. Summaries use your existing Claude subscription through
+Claude Code, or an Anthropic API key billed per use.
+
+**Where are my notes?**
+In `Documents/TalkFlowBy`, as plain Markdown files organized by year and month. You can
+open them with Obsidian, Logseq, VS Code or any editor.
 
 ## Build from source
 

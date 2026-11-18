@@ -46,7 +46,7 @@ export function createMainWindow(): BrowserWindow {
 }
 
 /** Janela pequena no canto superior direito, sempre por cima, sem roubar o foco da reunião. */
-export function createPromptWindow(appId: string, appName: string): BrowserWindow {
+export function createPromptWindow(appId: string, appName: string, lang: string): BrowserWindow {
   const { workArea } = screen.getPrimaryDisplay()
   const width = 360
   const height = 164
@@ -71,6 +71,6 @@ export function createPromptWindow(appId: string, appName: string): BrowserWindo
   win.setAlwaysOnTop(true, 'floating')
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
   win.once('ready-to-show', () => win.showInactive())
-  load(win, 'prompt', `?app=${encodeURIComponent(appId)}&name=${encodeURIComponent(appName)}`)
+  load(win, 'prompt', `?app=${encodeURIComponent(appId)}&name=${encodeURIComponent(appName)}&lang=${lang}`)
   return win
 }

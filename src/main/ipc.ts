@@ -3,7 +3,7 @@ import type { Settings, Track } from '../shared/types'
 import { askMicrophone, readPermissions } from './capture'
 import type { Controller } from './controller'
 import * as lib from './library'
-import { getSettings, setApiKey, updateSettings } from './settings'
+import { getSettings, setApiKey, tr, updateSettings } from './settings'
 
 const root = (): string => getSettings().rootDir
 
@@ -15,14 +15,15 @@ export function registerIpc(c: Controller): void {
     if (patch.detectMeetings === true) await c.detector.start()
     if (patch.detectMeetings === false) c.detector.stop()
     if (patch.rootDir) c.send('library:changed', {})
+    if (patch.uiLanguage) c.tray?.refresh()
     return next
   })
   ipcMain.handle('settings:setApiKey', (_e, key: string | null) => setApiKey(key))
 
-  ipcMain.handle('library:tree', () => lib.listTree(root()))
+  ipcMain.handle('library:tree', () => lib.listTree(root(), getSettings().folders))
   ipcMain.handle('library:read', (_e, rel: string) => lib.readNote(root(), rel))
   ipcMain.handle('library:write', (_e, rel: string, content: string) => lib.writeNote(root(), rel, content))
-  ipcMain.handle('library:create', (_e, title?: string) => lib.createNote(root(), title))
+  ipcMain.handle('library:create', (_e, title?: string) => lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote))
   ipcMain.handle('library:rename', (_e, rel: string, title: string) => lib.renameNote(root(), rel, title))
   ipcMain.handle('library:trash', (_e, rel: string) => lib.trashNote(root(), rel))
   ipcMain.handle('library:reveal', (_e, rel: string) => lib.revealNote(root(), rel))

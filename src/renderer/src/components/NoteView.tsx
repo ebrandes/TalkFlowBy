@@ -1,6 +1,7 @@
 import { FolderOpen, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { MONTHS, joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
+import { useT } from '../i18n'
+import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
 import { flush, scheduleSave } from '../lib/saver'
 import { Editor } from './Editor'
 import { Stamp } from './Stamp'
@@ -13,6 +14,7 @@ interface Props {
 
 /** Abre uma nota: carimbo (se for reunião) e o editor com salvamento automático. */
 export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Element {
+  const t = useT()
   const [loaded, setLoaded] = useState<{ path: string; front: string; body: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +32,7 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
         setLoaded({ path, front, body })
         onPreview(summaryPreview(body))
       })
-      .catch(() => alive && setError('Não foi possível abrir esta nota. Ela pode ter sido movida ou apagada.'))
+      .catch(() => alive && setError(t.note.openError))
     return () => {
       alive = false
       void flush()
@@ -48,7 +50,7 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
   if (!loaded || loaded.path !== path) return <div className="doc" aria-busy />
 
   const meta = splitFrontmatter(`${loaded.front}\n`).meta
-  const noSummary = loaded.body.includes('O resumo não foi gerado')
+  const noSummary = loaded.body.includes('O resumo não foi gerado') || loaded.body.includes('The summary was not generated')
   const onChange = (markdown: string): void => scheduleSave(loaded.path, joinFrontmatter(loaded.front, markdown))
 
   return (
@@ -57,8 +59,8 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
         <div className="doc-head">
           {meeting ? (
             <Stamp
-              parts={[`${meeting.day} ${MONTHS[meeting.month - 1]} ${meeting.year}`, meeting.time, meta.duracao, meta.origem]}
-              state={noSummary ? 'Sem resumo' : 'Resumido'}
+              parts={[`${meeting.day} ${t.months[meeting.month - 1]} ${meeting.year}`, meeting.time, meta.duracao, meta.origem]}
+              state={noSummary ? t.note.noSummary : t.note.summarized}
             />
           ) : (
             <span />
@@ -66,16 +68,16 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
           <div className="doc-tools">
             <button
               className="icon-btn"
-              title="Mostrar o arquivo na pasta"
-              aria-label="Mostrar o arquivo na pasta"
+              title={t.note.reveal}
+              aria-label={t.note.reveal}
               onClick={() => void window.talkflow.library.reveal(path)}
             >
               <FolderOpen size={17} strokeWidth={1.75} />
             </button>
             <button
               className="icon-btn"
-              title="Mover para a Lixeira"
-              aria-label="Mover para a Lixeira"
+              title={t.note.trash}
+              aria-label={t.note.trash}
               onClick={async () => {
                 await flush()
                 await window.talkflow.library.trash(path)

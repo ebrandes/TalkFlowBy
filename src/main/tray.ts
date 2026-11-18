@@ -1,5 +1,6 @@
 import { Menu, Tray, app, nativeImage } from 'electron'
 import { join } from 'node:path'
+import { tr } from './settings'
 
 export interface TrayActions {
   open: () => void
@@ -35,17 +36,23 @@ export class AppTray {
   setRecording(recording: boolean): void {
     this.recording = recording
     this.tray.setImage(icon(recording))
-    this.tray.setToolTip(recording ? 'TalkFlowBy — gravando' : 'TalkFlowBy')
+    this.render()
+  }
+
+  /** Refaz o menu, por exemplo depois de trocar o idioma. */
+  refresh(): void {
     this.render()
   }
 
   private render(): void {
+    const t = tr().tray
+    this.tray.setToolTip(this.recording ? t.recordingTip : 'TalkFlowBy')
     const menu = Menu.buildFromTemplate([
-      { label: 'Abrir TalkFlowBy', click: this.actions.open },
+      { label: t.open, click: this.actions.open },
       { type: 'separator' },
-      { label: this.recording ? 'Parar gravação' : 'Gravar reunião', click: this.actions.toggleRecording },
+      { label: this.recording ? t.stop : t.record, click: this.actions.toggleRecording },
       { type: 'separator' },
-      { label: 'Sair', click: this.actions.quit }
+      { label: t.quit, click: this.actions.quit }
     ])
     this.tray.setContextMenu(menu)
   }

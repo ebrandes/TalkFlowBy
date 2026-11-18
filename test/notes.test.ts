@@ -9,6 +9,9 @@ import {
   splitFrontmatter,
   summaryPreview
 } from '../src/renderer/src/lib/notes'
+import { pt } from '../src/shared/i18n/pt'
+
+const F = { meetings: 'Reuniões', notes: 'Notas' }
 
 const tree: LibraryNode[] = [
   {
@@ -32,19 +35,20 @@ const tree: LibraryNode[] = [
 
 describe('lista', () => {
   it('agrupa reuniões por mês, recentes primeiro', () => {
-    const groups = meetingGroups(tree)
+    const groups = meetingGroups(tree, '', F, pt)
     expect(groups.map((g) => g.label)).toEqual(['Novembro 2026', 'Outubro 2026'])
     expect(groups[0].items.map((i) => i.title)).toEqual(['Planejamento', 'Cliente piloto'])
-    expect(guideSpan(groups)).toEqual(['28 out 2026', '17 nov 2026'])
+    expect(guideSpan(groups, pt.months)).toEqual(['28 out 2026', '17 nov 2026'])
   })
 
   it('filtra pela busca e ordena notas', () => {
-    expect(meetingGroups(tree, 'sprint').flatMap((g) => g.items).map((i) => i.title)).toEqual(['Sprint'])
-    expect(noteItems(tree).map((i) => i.title)).toEqual(['Abacate', 'Zebra'])
+    expect(meetingGroups(tree, 'sprint', F, pt).flatMap((g) => g.items).map((i) => i.title)).toEqual(['Sprint'])
+    expect(noteItems(tree, '', F).map((i) => i.title)).toEqual(['Abacate', 'Zebra'])
   })
 
   it('lê o nome da reunião', () => {
     expect(parseMeetingName('2026-11-17 14h30 - A - B')).toMatchObject({ day: 17, time: '14:30', subject: 'A - B' })
+    expect(parseMeetingName('2026-11-17 14.30 - Launch plan')).toMatchObject({ time: '14:30', subject: 'Launch plan', prefix: '2026-11-17 14.30' })
     expect(parseMeetingName('Ideias')).toBeNull()
   })
 })
@@ -58,6 +62,11 @@ describe('frontmatter', () => {
     expect(body.startsWith('# Título')).toBe(true)
     expect(joinFrontmatter(front, body)).toBe(md)
     expect(summaryPreview(body)).toBe('Resumo *curto*.')
+  })
+
+  it('lê as chaves em inglês', () => {
+    const { meta } = splitFrontmatter('---\ndate: 2026-11-17 14:30\nduration: 5 min\nsource: Zoom\n---\n\n# X\n')
+    expect(meta).toEqual({ data: '2026-11-17 14:30', duracao: '5 min', origem: 'Zoom' })
   })
 
   it('nota sem frontmatter passa intacta', () => {

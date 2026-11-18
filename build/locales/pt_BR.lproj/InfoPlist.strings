@@ -1,0 +1,4 @@
+/* Frases das permissões do macOS em português. */
+"NSMicrophoneUsageDescription" = "O TalkFlowBy grava a sua voz nas reuniões que você escolher gravar.";
+"NSAudioCaptureUsageDescription" = "O TalkFlowBy grava o áudio da chamada (as vozes dos outros participantes) nas reuniões que você escolher gravar.";
+"NSScreenCaptureUsageDescription" = "O macOS exige esta permissão para o TalkFlowBy captar o áudio da chamada. Nenhuma imagem da tela é gravada.";

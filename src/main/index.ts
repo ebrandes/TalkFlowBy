@@ -17,7 +17,7 @@ if (!app.requestSingleInstanceLock()) {
     app.setAppUserModelId('com.talkflowby.app')
     // Em desenvolvimento o Dock mostraria o ícone do Electron; no instalador o ícone vem do pacote.
     if (!app.isPackaged && process.platform === 'darwin') app.dock?.setIcon(nativeImage.createFromPath(join(process.cwd(), 'build', 'icon.png')))
-    await ensureRoot(getSettings().rootDir)
+    await ensureRoot(getSettings().rootDir, getSettings().folders)
     installSystemAudioCapture()
     registerIpc(controller)
     await controller.boot()

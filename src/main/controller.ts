@@ -5,7 +5,7 @@ import type { DetectedMeeting, ModelStatus, PipelineStatus } from '../shared/typ
 import { MeetingDetector } from './detector/index'
 import { processRecording } from './pipeline/run'
 import { ProcessingQueue, RecordingStore } from './recording'
-import { getApiKey, getSettings, updateSettings } from './settings'
+import { getApiKey, getSettings, tr, updateSettings } from './settings'
 import { downloadModel, findModel } from './setup/models'
 import { whisperPath } from './setup/binaries'
 import { AppTray } from './tray'
@@ -89,7 +89,7 @@ export class Controller {
     const whisper = await whisperPath()
     const model = this.model.path ?? (await findModel(app.getPath('userData')))
     if (!whisper || !model) {
-      this.setStatus({ stage: 'error', message: 'Transcrição indisponível: falta o Whisper ou o modelo. O áudio ficou guardado.' })
+      this.setStatus({ stage: 'error', message: tr().main.missingWhisper })
       return
     }
     const meta = JSON.parse(await readFile(join(done.session.dir, 'meta.json'), 'utf8'))
@@ -98,6 +98,8 @@ export class Controller {
         { sessionDir: done.session.dir, meta: { ...meta, startedAt: new Date(meta.startedAt) } },
         {
           rootDir: settings.rootDir,
+          lang: settings.uiLanguage,
+          meetingsFolder: settings.folders.meetings,
           whisper,
           model,
           language: settings.language,
@@ -112,7 +114,7 @@ export class Controller {
   private onMeetingStart(m: DetectedMeeting): void {
     if (this.store.current || this.prompt) return
     this.promptFor = m
-    this.prompt = createPromptWindow(m.appId, m.appName)
+    this.prompt = createPromptWindow(m.appId, m.appName, getSettings().uiLanguage)
     this.prompt.on('closed', () => {
       this.prompt = null
       this.promptFor = null

@@ -2,11 +2,8 @@ import { shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
-import type { LibraryNode } from '../shared/types'
+import type { Folders, LibraryNode } from '../shared/types'
 import { safeName, uniqueName } from './pipeline/filename'
-
-export const MEETINGS = 'Reuniões'
-export const NOTES = 'Notas'
 
 const toPosix = (p: string): string => p.split(sep).join('/')
 
@@ -14,37 +11,37 @@ const toPosix = (p: string): string => p.split(sep).join('/')
 export function resolveInside(root: string, rel: string): string {
   const full = resolve(root, rel)
   const back = relative(root, full)
-  if (back.startsWith('..') || resolve(back) === back) throw new Error('Caminho fora da pasta do TalkFlowBy.')
+  if (back.startsWith('..') || resolve(back) === back) throw new Error('Path is outside the TalkFlowBy folder.')
   return full
 }
 
-export async function ensureRoot(root: string): Promise<void> {
-  await mkdir(join(root, MEETINGS), { recursive: true })
-  await mkdir(join(root, NOTES), { recursive: true })
+export async function ensureRoot(root: string, folders: Folders): Promise<void> {
+  await mkdir(join(root, folders.meetings), { recursive: true })
+  await mkdir(join(root, folders.notes), { recursive: true })
 }
 
-async function walk(root: string, dir: string): Promise<LibraryNode[]> {
+async function walk(root: string, dir: string, meetings: string): Promise<LibraryNode[]> {
   const entries = await readdir(dir, { withFileTypes: true })
   const nodes: LibraryNode[] = []
   for (const e of entries) {
     if (e.name.startsWith('.')) continue
     const full = join(dir, e.name)
     const path = toPosix(relative(root, full))
-    if (e.isDirectory()) nodes.push({ kind: 'folder', name: e.name, path, children: await walk(root, full) })
+    if (e.isDirectory()) nodes.push({ kind: 'folder', name: e.name, path, children: await walk(root, full, meetings) })
     else if (e.name.toLowerCase().endsWith('.md')) {
       nodes.push({ kind: 'file', name: e.name.replace(/\.md$/i, ''), path, modifiedAt: (await stat(full)).mtimeMs })
     }
   }
   // Pastas de data e reuniões: mais recentes primeiro. Notas: ordem alfabética.
-  const inMeetings = toPosix(relative(root, dir)).startsWith(MEETINGS)
+  const inMeetings = toPosix(relative(root, dir)).startsWith(meetings)
   return nodes.sort((a, b) =>
     inMeetings ? b.name.localeCompare(a.name, 'pt-BR', { numeric: true }) : a.name.localeCompare(b.name, 'pt-BR')
   )
 }
 
-export async function listTree(root: string): Promise<LibraryNode[]> {
-  await ensureRoot(root)
-  return walk(root, root)
+export async function listTree(root: string, folders: Folders): Promise<LibraryNode[]> {
+  await ensureRoot(root, folders)
+  return walk(root, root, folders.meetings)
 }
 
 export async function readNote(root: string, rel: string): Promise<string> {
@@ -57,8 +54,8 @@ export async function writeNote(root: string, rel: string, content: string): Pro
   await writeFile(full, content, 'utf8')
 }
 
-export async function createNote(root: string, title = 'Nova nota'): Promise<string> {
-  const rel = uniqueName(`${NOTES}/${safeName(title)}.md`, (p) => existsSync(join(root, p)))
+export async function createNote(root: string, notesFolder: string, title: string): Promise<string> {
+  const rel = uniqueName(`${notesFolder}/${safeName(title)}.md`, (p) => existsSync(join(root, p)))
   await writeNote(root, rel, `# ${title}\n\n`)
   return rel
 }

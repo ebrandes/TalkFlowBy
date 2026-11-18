@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { dict, type Lang } from '../../shared/i18n'
 import type { MeetingMeta, PipelineStatus, Segment, Speaker, Summary, Track } from '../../shared/types'
 import type { SummarizeOptions } from './summarize'
 import { summarize } from './summarize'
@@ -21,6 +22,9 @@ export interface RunInput {
 
 export interface RunDeps {
   rootDir: string
+  /** Idioma das notas (títulos das seções, falantes, nome da pasta). */
+  lang: Lang
+  meetingsFolder: string
   whisper: string
   model: string
   language: string
@@ -42,10 +46,10 @@ async function hasAudio(file: string): Promise<boolean> {
 
 /** Gravação → wav → Whisper → junção → Haiku → .md. Devolve o caminho relativo da nota. */
 export async function processRecording(input: RunInput, deps: RunDeps): Promise<string> {
+  const t = dict(deps.lang)
   const d = input.meta.startedAt
-  const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
   const pad = (n: number): string => String(n).padStart(2, '0')
-  const meeting = `${d.getDate()} ${months[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const meeting = `${d.getDate()} ${t.months[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`
   const onStatus = (s: PipelineStatus): void => deps.onStatus({ ...s, meeting })
   onStatus({ stage: 'converting' })
   const ready: { wav: string; speaker: Speaker }[] = []
@@ -86,18 +90,19 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   if (turns.length > 0) {
     onStatus({ stage: 'summarizing' })
     try {
-      summary = await summarize(turnsToPlainText(turns), deps.summary)
+      summary = await summarize(turnsToPlainText(turns, { Você: t.doc.you, Outros: t.doc.others }), deps.summary)
     } catch (err) {
-      warning = `Resumo não gerado: ${(err as Error).message}`
+      warning = `Summary not generated: ${(err as Error).message}`
     }
   }
 
   onStatus({ stage: 'saving' })
-  const assunto = summary?.assunto || 'Reunião'
-  const rel = uniqueName(meetingRelPath(input.meta.startedAt, assunto), (p) => existsSync(join(deps.rootDir, p)))
+  const assunto = summary?.assunto || t.doc.fileSubject
+  const timeSep = deps.lang === 'pt' ? 'h' : '.'
+  const rel = uniqueName(meetingRelPath(input.meta.startedAt, assunto, deps.meetingsFolder, timeSep), (p) => existsSync(join(deps.rootDir, p)))
   const full = join(deps.rootDir, rel)
   await mkdir(dirname(full), { recursive: true })
-  await writeFile(full, buildMeetingMarkdown(input.meta, summary, turns), 'utf8')
+  await writeFile(full, buildMeetingMarkdown(input.meta, summary, turns, t.doc), 'utf8')
 
   if (!deps.keepAudio) await rm(input.sessionDir, { recursive: true, force: true })
   onStatus({ stage: 'done', notePath: rel, message: warning })

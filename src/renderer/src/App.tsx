@@ -1,5 +1,7 @@
 import { AudioLines, FilePlus2, ListChecks, Mic } from 'lucide-react'
 import { useState } from 'react'
+import { dict } from '../../shared/i18n'
+import type { Folders, ModelStatus } from '../../shared/types'
 import { Crumbs } from './components/Crumbs'
 import { NoteView } from './components/NoteView'
 import { SettingsView } from './components/Settings'
@@ -8,10 +10,21 @@ import { Sidebar, type Tab } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
 import { useApp } from './hooks/useApp'
 import { useRecording } from './hooks/useRecording'
+import { guessLang, I18nProvider, useT } from './i18n'
 
 export function App(): React.JSX.Element {
   const app = useApp()
-  const rec = useRecording()
+  const lang = app.settings?.uiLanguage ?? guessLang()
+  return (
+    <I18nProvider lang={lang}>
+      <Shell app={app} folders={app.settings?.folders ?? dict(lang).folders} />
+    </I18nProvider>
+  )
+}
+
+function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Folders }): React.JSX.Element {
+  const t = useT()
+  const rec = useRecording(t.recorder)
   const [tab, setTab] = useState<Tab>('meetings')
   const [showSettings, setShowSettings] = useState(false)
   const [preview, setPreview] = useState('')
@@ -19,22 +32,23 @@ export function App(): React.JSX.Element {
   const open = (rel: string | null): void => {
     setShowSettings(false)
     setPreview('')
-    if (rel) setTab(rel.startsWith('Notas') ? 'notes' : 'meetings')
+    if (rel) setTab(rel.startsWith(folders.notes) ? 'notes' : 'meetings')
     app.select(rel)
   }
 
   const newNote = async (): Promise<void> => {
-    const rel = await window.talkflow.library.create('Nova nota')
+    const rel = await window.talkflow.library.create()
     await app.refresh()
     open(rel)
   }
 
-  const fallback = showSettings ? 'Configurações' : tab === 'meetings' ? 'Reuniões' : 'Notas'
+  const fallback = showSettings ? t.settings.title : tab === 'meetings' ? t.rail.meetings : t.rail.notes
 
   return (
     <div className={`shell platform-${window.talkflow.platform}`}>
       <Sidebar
         tree={app.tree}
+        folders={folders}
         tab={tab}
         onTab={setTab}
         selected={app.selected}
@@ -48,6 +62,7 @@ export function App(): React.JSX.Element {
           crumbs={
             <Crumbs
               path={showSettings ? null : app.selected}
+              folders={folders}
               fallback={fallback}
               onRenamed={async (p) => {
                 await app.refresh()
@@ -57,7 +72,7 @@ export function App(): React.JSX.Element {
           }
           rec={rec}
           status={app.status}
-          blockedReason={app.model.ready ? null : 'Falta o modelo de transcrição'}
+          blockedReason={app.model.ready ? null : t.bar.missingModel}
         />
         {showSettings && app.settings ? (
           <SettingsView settings={app.settings} model={app.model} onChange={app.setSettings} onClose={() => setShowSettings(false)} />
@@ -78,43 +93,40 @@ export function App(): React.JSX.Element {
   )
 }
 
-function Welcome({ model, tab, recording, onNewNote }: { model: import('../../shared/types').ModelStatus; tab: Tab; recording: boolean; onNewNote: () => void }): React.JSX.Element {
+function Welcome({ model, tab, recording, onNewNote }: { model: ModelStatus; tab: Tab; recording: boolean; onNewNote: () => void }): React.JSX.Element {
+  const t = useT().welcome
   return (
     <div className="doc">
       <div className="doc-col welcome">
         <SetupCard model={model} />
         {tab === 'meetings' ? (
           <>
-            <h1>{recording ? 'Gravando a reunião' : 'Nenhuma reunião aberta'}</h1>
-            <p className="lead">
-              {recording
-                ? 'Pode seguir na chamada. Quando parar, a transcrição e o resumo aparecem na lista em alguns minutos.'
-                : 'Clique em Gravar no topo, ou responda Gravar no aviso que aparece quando você entra no Teams ou no Google Meet.'}
-            </p>
+            <h1>{recording ? t.recordingTitle : t.idleTitle}</h1>
+            <p className="lead">{recording ? t.recordingLead : t.idleLead}</p>
             {!recording && (
               <ol className="how">
                 <li>
                   <Mic size={17} strokeWidth={1.75} aria-hidden />
-                  Grava a sua voz e o áudio da chamada, sem robô entrando na reunião.
+                  {t.how1}
                 </li>
                 <li>
                   <AudioLines size={17} strokeWidth={1.75} aria-hidden />
-                  Transcreve neste computador, separando você dos outros.
+                  {t.how2}
                 </li>
                 <li>
                   <ListChecks size={17} strokeWidth={1.75} aria-hidden />
-                  O Claude Haiku organiza em resumo, decisões e próximos passos.
+                  {t.how3}
                 </li>
               </ol>
             )}
           </>
         ) : (
           <>
-            <h1>Nenhuma nota aberta</h1>
-            <p className="lead">Escolha uma nota na lista ou comece uma nova. Digite / dentro da nota para inserir títulos, listas e tarefas.</p>
+            <h1>{t.notesTitle}</h1>
+            <p className="lead">{t.notesLead}</p>
             <button className="btn" onClick={onNewNote}>
               <FilePlus2 size={15} strokeWidth={1.75} aria-hidden />
-              Nova nota
+              {t.newNote}
             </button>
           </>
         )}

@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { ModelStatus } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface Perms {
   microphone: string
@@ -18,35 +19,34 @@ export function usePermissions(): [Perms | null, () => void] {
   return [perms, refresh]
 }
 
+function Done({ label }: { label: string }): React.JSX.Element {
+  return (
+    <span className="ok-mark">
+      <Check size={15} strokeWidth={2} aria-hidden /> {label}
+    </span>
+  )
+}
+
 /** Linha do modelo de transcrição: pronto, baixando ou faltando. */
 export function ModelLine({ model }: { model: ModelStatus }): React.JSX.Element {
-  if (model.ready) {
-    return (
-      <div className="set-row">
-        <span className="set-label">
-          <span>Modelo de transcrição</span>
-          <span className="hint">Whisper large-v3-turbo, roda neste computador</span>
-        </span>
-        <span className="ok-mark">
-          <Check size={15} strokeWidth={2} aria-hidden /> Pronto
-        </span>
-      </div>
-    )
-  }
+  const t = useT().setup
+  const pct = Math.round((model.progress ?? 0) * 100)
   return (
     <div className="set-row">
       <span className="set-label">
-        <span>Modelo de transcrição</span>
-        <span className="hint">{model.error ?? 'Arquivo de 574 MB, baixado uma vez. A transcrição roda neste computador.'}</span>
+        <span>{t.model}</span>
+        <span className="hint">{model.ready ? t.modelReady : (model.error ?? t.modelMissing)}</span>
       </span>
-      {model.downloading ? (
-        <span className="progress" role="progressbar" aria-valuenow={Math.round((model.progress ?? 0) * 100)} aria-valuemin={0} aria-valuemax={100}>
-          <span className="progress-fill" style={{ width: `${(model.progress ?? 0) * 100}%` }} />
-          <span className="progress-text">{Math.round((model.progress ?? 0) * 100)}%</span>
+      {model.ready ? (
+        <Done label={t.ready} />
+      ) : model.downloading ? (
+        <span className="progress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <span className="progress-fill" style={{ width: `${pct}%` }} />
+          <span className="progress-text">{pct}%</span>
         </span>
       ) : (
         <button className="btn" onClick={() => void window.talkflow.model.download()}>
-          Baixar
+          {t.download}
         </button>
       )}
     </div>
@@ -55,19 +55,18 @@ export function ModelLine({ model }: { model: ModelStatus }): React.JSX.Element 
 
 /** Microfone e áudio da chamada no Mac. No Windows não há o que pedir. */
 export function PermissionLines(): React.JSX.Element {
+  const t = useT().setup
   const [perms, refresh] = usePermissions()
   if (!perms) return <></>
   return (
     <>
       <div className="set-row">
         <span className="set-label">
-          <span>Microfone</span>
-          <span className="hint">Para gravar a sua voz</span>
+          <span>{t.microphone}</span>
+          <span className="hint">{t.microphoneHint}</span>
         </span>
         {perms.microphone === 'granted' ? (
-          <span className="ok-mark">
-            <Check size={15} strokeWidth={2} aria-hidden /> Liberado
-          </span>
+          <Done label={t.allowed} />
         ) : (
           <button
             className="btn"
@@ -77,22 +76,20 @@ export function PermissionLines(): React.JSX.Element {
               refresh()
             }}
           >
-            Liberar
+            {t.allow}
           </button>
         )}
       </div>
       <div className="set-row">
         <span className="set-label">
-          <span>Áudio da chamada</span>
-          <span className="hint">O macOS chama de “Gravação de Tela”. Nenhuma imagem é gravada.</span>
+          <span>{t.callAudio}</span>
+          <span className="hint">{t.callAudioHint}</span>
         </span>
         {perms.screen === 'granted' ? (
-          <span className="ok-mark">
-            <Check size={15} strokeWidth={2} aria-hidden /> Liberado
-          </span>
+          <Done label={t.allowed} />
         ) : (
           <button className="btn" onClick={() => void window.talkflow.permissions.openSettings('screen')}>
-            Abrir ajustes
+            {t.openSettings}
           </button>
         )}
       </div>
@@ -102,13 +99,14 @@ export function PermissionLines(): React.JSX.Element {
 
 /** Primeira abertura: o que falta para gravar, em uma frase cada. Some quando tudo está pronto. */
 export function SetupCard({ model }: { model: ModelStatus }): React.JSX.Element | null {
+  const t = useT().setup
   const [perms] = usePermissions()
   const isMac = window.talkflow.platform === 'darwin'
   const permsOk = !isMac || (perms?.microphone === 'granted' && perms?.screen === 'granted')
   if (model.ready && permsOk) return null
   return (
-    <section className="setup" aria-label="Preparação">
-      <h2>Antes da primeira gravação</h2>
+    <section className="setup" aria-label={t.title}>
+      <h2>{t.title}</h2>
       {!model.ready && <ModelLine model={model} />}
       {isMac && !permsOk && <PermissionLines />}
     </section>

@@ -5,8 +5,8 @@ export const SUMMARY_SCHEMA = {
   additionalProperties: false,
   required: ['assunto', 'resumo', 'topicos', 'decisoes', 'tarefas'],
   properties: {
-    assunto: { type: 'string', description: 'Assunto principal em até 8 palavras, sem data.' },
-    resumo: { type: 'string', description: 'De 2 a 4 frases curtas: o que foi tratado e o que ficou decidido.' },
+    assunto: { type: 'string', description: 'Main subject in at most 8 words, no date, in the meeting language.' },
+    resumo: { type: 'string', description: '2 to 4 short sentences: what was discussed and what was decided.' },
     topicos: {
       type: 'array',
       items: {
@@ -36,21 +36,21 @@ export const SUMMARY_SCHEMA = {
 } as const
 
 export const SYSTEM_PROMPT = [
-  'Você organiza transcrições de reuniões em notas curtas e fáceis de ler.',
-  'A transcrição tem duas vozes: "Você" é a pessoa que gravou; "Outros" são os demais participantes.',
-  'Regras:',
-  '- Escreva no idioma da reunião (normalmente português do Brasil).',
-  '- assunto: até 8 palavras, sem data, como título de arquivo.',
-  '- resumo: de 2 a 4 frases curtas.',
-  '- topicos: de 1 a 6 tópicos, cada um com título curto e pontos de uma linha.',
-  '- decisoes: só o que ficou realmente decidido; lista vazia se nada foi decidido.',
-  '- tarefas: ações combinadas; coloque o responsável só quando for dito na conversa.',
-  '- Não invente nomes, números, prazos ou decisões que não estejam na transcrição.',
-  '- Ignore ruídos de transcrição e repetições.'
+  'You turn meeting transcripts into short, easy-to-read notes.',
+  'The transcript has two voices: the person who recorded it, and the other participants.',
+  'Rules:',
+  '- Write every field in the same language the meeting was held in.',
+  '- assunto (subject): at most 8 words, no date, usable as a file name.',
+  '- resumo (summary): 2 to 4 short sentences.',
+  '- topicos (topics): 1 to 6 topics, each with a short title and one-line points.',
+  '- decisoes (decisions): only what was actually decided; empty list if nothing was.',
+  '- tarefas (tasks): agreed actions; set responsavel (owner) only when someone is named in the conversation.',
+  '- Never invent names, numbers, dates or decisions that are not in the transcript.',
+  '- Ignore transcription noise and repetitions.'
 ].join('\n')
 
 export function buildUserPrompt(transcript: string): string {
-  return `Organize esta reunião.\n\n<transcricao>\n${transcript}\n</transcricao>`
+  return `Organize this meeting.\n\n<transcript>\n${transcript}\n</transcript>`
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '')
@@ -85,6 +85,6 @@ export function normalizeSummary(raw: unknown): Summary {
 export function extractJson(text: string): unknown {
   const start = text.indexOf('{')
   const end = text.lastIndexOf('}')
-  if (start < 0 || end <= start) throw new Error('A resposta do modelo não trouxe JSON.')
+  if (start < 0 || end <= start) throw new Error('The model response did not contain JSON.')
   return JSON.parse(text.slice(start, end + 1))
 }

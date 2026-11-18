@@ -1,6 +1,12 @@
 // Só em desenvolvimento, fora do Electron: imita a ponte do preload para revisar as telas no navegador.
 // Conteúdo sintético, apenas para teste visual.
+import { dict, type Lang } from '../../../shared/i18n'
 import type { LibraryNode, Settings } from '../../../shared/types'
+
+const params = new URLSearchParams(location.search)
+const lang: Lang = params.get('lang') === 'en' ? 'en' : 'pt'
+const F = dict(lang).folders
+const sep = lang === 'en' ? '.' : 'h'
 
 const files = new Map<string, string>()
 const sample = `---
@@ -39,11 +45,55 @@ origem: Google Meet (Chrome)
 
 **[00:11] Outros:** Concordo com os oito vídeos. Mas a cota de vozes acaba no dia 20, então precisamos de um plano para os Shorts.
 `
-files.set('Reuniões/2026/11/2026-11-17 14h30 - Planejamento do canal em dezembro.md', sample)
-files.set('Reuniões/2026/11/2026-11-14 10h00 - Alinhamento squad pagamentos.md', sample.replace('Planejamento do canal em dezembro', 'Alinhamento squad pagamentos'))
-files.set('Reuniões/2026/11/2026-11-12 16h15 - Fornecedor de embalagens.md', sample.replace('Planejamento do canal em dezembro', 'Fornecedor de embalagens'))
-files.set('Reuniões/2026/10/2026-10-28 09h30 - Revisão de sprint.md', sample.replace('Planejamento do canal em dezembro', 'Revisão de sprint'))
-files.set('Notas/Ideias soltas.md', '# Ideias soltas\n\n- Testar capa com fundo violeta\n- Perguntar sobre orçamento de 2027\n')
+const sampleEn = `---
+date: 2026-11-17 14:30
+duration: 42 min
+source: Google Meet (Chrome)
+---
+
+# Q4 launch plan
+
+> The team agreed on a December 2 launch, moved the pricing page review to Friday and will test the new onboarding with five customers first.
+
+## Topics
+
+### Launch date
+
+- Launch moves to December 2, after the payment provider migration.
+- Press kit is due one week before.
+
+### Onboarding
+
+- New flow gets tested with five customers before the full rollout.
+
+## Decisions
+
+- Pricing page review happens before the press kit.
+
+## Next steps
+
+- [ ] Send the updated timeline to sales — Ana
+- [ ] Book the five customer sessions
+
+## Transcript
+
+**[00:00] You:** Let's start with the launch date. The migration finishes on the 28th, so I'd like to move to December 2.
+
+**[00:11] Others:** December 2 works for us. We still need the pricing page reviewed before the press kit goes out.
+`
+const titles = lang === 'en'
+  ? ['Q4 launch plan', 'Payments squad sync', 'Packaging supplier call', 'Sprint review']
+  : ['Planejamento do canal em dezembro', 'Alinhamento squad pagamentos', 'Fornecedor de embalagens', 'Revisão de sprint']
+const base = lang === 'en' ? sampleEn : sample
+const make = (title: string): string => base.replace(lang === 'en' ? 'Q4 launch plan' : 'Planejamento do canal em dezembro', title)
+files.set(`${F.meetings}/2026/11/2026-11-17 14${sep}30 - ${titles[0]}.md`, make(titles[0]))
+files.set(`${F.meetings}/2026/11/2026-11-14 10${sep}00 - ${titles[1]}.md`, make(titles[1]))
+files.set(`${F.meetings}/2026/11/2026-11-12 16${sep}15 - ${titles[2]}.md`, make(titles[2]))
+files.set(`${F.meetings}/2026/10/2026-10-28 09${sep}30 - ${titles[3]}.md`, make(titles[3]))
+files.set(
+  `${F.notes}/${lang === 'en' ? 'Loose ideas' : 'Ideias soltas'}.md`,
+  lang === 'en' ? '# Loose ideas\n\n- Try a violet cover\n- Ask about the 2027 budget\n' : '# Ideias soltas\n\n- Testar capa com fundo violeta\n- Perguntar sobre orçamento de 2027\n'
+)
 
 function tree(): LibraryNode[] {
   const root: LibraryNode[] = []
@@ -64,8 +114,10 @@ function tree(): LibraryNode[] {
 }
 
 let settings: Settings = {
-  rootDir: '/Users/voce/Documents/TalkFlowBy',
-  language: 'pt',
+  rootDir: lang === 'en' ? '/Users/you/Documents/TalkFlowBy' : '/Users/voce/Documents/TalkFlowBy',
+  uiLanguage: lang,
+  folders: { ...F },
+  language: lang,
   summaryProvider: 'auto',
   hasApiKey: false,
   keepAudio: false,
@@ -75,7 +127,6 @@ let settings: Settings = {
 }
 
 const noop = (): (() => void) => () => undefined
-const params = new URLSearchParams(location.search)
 const recording = params.has('rec')
 const stage = params.get('stage')
 
@@ -90,8 +141,8 @@ window.talkflow = {
     tree: async () => tree(),
     read: async (rel) => files.get(rel) ?? '',
     write: async (rel, c) => void files.set(rel, c),
-    create: async (title = 'Nova nota') => {
-      const rel = `Notas/${title}.md`
+    create: async (title = dict(lang).main.newNote) => {
+      const rel = `${F.notes}/${title}.md`
       files.set(rel, `# ${title}\n\n`)
       return rel
     },
