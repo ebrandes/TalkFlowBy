@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { DONE_FILE, findPending, markProcessing, startFromDirName } from '../src/main/recovery'
 
@@ -35,7 +35,7 @@ describe('recuperação de gravações', () => {
     session(root, '2026-11-18T04-30-00-000Z', { 'mic.webm': Buffer.alloc(10) })
 
     const found = await findPending(root)
-    expect(found.map((p) => p.dir.split('/').pop()).sort()).toEqual(['2026-11-18T03-43-11-649Z', '2026-11-18T03-50-00-000Z'])
+    expect(found.map((p) => basename(p.dir)).sort()).toEqual(['2026-11-18T03-43-11-649Z', '2026-11-18T03-50-00-000Z'])
     const recovered = JSON.parse(readFileSync(join(cut, 'meta.json'), 'utf8'))
     expect(recovered.startedAt).toBe('2026-11-18T03:43:11.649Z')
   })
