@@ -46,10 +46,26 @@ function load(): Stored {
       stored = {}
     }
   }
-  cache = { ...defaults(), ...stored }
+  cache = { ...defaults(), ...stored, ...inherited(stored) }
   // Fixa idioma e nomes de pasta na primeira abertura; trocar o idioma do sistema depois não move as notas.
   if (!stored.folders || !stored.uiLanguage) void save(cache)
   return cache
+}
+
+/**
+ * Quem usou a versão só em português já tem as pastas "Reuniões" e "Notas" (ou transcrição em
+ * português): continua em português, com as mesmas pastas, mesmo num sistema em inglês.
+ */
+function inherited(stored: Partial<Stored>): Partial<Stored> {
+  if (stored.folders && stored.uiLanguage) return {}
+  const root = stored.rootDir ?? defaults().rootDir
+  const ptFolders = dict('pt').folders
+  const hasPtFolders = existsSync(join(root, ptFolders.meetings)) || existsSync(join(root, ptFolders.notes))
+  if (!hasPtFolders && stored.language !== 'pt') return {}
+  return {
+    uiLanguage: stored.uiLanguage ?? 'pt',
+    folders: stored.folders ?? { ...ptFolders }
+  }
 }
 
 async function save(next: Stored): Promise<void> {
