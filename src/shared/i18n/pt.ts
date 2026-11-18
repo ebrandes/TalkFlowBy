@@ -146,11 +146,8 @@ export const pt: Dict = {
   prompt: {
     title: 'Gravar esta reunião?',
     desc: (app) => `Reunião no ${app}. Lembre de avisar os participantes.`,
-    never: 'Nunca para este app',
-    neverTitle: 'Não perguntar mais para este app',
-    later: 'Agora não',
-    record: 'Gravar',
-    close: 'Fechar aviso'
+    close: 'Fechar',
+    record: 'Gravar'
   },
 
   editor: {

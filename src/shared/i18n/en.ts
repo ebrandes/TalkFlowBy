@@ -145,11 +145,8 @@ export const en = {
   prompt: {
     title: 'Record this meeting?',
     desc: (app: string) => `Meeting in ${app}. Remember to tell everyone.`,
-    never: 'Never for this app',
-    neverTitle: 'Stop asking for this app',
-    later: 'Not now',
-    record: 'Record',
-    close: 'Close prompt'
+    close: 'Close',
+    record: 'Record'
   },
 
   editor: {

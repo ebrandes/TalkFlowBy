@@ -69,7 +69,9 @@ export function createPromptWindow(appId: string, appName: string, lang: string)
     webPreferences: { preload: preload(), sandbox: false, contextIsolation: true }
   })
   win.setAlwaysOnTop(true, 'floating')
-  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+  // skipTransformProcessType: sem isso o macOS some com a janela principal e o ícone do Dock
+  // por um instante (e às vezes de vez), parecendo que o app fechou.
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })
   win.once('ready-to-show', () => win.showInactive())
   load(win, 'prompt', `?app=${encodeURIComponent(appId)}&name=${encodeURIComponent(appName)}&lang=${lang}`)
   return win
