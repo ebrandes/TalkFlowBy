@@ -1,0 +1,40 @@
+appId: com.talkflowby.app
+productName: TalkFlowBy
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+asarUnpack:
+  - node_modules/ffmpeg-static/**
+extraResources:
+  - from: resources/bin
+    to: bin
+  - from: resources/tray
+    to: tray
+    filter: ["*.png"]
+mac:
+  target:
+    # A arquitetura vem da linha de comando (--arm64 ou --x64): o ffmpeg-static instalado
+    # é da máquina que gera o pacote, então cada Mac gera o seu.
+    - dmg
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+  category: public.app-category.productivity
+  minimumSystemVersion: "14.2"
+  identity: null
+  extendInfo:
+    NSMicrophoneUsageDescription: O TalkFlowBy grava a sua voz nas reuniões que você escolher gravar.
+    NSAudioCaptureUsageDescription: O TalkFlowBy grava o áudio da chamada (as vozes dos outros participantes) nas reuniões que você escolher gravar.
+    NSScreenCaptureUsageDescription: O macOS exige esta permissão para o TalkFlowBy captar o áudio da chamada. Nenhuma imagem da tela é gravada.
+    LSUIElement: false
+win:
+  artifactName: ${productName}-${version}-windows-setup.${ext}
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: true
+  perMachine: false
+  createDesktopShortcut: true
+  shortcutName: TalkFlowBy

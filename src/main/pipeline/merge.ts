@@ -1,0 +1,58 @@
+import type { Segment, Turn } from '../../shared/types'
+
+/** Turno muito longo vira dois parágrafos para não gerar linha gigante no .md. */
+const MAX_TURN_CHARS = 900
+/** Silêncio longo da mesma pessoa abre um parágrafo novo. */
+const MAX_GAP_SEC = 45
+
+const clean = (text: string): string => text.replace(/\s+/g, ' ').trim()
+
+/** Trechos que o Whisper costuma inventar no silêncio. */
+const NOISE = /^(\[.*\]|\(.*\)|obrigad[oa]\.?|legendas? .*|tchau\.?)$/i
+
+export function isNoise(text: string): boolean {
+  const t = clean(text)
+  return t.length === 0 || NOISE.test(t)
+}
+
+/**
+ * Intercala as duas trilhas pelo tempo e agrupa falas seguidas da mesma pessoa.
+ * Não mexe nas palavras; só ordena, limpa espaços e junta.
+ */
+export function mergeTracks(mic: Segment[], system: Segment[]): Turn[] {
+  const all = [...mic, ...system]
+    .filter((s) => !isNoise(s.text))
+    .sort((a, b) => a.start - b.start || (a.speaker === 'Você' ? -1 : 1))
+
+  const turns: Turn[] = []
+  let lastEnd = 0
+  for (const seg of all) {
+    const text = clean(seg.text)
+    const prev = turns[turns.length - 1]
+    const sameSpeaker = prev && prev.speaker === seg.speaker
+    const shortGap = seg.start - lastEnd <= MAX_GAP_SEC
+    const fits = prev && prev.text.length + text.length < MAX_TURN_CHARS
+    if (sameSpeaker && shortGap && fits) {
+      prev.text = `${prev.text} ${text}`
+    } else {
+      turns.push({ speaker: seg.speaker, start: seg.start, text })
+    }
+    lastEnd = Math.max(lastEnd, seg.end)
+  }
+  return turns
+}
+
+/** Texto corrido para mandar ao modelo de resumo. */
+export function turnsToPlainText(turns: Turn[]): string {
+  return turns.map((t) => `[${formatClock(t.start)}] ${t.speaker}: ${t.text}`).join('\n')
+}
+
+export function formatClock(totalSec: number): string {
+  const s = Math.max(0, Math.floor(totalSec))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(sec).padStart(2, '0')
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}

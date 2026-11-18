@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-18T02:52:22+00:00",
+  "title": "Design System: TalkFlowBy",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Form Paper",
+        "tonalRamp": [
+          "oklch(15% 0.002 135)",
+          "oklch(26% 0.003 135)",
+          "oklch(38% 0.004 135)",
+          "oklch(50% 0.004 135)",
+          "oklch(62% 0.004 135)",
+          "oklch(74% 0.003 135)",
+          "oklch(85% 0.002 135)",
+          "oklch(95% 0.001 135)"
+        ],
+        "canonical": "oklch(97.7% 0.004 135)"
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Rail Paper",
+        "tonalRamp": [
+          "oklch(15% 0.006 137)",
+          "oklch(26% 0.009 137)",
+          "oklch(38% 0.011 137)",
+          "oklch(50% 0.011 137)",
+          "oklch(62% 0.011 137)",
+          "oklch(74% 0.009 137)",
+          "oklch(85% 0.006 137)",
+          "oklch(95% 0.002 137)"
+        ],
+        "canonical": "oklch(92.5% 0.011 137)"
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised Sheet",
+        "tonalRamp": [
+          "oklch(15% 0.002 135)",
+          "oklch(26% 0.003 135)",
+          "oklch(38% 0.004 135)",
+          "oklch(50% 0.004 135)",
+          "oklch(62% 0.004 135)",
+          "oklch(74% 0.003 135)",
+          "oklch(85% 0.002 135)",
+          "oklch(95% 0.001 135)"
+        ]
+      },
+      "hover": {
+        "role": "neutral",
+        "displayName": "Thumb Grey",
+        "tonalRamp": [
+          "oklch(15% 0.007 140)",
+          "oklch(26% 0.011 140)",
+          "oklch(38% 0.013 140)",
+          "oklch(50% 0.013 140)",
+          "oklch(62% 0.013 140)",
+          "oklch(74% 0.011 140)",
+          "oklch(85% 0.007 140)",
+          "oklch(95% 0.003 140)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "tonalRamp": [
+          "oklch(15% 0.008 142)",
+          "oklch(26% 0.012 142)",
+          "oklch(38% 0.015 142)",
+          "oklch(50% 0.015 142)",
+          "oklch(62% 0.015 142)",
+          "oklch(74% 0.012 142)",
+          "oklch(85% 0.008 142)",
+          "oklch(95% 0.003 142)"
+        ],
+        "canonical": "oklch(86.4% 0.015 142)"
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "tonalRamp": [
+          "oklch(15% 0.009 148)",
+          "oklch(26% 0.014 148)",
+          "oklch(38% 0.017 148)",
+          "oklch(50% 0.017 148)",
+          "oklch(62% 0.017 148)",
+          "oklch(74% 0.014 148)",
+          "oklch(85% 0.009 148)",
+          "oklch(95% 0.003 148)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.005 173)",
+          "oklch(26% 0.008 173)",
+          "oklch(38% 0.010 173)",
+          "oklch(50% 0.010 173)",
+          "oklch(62% 0.010 173)",
+          "oklch(74% 0.008 173)",
+          "oklch(85% 0.005 173)",
+          "oklch(95% 0.002 173)"
+        ],
+        "canonical": "oklch(24.5% 0.010 173)"
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "oklch(15% 0.006 165)",
+          "oklch(26% 0.010 165)",
+          "oklch(38% 0.012 165)",
+          "oklch(50% 0.012 165)",
+          "oklch(62% 0.012 165)",
+          "oklch(74% 0.010 165)",
+          "oklch(85% 0.006 165)",
+          "oklch(95% 0.002 165)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "tonalRamp": [
+          "oklch(15% 0.007 160)",
+          "oklch(26% 0.011 160)",
+          "oklch(38% 0.014 160)",
+          "oklch(50% 0.014 160)",
+          "oklch(62% 0.014 160)",
+          "oklch(74% 0.011 160)",
+          "oklch(85% 0.007 160)",
+          "oklch(95% 0.003 160)"
+        ]
+      },
+      "violet": {
+        "role": "primary",
+        "displayName": "Stamp-Pad Violet",
+        "tonalRamp": [
+          "oklch(15% 0.086 291)",
+          "oklch(26% 0.130 291)",
+          "oklch(38% 0.159 291)",
+          "oklch(50% 0.161 291)",
+          "oklch(62% 0.159 291)",
+          "oklch(74% 0.130 291)",
+          "oklch(85% 0.086 291)",
+          "oklch(95% 0.032 291)"
+        ],
+        "canonical": "oklch(45.8% 0.161 291)"
+      },
+      "violet-tint": {
+        "role": "primary",
+        "displayName": "Violet Wash",
+        "tonalRamp": [
+          "oklch(15% 0.086 291)",
+          "oklch(26% 0.130 291)",
+          "oklch(38% 0.159 291)",
+          "oklch(50% 0.161 291)",
+          "oklch(62% 0.159 291)",
+          "oklch(74% 0.130 291)",
+          "oklch(85% 0.086 291)",
+          "oklch(95% 0.032 291)"
+        ]
+      },
+      "rec": {
+        "role": "secondary",
+        "displayName": "Live Red",
+        "tonalRamp": [
+          "oklch(15% 0.093 28)",
+          "oklch(26% 0.140 28)",
+          "oklch(38% 0.171 28)",
+          "oklch(50% 0.173 28)",
+          "oklch(62% 0.171 28)",
+          "oklch(74% 0.140 28)",
+          "oklch(85% 0.093 28)",
+          "oklch(95% 0.035 28)"
+        ],
+        "canonical": "oklch(51.0% 0.173 28)"
+      },
+      "rec-tint": {
+        "role": "secondary",
+        "displayName": "Red Wash",
+        "tonalRamp": [
+          "oklch(15% 0.093 28)",
+          "oklch(26% 0.140 28)",
+          "oklch(38% 0.171 28)",
+          "oklch(50% 0.173 28)",
+          "oklch(62% 0.171 28)",
+          "oklch(74% 0.140 28)",
+          "oklch(85% 0.093 28)",
+          "oklch(95% 0.035 28)"
+        ]
+      },
+      "ok": {
+        "role": "tertiary",
+        "displayName": "Ledger Green",
+        "tonalRamp": [
+          "oklch(15% 0.047 154)",
+          "oklch(26% 0.071 154)",
+          "oklch(38% 0.087 154)",
+          "oklch(50% 0.088 154)",
+          "oklch(62% 0.087 154)",
+          "oklch(74% 0.071 154)",
+          "oklch(85% 0.047 154)",
+          "oklch(95% 0.018 154)"
+        ],
+        "canonical": "oklch(47.7% 0.088 154)"
+      },
+      "warn": {
+        "role": "tertiary",
+        "displayName": "Amber Notice",
+        "tonalRamp": [
+          "oklch(15% 0.058 73)",
+          "oklch(26% 0.087 73)",
+          "oklch(38% 0.107 73)",
+          "oklch(50% 0.108 73)",
+          "oklch(62% 0.107 73)",
+          "oklch(74% 0.087 73)",
+          "oklch(85% 0.058 73)",
+          "oklch(95% 0.022 73)"
+        ],
+        "canonical": "oklch(50.8% 0.108 73)"
+      },
+      "ground-dark": {
+        "role": "neutral",
+        "displayName": "Graphite Paper",
+        "tonalRamp": [
+          "oklch(15% 0.003 237)",
+          "oklch(26% 0.005 237)",
+          "oklch(38% 0.006 237)",
+          "oklch(50% 0.006 237)",
+          "oklch(62% 0.006 237)",
+          "oklch(74% 0.005 237)",
+          "oklch(85% 0.003 237)",
+          "oklch(95% 0.001 237)"
+        ],
+        "canonical": "oklch(20.7% 0.006 237)",
+        "theme": "dark"
+      },
+      "violet-dark": {
+        "role": "primary",
+        "displayName": "Stamp-Pad Violet (dark)",
+        "tonalRamp": [
+          "oklch(15% 0.061 294)",
+          "oklch(26% 0.092 294)",
+          "oklch(38% 0.113 294)",
+          "oklch(50% 0.114 294)",
+          "oklch(62% 0.113 294)",
+          "oklch(74% 0.092 294)",
+          "oklch(85% 0.061 294)",
+          "oklch(95% 0.023 294)"
+        ],
+        "canonical": "oklch(75.8% 0.114 294)",
+        "theme": "dark"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Note H1, Configurações and welcome titles."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Note H2 sections, each opened by a hairline rule."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Note H3 and the meeting prompt question; lead summary size."
+      },
+      "body-reading": {
+        "displayName": "Body reading",
+        "purpose": "Editor paragraphs and lists at the 600px line."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "App chrome default, tabular numerals."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, row titles, breadcrumb name."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Row time, hints, month headings, warnings."
+      },
+      "stamp": {
+        "displayName": "Stamp",
+        "purpose": "Mono uppercase voice of the stamp and live timer; date blocks at 9.5px/15px."
+      },
+      "guide": {
+        "displayName": "Guide words",
+        "purpose": "First and last date in view above the list."
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating",
+        "value": "0 8px 24px rgb(28 34 32 / 0.14), 0 2px 6px rgb(28 34 32 / 0.08)",
+        "purpose": "Editor slash menu, toolbar and link popovers only (light)."
+      },
+      {
+        "name": "floating-dark",
+        "value": "0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3)",
+        "purpose": "Same, dark theme."
+      },
+      {
+        "name": "control-lift",
+        "value": "0 1px 2px rgb(28 34 32 / 0.08)",
+        "purpose": "Selected segment; switch knob uses 0 1px 2px rgb(0 0 0 / 0.25)."
+      },
+      {
+        "name": "selected-ring",
+        "value": "0 0 0 1px var(--rule)",
+        "purpose": "Hairline ring around the selected list row, not elevation."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px var(--violet-tint)",
+        "purpose": "Field and search focus."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "All state transitions (ease-out)."
+      },
+      {
+        "name": "fast",
+        "value": "160ms",
+        "purpose": "Hover, selection, toggle and stamp state swaps."
+      },
+      {
+        "name": "stamp-in",
+        "value": "opacity 0 and scale(1.12) to rest, 160ms",
+        "purpose": "Stamp state seal re-inks in place when the stage changes."
+      },
+      {
+        "name": "progress",
+        "value": "width 300ms",
+        "purpose": "Model download progress fill."
+      }
+    ],
+    "breakpoints": [],
+    "layout": {
+      "railWidth": "300px",
+      "barHeight": "56px",
+      "measure": "720px",
+      "line": "600px",
+      "macTrafficLightInset": "84px"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink-filled main action (Gravar); the only filled button at rest.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>Gravar</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 16px; border:1px solid var(--rule,#cdd5cc); border-radius:8px; background:var(--raised,#fbfcfa); color:var(--ink,#1c2220); font:600 0.8125rem/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; white-space:nowrap; transition:background 160ms cubic-bezier(0.16,1,0.3,1), border-color 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn:hover { background:var(--hover,#d9e0d7); } .ds-btn:active { transform:translateY(0.5px); } .ds-btn:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; } .ds-btn-primary { background:var(--ink,#1c2220); border-color:var(--ink,#1c2220); color:var(--ground,#f6f8f5); } .ds-btn-primary:hover { background:var(--ink-2,#4a5550); border-color:var(--ink-2,#4a5550); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Live red Parar button, shown only while recording.",
+      "html": "<button class=\"ds-btn ds-btn-danger\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/></svg>Parar</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 16px; border:1px solid var(--rule,#cdd5cc); border-radius:8px; background:var(--raised,#fbfcfa); color:var(--ink,#1c2220); font:600 0.8125rem/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; white-space:nowrap; transition:background 160ms cubic-bezier(0.16,1,0.3,1), border-color 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn:hover { background:var(--hover,#d9e0d7); } .ds-btn:active { transform:translateY(0.5px); } .ds-btn:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; } .ds-btn-danger { background:var(--rec,#b42d27); border-color:var(--rec,#b42d27); color:var(--rec-ink,#fff); } .ds-btn-danger:hover { background:var(--rec,#b42d27); filter:brightness(1.08); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Raised sheet with hairline; text-only settings row actions.",
+      "html": "<button class=\"ds-btn\">Abrir pasta</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 16px; border:1px solid var(--rule,#cdd5cc); border-radius:8px; background:var(--raised,#fbfcfa); color:var(--ink,#1c2220); font:600 0.8125rem/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; white-space:nowrap; transition:background 160ms cubic-bezier(0.16,1,0.3,1), border-color 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn:hover { background:var(--hover,#d9e0d7); } .ds-btn:active { transform:translateY(0.5px); } .ds-btn:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Transparent low-stakes action, e.g. Nunca para este app.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Nunca para este app</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 16px; border:1px solid var(--rule,#cdd5cc); border-radius:8px; background:var(--raised,#fbfcfa); color:var(--ink,#1c2220); font:600 0.8125rem/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; white-space:nowrap; transition:background 160ms cubic-bezier(0.16,1,0.3,1), border-color 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn:hover { background:var(--hover,#d9e0d7); } .ds-btn:active { transform:translateY(0.5px); } .ds-btn:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; } .ds-btn-ghost { background:transparent; border-color:transparent; color:var(--ink-3,#5e6a64); font-weight:500; } .ds-btn-ghost:hover { background:var(--hover,#d9e0d7); }"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "icon-button",
+      "description": "32px square Lucide icon action, ink-2 at rest.",
+      "html": "<button class=\"ds-icon-btn\" aria-label=\"Configurações\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></button>",
+      "css": ".ds-icon-btn { display:inline-grid; place-items:center; width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:var(--ink-2,#4a5550); transition:background 160ms cubic-bezier(0.16,1,0.3,1), color 160ms cubic-bezier(0.16,1,0.3,1); } .ds-icon-btn:hover { background:var(--hover,#d9e0d7); color:var(--ink,#1c2220); } .ds-icon-btn:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Raised hairline field; violet border and wash halo on focus.",
+      "html": "<label class=\"ds-search\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input class=\"ds-search-input\" placeholder=\"Buscar\"></label>",
+      "css": ".ds-search { display:flex; align-items:center; gap:8px; width:268px; height:34px; padding:0 12px; border:1px solid var(--rule,#cdd5cc); border-radius:8px; background:var(--raised,#fbfcfa); color:var(--ink-3,#5e6a64); } .ds-search:focus-within { border-color:var(--violet,#5b3fa8); box-shadow:0 0 0 3px var(--violet-tint,#e9e4f6); } .ds-search-input { flex:1; min-width:0; border:0; background:transparent; font:400 0.8125rem/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color:var(--ink,#1c2220); outline:none; } .ds-search-input::placeholder { color:var(--ink-3,#5e6a64); }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "nav",
+      "refersTo": "segmented",
+      "description": "Reuniões / Notas switch on a thumb-grey track.",
+      "html": "<div class=\"ds-seg\" role=\"tablist\"><button role=\"tab\" aria-selected=\"true\">Reuniões</button><button role=\"tab\" aria-selected=\"false\">Notas</button></div>",
+      "css": ".ds-seg { display:grid; grid-template-columns:1fr 1fr; gap:2px; width:268px; padding:2px; border-radius:8px; background:var(--hover,#d9e0d7); } .ds-seg button { height:28px; border:0; border-radius:6px; background:transparent; font:500 0.8125rem/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color:var(--ink-2,#4a5550); transition:background 160ms cubic-bezier(0.16,1,0.3,1); } .ds-seg button:hover { color:var(--ink,#1c2220); } .ds-seg button[aria-selected='true'] { background:var(--raised,#fbfcfa); color:var(--ink,#1c2220); font-weight:600; box-shadow:0 1px 2px rgb(28 34 32 / 0.08); } .ds-seg button:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; }"
+    },
+    {
+      "name": "Stamp",
+      "kind": "custom",
+      "refersTo": "stamp",
+      "description": "Signature dated stamp; state word in an inverted seal, red when live.",
+      "html": "<div style=\"display:flex;flex-direction:column;gap:14px;align-items:flex-start\"><span class=\"ds-stamp\"><span>12 nov 2026 · 14:30 · 42 min · Teams</span><span class=\"ds-stamp-state\">Resumido</span></span><span class=\"ds-stamp live\"><span>12:48</span><span class=\"ds-stamp-state\">Gravando</span></span></div>",
+      "css": ".ds-stamp { display:inline-flex; align-items:center; gap:12px; padding:6px 6px 6px 12px; border:1.5px solid var(--violet,#5b3fa8); border-radius:5px; outline:1px solid var(--violet,#5b3fa8); outline-offset:2px; color:var(--violet,#5b3fa8); font:700 11px/1 ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace; letter-spacing:0.09em; text-transform:uppercase; white-space:nowrap; } .ds-stamp-state { padding:4px 7px; border-radius:3px; background:var(--violet,#5b3fa8); color:var(--violet-ink,#fff); animation:ds-stamp-in 160ms cubic-bezier(0.16,1,0.3,1); } .ds-stamp.live { border-color:var(--rec,#b42d27); outline-color:var(--rec,#b42d27); color:var(--rec,#b42d27); } .ds-stamp.live .ds-stamp-state { background:var(--rec,#b42d27); color:var(--rec-ink,#fff); } @keyframes ds-stamp-in { from { opacity:0; transform:scale(1.12); } }"
+    },
+    {
+      "name": "Meeting Row",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "List row with mono date block; violet block and raised sheet when selected.",
+      "html": "<div style=\"width:284px\"><button class=\"ds-row\"><span class=\"ds-date\"><span class=\"ds-date-m\">Nov</span><span class=\"ds-date-d\">12</span></span><span class=\"ds-row-body\"><span class=\"ds-row-title\">Revisão do planejamento</span><span class=\"ds-row-meta\">14:30</span></span></button><button class=\"ds-row selected\"><span class=\"ds-date\"><span class=\"ds-date-m\">Nov</span><span class=\"ds-date-d\">10</span></span><span class=\"ds-row-body\"><span class=\"ds-row-title\">Alinhamento semanal</span><span class=\"ds-row-meta\">09:00</span></span></button></div>",
+      "css": ".ds-row { display:flex; align-items:flex-start; gap:12px; width:100%; padding:8px 12px; border:0; border-radius:8px; background:transparent; text-align:left; color:var(--ink,#1c2220); transition:background 160ms cubic-bezier(0.16,1,0.3,1); } .ds-row:hover { background:var(--hover,#d9e0d7); } .ds-row.selected { background:var(--raised,#fbfcfa); box-shadow:0 0 0 1px var(--rule,#cdd5cc); } .ds-row:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; } .ds-date { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; flex:none; width:42px; height:42px; border:1.5px solid var(--rule-strong,#aab5ab); border-radius:5px; font-family:ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace; color:var(--ink-2,#4a5550); } .ds-row.selected .ds-date { border-color:var(--violet,#5b3fa8); color:var(--violet,#5b3fa8); } .ds-date-m { font-size:9.5px; font-weight:700; letter-spacing:0.08em; line-height:1; text-transform:uppercase; } .ds-date-d { margin-top:2px; font-size:15px; font-weight:700; line-height:1; } .ds-row-body { display:flex; flex-direction:column; gap:1px; min-width:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; } .ds-row-title { font-size:0.8125rem; font-weight:600; line-height:1.35; } .ds-row-meta { font-size:0.75rem; color:var(--ink-3,#5e6a64); }"
+    },
+    {
+      "name": "Toggle",
+      "kind": "input",
+      "description": "Settings switch; violet when on.",
+      "html": "<input type=\"checkbox\" role=\"switch\" class=\"ds-switch\" checked aria-label=\"Exemplo\">",
+      "css": ".ds-switch { appearance:none; position:relative; width:36px; height:20px; margin:0; border-radius:20px; background:var(--rule-strong,#aab5ab); transition:background 160ms cubic-bezier(0.16,1,0.3,1); } .ds-switch::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgb(0 0 0 / 0.25); transition:transform 160ms cubic-bezier(0.16,1,0.3,1); } .ds-switch:checked { background:var(--violet,#5b3fa8); } .ds-switch:checked::after { transform:translateX(16px); } .ds-switch:focus-visible { outline:2px solid var(--focus,#5b3fa8); outline-offset:2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Carimbo e Protocolo",
+    "overview": "TalkFlowBy is a records office for meetings. The ground is cool grey-green form paper, the text is near-black ink, and each meeting carries a dated rubber stamp in stamp-pad violet that says when it happened and where it stands (Gravando, Transcrevendo, Resumindo, Resumido). The stamp is the one decorative act in the system; everything around it is plain office stationery: hairline rules, a ruled list of filed meetings with small date stamps, and a single reading column.\n\nThe density is that of a calm desktop tool, not a dashboard. One window, a 300px rail of filed meetings and notes, a 56px top bar holding the record action, and a 720px reading column. Colour is almost absent: violet appears only where something has a state (the stamp, a selected date block, focus, a checked task, an active toggle, a link), and red appears only when the microphone is live or something failed. Light and dark follow the operating system; dark is graphite-green with a lifted lavender violet.\n\nMotion is short and functional: 160ms ease-out state swaps, and the stamp's state word re-inks in place with a small scale-down when the stage changes. There is no entrance choreography.",
+    "keyCharacteristics": [
+      "Grey-green form paper and near-black ink; violet and red are state, not decoration.",
+      "The dated stamp (double-ruled, monospace, uppercase, inverted state seal) is the signature.",
+      "System UI sans for all reading and chrome; monospace only for stamped and measured things.",
+      "Flat: hairline rules and tonal layers, shadows only on floating menus.",
+      "Lucide outline icons at stroke 1.75, used sparingly."
+    ],
+    "rules": [
+      {
+        "name": "The Stamp-Pad Rule",
+        "body": "Violet marks state and the stamp, nothing else. It is never a fill for a primary button, never a heading colour, never a background panel. The primary action is ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Live Ink Rule",
+        "body": "Red means the microphone is on or something broke. Nothing else may be red, so a red stamp in the top bar is always trustworthy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Themes Rule",
+        "body": "Every colour exists as a light and a dark token, switched by `prefers-color-scheme`. Never hard-code a colour that only works in one theme.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measured Mono Rule",
+        "body": "Monospace appears only inside stamps (including the live timer), date blocks, guide words, and literal measurements or machine text (progress percentage, file paths, inline code). Never for headings, labels or body.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Kicker Rule",
+        "body": "Uppercase tracked text belongs to the stamp family only. Sections are named by sentence-case headings, never by small uppercase labels above them.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Column Rule",
+        "body": "Reading content lives in the 720px column with text at the 600px line. Don't widen text to fill the window.",
+        "section": "layout"
+      },
+      {
+        "name": "The Paper Stack Rule",
+        "body": "Surfaces sit flat on the desk; only things that float over the page (menus, popovers) cast a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep violet for the stamp and for state (selected, focus, checked, active, progress, links), per The Stamp-Pad Rule.",
+      "Do reserve red for the live recording stamp, the Parar button and errors.",
+      "Do put every new colour in both themes in `tokens.css` and switch it by `prefers-color-scheme`.",
+      "Do set reading text inside the 720px column at the 600px line.",
+      "Do use Lucide outline icons at strokeWidth 1.75 (2 only for filled record/stop glyphs and check marks), sized 15 to 18px.",
+      "Do keep settings labels, hints and settings row buttons text-only.",
+      "Do use the mono uppercase stamp voice for anything stamped or measured, and nothing else."
+    ],
+    "donts": [
+      "Don't use violet as a button fill, panel background or heading colour; the primary action is ink.",
+      "Don't use red for emphasis, counts or destructive-but-idle actions such as delete.",
+      "Don't add shadows to cards, rows or the reading column; only floating menus cast one.",
+      "Don't add uppercase eyebrow labels above headings; sections are named by sentence-case headings.",
+      "Don't use any icon set other than Lucide, or decorative icons beside labels.",
+      "Don't add entrance animations; state changes swap in place in 160ms."
+    ]
+  }
+}

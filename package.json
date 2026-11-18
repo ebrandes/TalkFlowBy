@@ -1,0 +1,51 @@
+{
+  "name": "talkflowby",
+  "productName": "TalkFlowBy",
+  "version": "0.1.0",
+  "description": "Free, open-source meeting recorder and markdown notepad. Records both sides of your Teams or Google Meet call without a bot, transcribes locally with Whisper and summarizes with Claude Haiku.",
+  "author": "Brandes",
+  "license": "MIT",
+  "homepage": "https://github.com/ebrandes/TalkFlowBy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ebrandes/TalkFlowBy.git"
+  },
+  "main": "out/main/index.js",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "vitest run",
+    "build:micwatch": "node scripts/build-micwatch.mjs",
+    "fetch:binaries": "node scripts/fetch-binaries.mjs",
+    "dist:mac": "npm run build:micwatch && npm run fetch:binaries && electron-vite build && electron-builder --mac",
+    "dist:win": "npm run fetch:binaries && electron-vite build && electron-builder --win"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
+    "@milkdown/crepe": "^7.23.0",
+    "ffmpeg-static": "^5.3.0",
+    "lucide-react": "^1.74.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "markdownlint": "^0.42.1",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "allowScripts": {
+    "ffmpeg-static@5.3.0": true,
+    "electron@45.3.4": true
+  }
+}
