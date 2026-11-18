@@ -41,7 +41,31 @@ export const pt: Dict = {
     reveal: 'Mostrar o arquivo na pasta',
     trash: 'Mover para a Lixeira',
     fileName: 'Nome do arquivo',
-    rename: 'Clique para renomear o arquivo'
+    rename: 'Clique para renomear o arquivo',
+    share: 'Enviar ou copiar',
+    copyNote: 'Copiar nota (Markdown)',
+    copyTranscript: 'Copiar transcrição',
+    openClaude: 'Abrir no Claude',
+    copied: 'Copiado',
+    copiedForClaude: 'Nota copiada. Se ela não aparecer no Claude, cole com Ctrl+V ou ⌘V.',
+    noTranscript: 'Esta nota não tem transcrição.'
+  },
+
+  confirm: {
+    trashOne: 'Mover esta nota para a Lixeira?',
+    trashMany: (n) => `Mover ${n} notas para a Lixeira?`,
+    trashHint: 'Dá para recuperar pela Lixeira do sistema.',
+    cancel: 'Cancelar',
+    trash: 'Mover para a Lixeira'
+  },
+
+  select: {
+    start: 'Selecionar notas',
+    done: 'Concluir',
+    count: (n) => (n === 1 ? '1 selecionada' : `${n} selecionadas`),
+    all: 'Selecionar todas',
+    none: 'Limpar seleção',
+    trash: 'Mover para a Lixeira'
   },
 
   welcome: {

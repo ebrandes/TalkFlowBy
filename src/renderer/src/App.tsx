@@ -1,7 +1,8 @@
 import { AudioLines, FilePlus2, ListChecks, Mic } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { dict } from '../../shared/i18n'
 import type { Folders, ModelStatus } from '../../shared/types'
+import { ConfirmDialog } from './components/ConfirmDialog'
 import { Crumbs } from './components/Crumbs'
 import { NoteView } from './components/NoteView'
 import { SettingsView } from './components/Settings'
@@ -28,6 +29,27 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
   const [tab, setTab] = useState<Tab>('meetings')
   const [showSettings, setShowSettings] = useState(false)
   const [preview, setPreview] = useState('')
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [pendingTrash, setPendingTrash] = useState<{ paths: string[]; done: (ok: boolean) => void } | null>(null)
+
+  const showToast = (message: string): void => {
+    setToast(message)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 4000)
+  }
+
+  const askTrashMany = (paths: string[]): Promise<boolean> => new Promise((done) => setPendingTrash({ paths, done }))
+
+  const confirmTrashMany = async (): Promise<void> => {
+    if (!pendingTrash) return
+    const { paths, done } = pendingTrash
+    setPendingTrash(null)
+    await window.talkflow.library.trashMany(paths)
+    if (app.selected && paths.includes(app.selected)) open(null)
+    await app.refresh()
+    done(true)
+  }
 
   const open = (rel: string | null): void => {
     setShowSettings(false)
@@ -56,6 +78,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
         onSelect={open}
         onNewNote={() => void newNote()}
         onSettings={() => setShowSettings(true)}
+        onTrashMany={askTrashMany}
       />
       <main className="main">
         <TopBar
@@ -80,6 +103,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
           <NoteView
             path={app.selected}
             onPreview={setPreview}
+            onToast={showToast}
             onDeleted={async () => {
               await app.refresh()
               open(null)
@@ -89,6 +113,20 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
           <Welcome model={app.model} tab={tab} recording={rec.recording} onNewNote={() => void newNote()} />
         )}
       </main>
+      <ConfirmDialog
+        open={Boolean(pendingTrash)}
+        title={pendingTrash && pendingTrash.paths.length === 1 ? t.confirm.trashOne : t.confirm.trashMany(pendingTrash?.paths.length ?? 0)}
+        onCancel={() => {
+          pendingTrash?.done(false)
+          setPendingTrash(null)
+        }}
+        onConfirm={() => void confirmTrashMany()}
+      />
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

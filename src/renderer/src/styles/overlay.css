@@ -1,0 +1,161 @@
+/* Menu Enviar, confirmação, aviso rápido e barra de seleção. */
+
+.share {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 232px;
+  padding: var(--space-1);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: var(--shadow);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 34px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--text-sm);
+  text-align: left;
+  color: var(--ink);
+}
+
+.menu-item svg {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.menu-item:hover:not(:disabled),
+.menu-item:focus-visible {
+  background: var(--hover);
+  outline: none;
+}
+
+.menu-item:disabled {
+  color: var(--ink-3);
+}
+
+.confirm {
+  width: min(380px, calc(100vw - 48px));
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--raised);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.confirm::backdrop {
+  background: rgb(21 24 26 / 0.35);
+}
+
+.confirm h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.confirm-detail {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.confirm-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-6);
+  z-index: 30;
+  max-width: min(520px, calc(100vw - 48px));
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--ground);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+  animation: toast-in var(--fast) var(--ease);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}
+
+/* Modo de seleção na lista */
+.icon-btn.active {
+  background: var(--violet-tint);
+  color: var(--violet);
+}
+
+.pick-box {
+  flex: none;
+  margin-top: 12px;
+  color: var(--ink-3);
+}
+
+.note-row .pick-box {
+  margin-top: 0;
+}
+
+.pick-box.on {
+  color: var(--violet);
+}
+
+.row.picked {
+  background: var(--violet-tint);
+}
+
+.pick-bar {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--rule);
+  background: var(--rail);
+}
+
+.pick-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.pick-count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.pick-line .btn {
+  flex: 1;
+  justify-content: center;
+}

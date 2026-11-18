@@ -34,6 +34,7 @@ const api = {
     create: (title?: string): Promise<string> => ipcRenderer.invoke('library:create', title),
     rename: (rel: string, title: string): Promise<string> => ipcRenderer.invoke('library:rename', rel, title),
     trash: (rel: string): Promise<void> => ipcRenderer.invoke('library:trash', rel),
+    trashMany: (rels: string[]): Promise<number> => ipcRenderer.invoke('library:trashMany', rels),
     reveal: (rel: string): Promise<void> => ipcRenderer.invoke('library:reveal', rel),
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
     onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb)

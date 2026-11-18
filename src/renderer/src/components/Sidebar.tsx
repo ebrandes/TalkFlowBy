@@ -1,5 +1,5 @@
-import { FilePlus2, FileText, Search, Settings } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { FilePlus2, FileText, ListChecks, Search, Settings, Square, SquareCheck } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Folders, LibraryNode } from '../../../shared/types'
 import { useT } from '../i18n'
 import { guideSpan, meetingGroups, noteItems, type ListItem } from '../lib/notes'
@@ -17,22 +17,57 @@ interface Props {
   onSelect: (rel: string) => void
   onNewNote: () => void
   onSettings: () => void
+  /** Pede confirmação e manda as notas marcadas para a Lixeira; devolve quando terminar. */
+  onTrashMany: (paths: string[]) => Promise<boolean>
 }
 
 export function Sidebar(p: Props): React.JSX.Element {
   const t = useT()
   const [query, setQuery] = useState('')
+  const [picking, setPicking] = useState(false)
+  const [picked, setPicked] = useState<Set<string>>(new Set())
   const groups = useMemo(() => meetingGroups(p.tree, query, p.folders, t), [p.tree, query, p.folders, t])
   const notes = useMemo(() => noteItems(p.tree, query, p.folders), [p.tree, query, p.folders])
   const span = guideSpan(groups, t.months)
+  const visible = p.tab === 'meetings' ? groups.flatMap((g) => g.items) : notes
+
+  // Trocar de aba ou de busca limpa o que não está mais à vista.
+  useEffect(() => {
+    const paths = new Set(visible.map((i) => i.path))
+    setPicked((prev) => new Set([...prev].filter((x) => paths.has(x))))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.tab, query, p.tree])
+
+  const stopPicking = (): void => {
+    setPicking(false)
+    setPicked(new Set())
+  }
+  const toggle = (path: string): void =>
+    setPicked((prev) => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  const choose = (path: string): void => (picking ? toggle(path) : p.onSelect(path))
+  const allPicked = visible.length > 0 && visible.every((i) => picked.has(i.path))
 
   return (
-    <aside className="rail">
+    <aside className={`rail${picking ? ' picking' : ''}`}>
       <div className="rail-head">
         <span className="brand">TalkFlowBy</span>
         <div className="rail-actions">
           <button className="icon-btn" onClick={p.onNewNote} aria-label={t.rail.newNote} title={t.rail.newNote}>
             <FilePlus2 size={18} strokeWidth={1.75} />
+          </button>
+          <button
+            className={`icon-btn${picking ? ' active' : ''}`}
+            onClick={() => (picking ? stopPicking() : setPicking(true))}
+            aria-label={t.select.start}
+            aria-pressed={picking}
+            title={t.select.start}
+          >
+            <ListChecks size={18} strokeWidth={1.75} />
           </button>
           <button className="icon-btn" onClick={p.onSettings} aria-label={t.rail.settings} title={t.rail.settings}>
             <Settings size={18} strokeWidth={1.75} />
@@ -42,13 +77,7 @@ export function Sidebar(p: Props): React.JSX.Element {
 
       <label className="search">
         <Search size={15} strokeWidth={1.75} aria-hidden />
-        <input
-          className="search-input"
-          placeholder={t.rail.search}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          aria-label={t.rail.search}
-        />
+        <input className="search-input" placeholder={t.rail.search} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t.rail.search} />
       </label>
 
       <div className="segmented" role="tablist">
@@ -73,36 +102,87 @@ export function Sidebar(p: Props): React.JSX.Element {
             <section key={g.label}>
               <h3 className="list-month">{g.label}</h3>
               {g.items.map((item) => (
-                <MeetingRow key={item.path} item={item} months={t.months} selected={item.path === p.selected} preview={p.preview} onSelect={p.onSelect} />
+                <MeetingRow
+                  key={item.path}
+                  item={item}
+                  months={t.months}
+                  selected={!picking && item.path === p.selected}
+                  picked={picking ? picked.has(item.path) : undefined}
+                  preview={p.preview}
+                  onChoose={choose}
+                />
               ))}
             </section>
           ))}
         {p.tab === 'notes' &&
           notes.map((item) => (
-            <button key={item.path} className={`row note-row${item.path === p.selected ? ' selected' : ''}`} onClick={() => p.onSelect(item.path)}>
-              <FileText size={16} strokeWidth={1.75} aria-hidden />
+            <button
+              key={item.path}
+              className={`row note-row${!picking && item.path === p.selected ? ' selected' : ''}${picked.has(item.path) ? ' picked' : ''}`}
+              onClick={() => choose(item.path)}
+              aria-pressed={picking ? picked.has(item.path) : undefined}
+            >
+              {picking ? <PickBox on={picked.has(item.path)} /> : <FileText size={16} strokeWidth={1.75} aria-hidden />}
               <span className="row-title">{item.title}</span>
             </button>
           ))}
-        <EmptyList tab={p.tab} query={query} empty={p.tab === 'meetings' ? groups.length === 0 : notes.length === 0} onNewNote={p.onNewNote} />
+        <EmptyList tab={p.tab} query={query} empty={visible.length === 0} onNewNote={p.onNewNote} />
       </nav>
+
+      {picking && (
+        <div className="pick-bar">
+          <div className="pick-line">
+            <span className="pick-count">{t.select.count(picked.size)}</span>
+            <button className="link" onClick={() => setPicked(allPicked ? new Set() : new Set(visible.map((i) => i.path)))}>
+              {allPicked ? t.select.none : t.select.all}
+            </button>
+          </div>
+          <div className="pick-line">
+            <button className="btn" onClick={stopPicking}>
+              {t.select.done}
+            </button>
+            <button
+              className="btn danger"
+              disabled={picked.size === 0}
+              onClick={async () => {
+                if (await p.onTrashMany([...picked])) stopPicking()
+              }}
+            >
+              {t.select.trash}
+            </button>
+          </div>
+        </div>
+      )}
     </aside>
   )
+}
+
+function PickBox({ on }: { on: boolean }): React.JSX.Element {
+  return on ? <SquareCheck size={18} strokeWidth={1.75} className="pick-box on" aria-hidden /> : <Square size={18} strokeWidth={1.75} className="pick-box" aria-hidden />
 }
 
 interface RowProps {
   item: ListItem
   months: string[]
   selected: boolean
+  /** Definido só no modo de seleção. */
+  picked?: boolean
   preview: string
-  onSelect: (rel: string) => void
+  onChoose: (rel: string) => void
 }
 
-function MeetingRow({ item, months, selected, preview, onSelect }: RowProps): React.JSX.Element {
+function MeetingRow({ item, months, selected, picked, preview, onChoose }: RowProps): React.JSX.Element {
   const m = item.meeting
+  const picking = picked !== undefined
   return (
-    <button className={`row meeting-row${selected ? ' selected' : ''}`} onClick={() => onSelect(item.path)} aria-current={selected || undefined}>
-      {m ? <DateBlock month={months[m.month - 1]} day={m.day} selected={selected} /> : <FileText size={16} strokeWidth={1.75} aria-hidden />}
+    <button
+      className={`row meeting-row${selected ? ' selected' : ''}${picked ? ' picked' : ''}`}
+      onClick={() => onChoose(item.path)}
+      aria-current={selected || undefined}
+      aria-pressed={picking ? picked : undefined}
+    >
+      {picking && <PickBox on={Boolean(picked)} />}
+      {m ? <DateBlock month={months[m.month - 1]} day={m.day} selected={selected || Boolean(picked)} /> : <FileText size={16} strokeWidth={1.75} aria-hidden />}
       <span className="row-body">
         <span className="row-title">{item.title}</span>
         {m && <span className="row-meta">{m.time}</span>}

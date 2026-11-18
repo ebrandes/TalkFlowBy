@@ -26,6 +26,7 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('library:create', (_e, title?: string) => lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote))
   ipcMain.handle('library:rename', (_e, rel: string, title: string) => lib.renameNote(root(), rel, title))
   ipcMain.handle('library:trash', (_e, rel: string) => lib.trashNote(root(), rel))
+  ipcMain.handle('library:trashMany', (_e, rels: string[]) => lib.trashNotes(root(), rels))
   ipcMain.handle('library:reveal', (_e, rel: string) => lib.revealNote(root(), rel))
   ipcMain.handle('library:openRoot', () => shell.openPath(root()))
 

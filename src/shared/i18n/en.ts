@@ -40,7 +40,31 @@ export const en = {
     reveal: 'Show file in folder',
     trash: 'Move to Trash',
     fileName: 'File name',
-    rename: 'Click to rename the file'
+    rename: 'Click to rename the file',
+    share: 'Send or copy',
+    copyNote: 'Copy note (Markdown)',
+    copyTranscript: 'Copy transcript',
+    openClaude: 'Open in Claude',
+    copied: 'Copied to the clipboard',
+    copiedForClaude: 'Note copied. If it is not already in Claude, paste it with Ctrl+V or ⌘V.',
+    noTranscript: 'This note has no transcript.'
+  },
+
+  confirm: {
+    trashOne: 'Move this note to the Trash?',
+    trashMany: (n: number) => `Move ${n} notes to the Trash?`,
+    trashHint: 'You can restore them from the system Trash.',
+    cancel: 'Cancel',
+    trash: 'Move to Trash'
+  },
+
+  select: {
+    start: 'Select notes',
+    done: 'Done',
+    count: (n: number) => (n === 1 ? '1 selected' : `${n} selected`),
+    all: 'Select all',
+    none: 'Select none',
+    trash: 'Move to Trash'
   },
 
   welcome: {

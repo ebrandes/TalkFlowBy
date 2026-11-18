@@ -75,6 +75,20 @@ export async function trashNote(root: string, rel: string): Promise<void> {
   await shell.trashItem(resolveInside(root, rel))
 }
 
+/** Várias de uma vez; devolve quantas foram para a Lixeira. */
+export async function trashNotes(root: string, rels: string[]): Promise<number> {
+  let done = 0
+  for (const rel of rels) {
+    try {
+      await shell.trashItem(resolveInside(root, rel))
+      done++
+    } catch {
+      // Arquivo já sumiu ou está em uso: segue com os outros.
+    }
+  }
+  return done
+}
+
 export function revealNote(root: string, rel: string): void {
   shell.showItemInFolder(resolveInside(root, rel))
 }

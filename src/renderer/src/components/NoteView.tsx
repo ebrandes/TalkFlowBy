@@ -3,20 +3,25 @@ import { useEffect, useState } from 'react'
 import { useT } from '../i18n'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
 import { flush, scheduleSave } from '../lib/saver'
+import { ConfirmDialog } from './ConfirmDialog'
 import { Editor } from './Editor'
+import { ShareMenu } from './ShareMenu'
 import { Stamp } from './Stamp'
 
 interface Props {
   path: string
   onDeleted: () => void
   onPreview: (text: string) => void
+  onToast: (message: string) => void
 }
 
 /** Abre uma nota: carimbo (se for reunião) e o editor com salvamento automático. */
-export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Element {
+export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.JSX.Element {
   const t = useT()
   const [loaded, setLoaded] = useState<{ path: string; front: string; body: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [body, setBody] = useState('')
+  const [confirming, setConfirming] = useState(false)
 
   const name = path.split('/').pop()!.replace(/\.md$/i, '')
   const meeting = parseMeetingName(name)
@@ -30,6 +35,7 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
         if (!alive) return
         const { front, body } = splitFrontmatter(md)
         setLoaded({ path, front, body })
+        setBody(body)
         onPreview(summaryPreview(body))
       })
       .catch(() => alive && setError(t.note.openError))
@@ -51,7 +57,10 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
 
   const meta = splitFrontmatter(`${loaded.front}\n`).meta
   const noSummary = loaded.body.includes('O resumo não foi gerado') || loaded.body.includes('The summary was not generated')
-  const onChange = (markdown: string): void => scheduleSave(loaded.path, joinFrontmatter(loaded.front, markdown))
+  const onChange = (markdown: string): void => {
+    setBody(markdown)
+    scheduleSave(loaded.path, joinFrontmatter(loaded.front, markdown))
+  }
 
   return (
     <div className="doc">
@@ -66,6 +75,7 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
             <span />
           )}
           <div className="doc-tools">
+            <ShareMenu markdown={joinFrontmatter(loaded.front, body)} body={body} onToast={onToast} />
             <button
               className="icon-btn"
               title={t.note.reveal}
@@ -78,17 +88,25 @@ export function NoteView({ path, onDeleted, onPreview }: Props): React.JSX.Eleme
               className="icon-btn"
               title={t.note.trash}
               aria-label={t.note.trash}
-              onClick={async () => {
-                await flush()
-                await window.talkflow.library.trash(path)
-                onDeleted()
-              }}
+              onClick={() => setConfirming(true)}
             >
               <Trash2 size={17} strokeWidth={1.75} />
             </button>
           </div>
         </div>
         <Editor docKey={path} value={loaded.body} onChange={onChange} />
+        <ConfirmDialog
+          open={confirming}
+          title={t.confirm.trashOne}
+          detail={meeting?.subject ?? name}
+          onCancel={() => setConfirming(false)}
+          onConfirm={async () => {
+            setConfirming(false)
+            await flush()
+            await window.talkflow.library.trash(path)
+            onDeleted()
+          }}
+        />
       </div>
     </div>
   )

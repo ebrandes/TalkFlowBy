@@ -13,6 +13,8 @@
 }
 
 .doc-head {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,13 +25,6 @@
 .doc-tools {
   display: flex;
   gap: 2px;
-  opacity: 0.75;
-  transition: opacity var(--fast) var(--ease);
-}
-
-.doc-head:hover .doc-tools,
-.doc-tools:focus-within {
-  opacity: 1;
 }
 
 .doc-error {

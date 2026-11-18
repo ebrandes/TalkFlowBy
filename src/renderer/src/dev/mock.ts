@@ -153,6 +153,7 @@ window.talkflow = {
       return next
     },
     trash: async (rel) => void files.delete(rel),
+    trashMany: async (rels) => rels.filter((r) => files.delete(r)).length,
     reveal: async () => undefined,
     openRoot: async () => '',
     onChanged: noop
