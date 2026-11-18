@@ -128,7 +128,8 @@ describe('resumo do modelo', () => {
       resumo: '',
       topicos: [{ titulo: 'T', pontos: [] }],
       decisoes: [],
-      tarefas: []
+      tarefas: [],
+      fluxo: null
     })
   })
 })

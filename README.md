@@ -52,6 +52,15 @@ transcripts on someone else's server. TalkFlowBy does the useful part on your ma
 - **Send it to Claude.** One click copies the note or just the transcript, or opens Claude with
   the note ready to ask follow-up questions.
 - **Clean up fast.** Select several meetings and move them to the Trash at once.
+- **Draws the workflow.** When a meeting describes a process ("first this, then that, if it
+  fails go back"), a diagram of it goes at the end of the note. With the
+  [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph) skill installed
+  it is drawn as an image; without it, as a [Mermaid](https://mermaid.js.org) diagram that GitHub
+  and Obsidian render.
+- **Finds anything.** Search looks inside every note, not just titles, ignoring accents.
+- **Lives in your vault.** Point the notes folder at your Obsidian vault in Settings.
+- **Stays up to date.** Checks GitHub for new versions; on Windows it downloads and installs
+  on restart.
 
 ## Download
 
@@ -63,7 +72,8 @@ transcripts on someone else's server. TalkFlowBy does the useful part on your ma
 
 Get them from the [latest release](https://github.com/ebrandes/TalkFlowBy/releases/latest).
 
-**First launch.** The installers are not signed yet, so the system warns you once:
+**First launch.** The installers are not signed yet ([how to sign them](docs/SIGNING.md)), so
+the system warns you once:
 
 - **macOS:** open the app, then go to *System Settings → Privacy & Security* and click
   *Open Anyway*. Or right-click the app and choose *Open*.
@@ -158,6 +168,7 @@ source: Google Meet (Chrome)
 - Only the transcript text is sent to Anthropic to write the summary, through Claude Code
   or your API key. Nothing else is sent anywhere, and there is no telemetry.
 - Your API key is stored with the operating system's secure storage.
+- The app checks GitHub for new versions every few hours (you can turn this off in Settings).
 - Notes live in `Documents/TalkFlowBy`.
 
 **Recording conversations can require everyone's consent where you live.** The meeting

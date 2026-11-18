@@ -1,6 +1,8 @@
 import { Crepe } from '@milkdown/crepe'
 import {
   Bold,
+  Captions,
+  Image,
   Check,
   Circle,
   Code,
@@ -33,7 +35,6 @@ const svg = (Icon: LucideIcon, size = 18, filled = false): string =>
 
 export const CREPE_FEATURES = {
   [Crepe.Feature.CodeMirror]: false,
-  [Crepe.Feature.ImageBlock]: false,
   [Crepe.Feature.Latex]: false,
   [Crepe.Feature.Table]: false,
   [Crepe.Feature.TopBar]: false,
@@ -41,8 +42,22 @@ export const CREPE_FEATURES = {
 }
 
 /** Configuração do editor no idioma do app. */
-export function crepeConfig(t: Dict['editor']) {
+export function crepeConfig(t: Dict['editor'], proxyDomURL: (url: string) => string) {
   return {
+    // Só para mostrar o diagrama do fluxo que fica ao lado da nota.
+    [Crepe.Feature.ImageBlock]: {
+      proxyDomURL,
+      blockImageIcon: svg(Image),
+      inlineImageIcon: svg(Image),
+      blockConfirmButton: svg(Check, 16),
+      inlineConfirmButton: svg(Check, 16),
+      blockCaptionIcon: svg(Captions, 16),
+      blockUploadButton: t.uploadImage,
+      inlineUploadButton: t.uploadImage,
+      blockUploadPlaceholderText: t.imageLink,
+      inlineUploadPlaceholderText: t.imageLink,
+      blockCaptionPlaceholderText: t.imageCaption
+    },
     [Crepe.Feature.Placeholder]: { text: t.placeholder, mode: 'block' as const },
     [Crepe.Feature.Cursor]: { color: false as const },
     [Crepe.Feature.ListItem]: {

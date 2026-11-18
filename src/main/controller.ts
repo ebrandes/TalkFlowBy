@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DetectedMeeting, MeetingMeta, ModelStatus, PipelineStatus } from '../shared/types'
 import { findPending } from './recovery'
+import { Updater, type UpdateInfo } from './updater'
 import { MeetingDetector } from './detector/index'
 import { processRecording } from './pipeline/run'
 import { ProcessingQueue, RecordingStore } from './recording'
@@ -24,6 +25,11 @@ export class Controller {
   readonly store = new RecordingStore(() => getSettings().rootDir)
   readonly queue = new ProcessingQueue((s) => this.setStatus(s))
   readonly detector = new MeetingDetector((id) => getSettings().mutedApps.includes(id))
+  update: UpdateInfo | null = null
+  readonly updater = new Updater((info) => {
+    this.update = info
+    this.send('update:info', info)
+  })
 
   async boot(): Promise<void> {
     this.main = createMainWindow()
@@ -37,6 +43,7 @@ export class Controller {
     if (getSettings().detectMeetings) await this.detector.start()
     await this.refreshModel()
     await this.recoverPending()
+    if (getSettings().checkUpdates) this.updater.start()
   }
 
   show(): void {
@@ -125,6 +132,7 @@ export class Controller {
           greedy: chosen.greedy,
           language: settings.language,
           keepAudio: settings.keepAudio,
+          drawFlows: settings.drawFlows,
           summary: { provider: settings.summaryProvider, apiKey: getApiKey() },
           onStatus: (s) => this.setStatus(s)
         }

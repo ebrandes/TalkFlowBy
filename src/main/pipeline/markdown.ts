@@ -86,8 +86,20 @@ function quote(text: string): string[] {
   return sentences ? [`> ${sentences}`] : []
 }
 
+/** Fluxo no fim da nota: a imagem desenhada, ou o Mermaid quando não deu para desenhar. */
+export interface FlowBlock {
+  image?: string
+  mermaid?: string
+}
+
+function flowSection(flow: FlowBlock | undefined, d: Doc): string[] {
+  if (!flow?.image && !flow?.mermaid) return []
+  const body = flow.image ? [`![${d.flowImage}](${encodeURI(flow.image)})`] : ['```mermaid', flow.mermaid!, '```']
+  return [`## ${d.flow}`, '', ...body, '']
+}
+
 /** Monta a nota da reunião. O formato é fixo; o modelo só fornece o conteúdo. */
-export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null, turns: Turn[], d: Doc = pt.doc): string {
+export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null, turns: Turn[], d: Doc = pt.doc, flow?: FlowBlock): string {
   const title = summary?.assunto.trim() || d.untitled
   const parts: string[] = [...frontmatter(meta, d), '', `# ${escapeInline(title)}`, '']
 
@@ -103,6 +115,7 @@ export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null,
 
   parts.push(...section(d.transcript, transcriptBlock(turns, d)))
   if (turns.length === 0) parts.push(`## ${d.transcript}`, '', d.noSpeech, '')
+  parts.push(...flowSection(flow, d))
 
   while (parts[parts.length - 1] === '') parts.pop()
   return `${parts.join('\n')}\n`

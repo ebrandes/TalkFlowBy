@@ -123,8 +123,10 @@ let settings: Settings = {
   keepAudio: false,
   detectMeetings: true,
   silenceStopMinutes: 5,
+  drawFlows: true,
   transcriptionQuality: 'best',
   mutedApps: [],
+  checkUpdates: true,
   openAtLogin: true
 }
 
@@ -142,6 +144,8 @@ window.talkflow = {
   library: {
     tree: async () => tree(),
     read: async (rel) => files.get(rel) ?? '',
+    search: async (q) =>
+      [...files.entries()].filter(([, c]) => c.toLowerCase().includes(q.toLowerCase())).map(([path, c]) => ({ path, snippet: c.slice(c.toLowerCase().indexOf(q.toLowerCase()), c.toLowerCase().indexOf(q.toLowerCase()) + 80) })),
     write: async (rel, c) => void files.set(rel, c),
     create: async (title = dict(lang).main.newNote) => {
       const rel = `${F.notes}/${title}.md`
@@ -158,6 +162,7 @@ window.talkflow = {
     trashMany: async (rels) => rels.filter((r) => files.delete(r)).length,
     reveal: async () => undefined,
     openRoot: async () => '',
+    chooseRoot: async () => settings,
     onChanged: noop
   },
   recording: {
@@ -185,5 +190,10 @@ window.talkflow = {
     openSettings: async () => undefined
   },
   prompt: { answer: async () => undefined },
-  window: { show: async () => undefined }
+  window: { show: async () => undefined },
+  update: {
+    get: async () => (params.has('update') ? { version: '0.2.1', state: (params.get('update') as 'available' | 'ready') || 'available' } : null),
+    apply: async () => undefined,
+    onInfo: noop
+  }
 }

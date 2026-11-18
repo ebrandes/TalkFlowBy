@@ -52,6 +52,29 @@ export async function whisperPath(): Promise<string | null> {
   return findExecutable('whisper-cli')
 }
 
+/**
+ * A skill fireworks-tech-graph, se estiver instalada (Claude Code ou Codex), mais o Python para rodá-la.
+ * Sem ela o fluxo vai em Mermaid, que o GitHub e o Obsidian desenham sozinhos.
+ */
+export async function fireworksPaths(): Promise<{ python: string; script: string } | null> {
+  const home = homedir()
+  const roots = [join(home, '.claude', 'skills', 'fireworks-tech-graph'), join(home, '.codex', 'skills', 'fireworks-tech-graph'), join(home, '.agents', 'skills', 'fireworks-tech-graph')]
+  let script: string | null = null
+  for (const r of roots) {
+    const s = join(r, 'scripts', 'fireworks.py')
+    try {
+      await access(s, constants.F_OK)
+      script = s
+      break
+    } catch {
+      /* tenta a próxima */
+    }
+  }
+  if (!script) return null
+  const python = (await findExecutable('python3')) ?? (await findExecutable('python'))
+  return python ? { python, script } : null
+}
+
 export async function micwatchPath(): Promise<string | null> {
   const bundled = join(bundledBinDir(), 'micwatch')
   return (await isExecutable(bundled)) ? bundled : null

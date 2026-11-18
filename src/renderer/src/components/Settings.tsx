@@ -52,10 +52,16 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
             <div className="set-label">
               <span>{t.folder}</span>
               <code className="path">{settings.rootDir}</code>
+              <span className="hint">{t.folderHint}</span>
             </div>
-            <button className="btn" onClick={() => void window.talkflow.library.openRoot()}>
-              {t.open}
-            </button>
+            <div className="btn-pair">
+              <button className="btn" onClick={() => void window.talkflow.library.openRoot()}>
+                {t.open}
+              </button>
+              <button className="btn" onClick={async () => onChange(await window.talkflow.library.chooseRoot())}>
+                {t.change}
+              </button>
+            </div>
           </div>
         </section>
 
@@ -87,7 +93,9 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
               <option value={0}>{t.silenceNever}</option>
             </select>
           </div>
+          <Toggle label={t.drawFlows} hint={t.drawFlowsHint} checked={settings.drawFlows} onChange={(v) => void update({ drawFlows: v })} />
           <Toggle label={t.keepAudio} hint={t.keepAudioHint} checked={settings.keepAudio} onChange={(v) => void update({ keepAudio: v })} />
+          <Toggle label={t.checkUpdates} hint={t.checkUpdatesHint} checked={settings.checkUpdates} onChange={(v) => void update({ checkUpdates: v })} />
           <Toggle label={t.openAtLogin} hint={t.openAtLoginHint} checked={settings.openAtLogin} onChange={(v) => void update({ openAtLogin: v })} />
         </section>
 

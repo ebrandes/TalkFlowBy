@@ -4,6 +4,7 @@ import type { Folders, LibraryNode } from '../../../shared/types'
 import { useT } from '../i18n'
 import { guideSpan, meetingGroups, noteItems, type ListItem } from '../lib/notes'
 import { DateBlock } from './Stamp'
+import { UpdateBanner } from './UpdateBanner'
 
 export type Tab = 'meetings' | 'notes'
 
@@ -26,8 +27,25 @@ export function Sidebar(p: Props): React.JSX.Element {
   const [query, setQuery] = useState('')
   const [picking, setPicking] = useState(false)
   const [picked, setPicked] = useState<Set<string>>(new Set())
-  const groups = useMemo(() => meetingGroups(p.tree, query, p.folders, t), [p.tree, query, p.folders, t])
-  const notes = useMemo(() => noteItems(p.tree, query, p.folders), [p.tree, query, p.folders])
+  // Busca também dentro das notas, com um pequeno atraso para não ler os arquivos a cada tecla.
+  const [hits, setHits] = useState<Map<string, string>>(new Map())
+  useEffect(() => {
+    if (query.trim().length < 2) return setHits(new Map())
+    let alive = true
+    const timer = setTimeout(async () => {
+      const found = await window.talkflow.library.search(query)
+      if (alive) setHits(new Map(found.map((h) => [h.path, h.snippet])))
+    }, 250)
+    return () => {
+      alive = false
+      clearTimeout(timer)
+    }
+  }, [query, p.tree])
+  const inContent = useMemo(() => new Set(hits.keys()), [hits])
+  const snippetFor = (item: ListItem): string | undefined =>
+    query && !item.title.toLowerCase().includes(query.trim().toLowerCase()) ? hits.get(item.path) : undefined
+  const groups = useMemo(() => meetingGroups(p.tree, query, p.folders, t, inContent), [p.tree, query, p.folders, t, inContent])
+  const notes = useMemo(() => noteItems(p.tree, query, p.folders, inContent), [p.tree, query, p.folders, inContent])
   const span = guideSpan(groups, t.months)
   const visible = p.tab === 'meetings' ? groups.flatMap((g) => g.items) : notes
 
@@ -109,6 +127,7 @@ export function Sidebar(p: Props): React.JSX.Element {
                   selected={!picking && item.path === p.selected}
                   picked={picking ? picked.has(item.path) : undefined}
                   preview={p.preview}
+                  snippet={snippetFor(item)}
                   onChoose={choose}
                 />
               ))}
@@ -123,12 +142,16 @@ export function Sidebar(p: Props): React.JSX.Element {
               aria-pressed={picking ? picked.has(item.path) : undefined}
             >
               {picking ? <PickBox on={picked.has(item.path)} /> : <FileText size={16} strokeWidth={1.75} aria-hidden />}
-              <span className="row-title">{item.title}</span>
+              <span className="row-body">
+                <span className="row-title">{item.title}</span>
+                {snippetFor(item) && <span className="row-preview">{snippetFor(item)}</span>}
+              </span>
             </button>
           ))}
         <EmptyList tab={p.tab} query={query} empty={visible.length === 0} onNewNote={p.onNewNote} />
       </nav>
 
+      {!picking && <UpdateBanner />}
       {picking && (
         <div className="pick-bar">
           <div className="pick-line">
@@ -168,10 +191,12 @@ interface RowProps {
   /** Definido só no modo de seleção. */
   picked?: boolean
   preview: string
+  /** Trecho onde a busca achou o texto, quando não foi pelo título. */
+  snippet?: string
   onChoose: (rel: string) => void
 }
 
-function MeetingRow({ item, months, selected, picked, preview, onChoose }: RowProps): React.JSX.Element {
+function MeetingRow({ item, months, selected, picked, preview, snippet, onChoose }: RowProps): React.JSX.Element {
   const m = item.meeting
   const picking = picked !== undefined
   return (
@@ -186,7 +211,7 @@ function MeetingRow({ item, months, selected, picked, preview, onChoose }: RowPr
       <span className="row-body">
         <span className="row-title">{item.title}</span>
         {m && <span className="row-meta">{m.time}</span>}
-        {selected && preview && <span className="row-preview">{preview}</span>}
+        {snippet ? <span className="row-preview">{snippet}</span> : selected && preview && <span className="row-preview">{preview}</span>}
       </span>
     </button>
   )

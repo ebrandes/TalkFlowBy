@@ -14,3 +14,12 @@ describe('qualidade da transcrição', () => {
     expect(WHISPER_MODELS.fast.sizeMb).toBeLessThan(WHISPER_MODELS.balanced.sizeMb)
   })
 })
+
+describe('versão nova', () => {
+  it('compara número a número', async () => {
+    const { isNewer } = await import('../src/main/updater')
+    expect(isNewer('v0.1.10', '0.1.9')).toBe(true)
+    expect(isNewer('0.2.0', '0.2.0')).toBe(false)
+    expect(isNewer('0.1.2', '0.2.0')).toBe(false)
+  })
+})

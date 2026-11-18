@@ -37,15 +37,30 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - name: Build installer
-        run: ${{ matrix.dist }}
+        shell: bash
+        # Sem os segredos de assinatura o instalador sai sem assinar (com aviso do sistema).
+        # Com eles, sai assinado e, no Mac, notarizado. Veja docs/SIGNING.md.
+        run: |
+          EXTRA=""
+          if [ "$RUNNER_OS" = "macOS" ] && [ -n "$APPLE_ID" ] && [ -n "$CSC_LINK" ]; then EXTRA="-c.mac.notarize=true"; fi
+          ${{ matrix.dist }} $EXTRA
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: TalkFlowBy-${{ matrix.name }}
           path: |
             dist/*.dmg
             dist/*.exe
+            dist/latest.yml
+            dist/*-windows-setup.exe.blockmap
           if-no-files-found: error
 
   release:

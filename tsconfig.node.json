@@ -4,5 +4,5 @@
     "strict": true, "esModuleInterop": true, "skipLibCheck": true,
     "types": ["node"], "composite": true, "noEmit": true
   },
-  "include": ["electron.vite.config.mts", "src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/renderer/src/lib/notes.ts", "src/renderer/src/lib/share.ts", "test/**/*", "vitest.config.mts", "vite.ui.config.mts"]
+  "include": ["electron.vite.config.mts", "src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/renderer/src/lib/notes.ts", "src/renderer/src/lib/share.ts", "src/main/search.ts", "test/**/*", "vitest.config.mts", "vite.ui.config.mts"]
 }

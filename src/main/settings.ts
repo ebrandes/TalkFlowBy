@@ -31,8 +31,10 @@ function defaults(): Stored {
     keepAudio: false,
     detectMeetings: true,
     silenceStopMinutes: 5,
+    drawFlows: true,
     transcriptionQuality: defaultQuality(process.platform, process.arch),
     mutedApps: [],
+    checkUpdates: true,
     openAtLogin: true
   }
 }

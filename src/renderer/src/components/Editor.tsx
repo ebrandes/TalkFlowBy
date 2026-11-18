@@ -6,6 +6,13 @@ import { useEffect, useRef } from 'react'
 import { useT } from '../i18n'
 import { CREPE_FEATURES, crepeConfig } from './editor-config'
 
+/** Imagem com caminho relativo à nota (o diagrama do fluxo) vira um endereço que o app sabe servir. */
+export function noteFileUrl(notePath: string, url: string): string {
+  if (/^(https?|data|blob|tfb-file):/i.test(url)) return url
+  const dir = notePath.includes('/') ? notePath.slice(0, notePath.lastIndexOf('/') + 1) : ''
+  return `tfb-file://note/${encodeURIComponent(dir + decodeURI(url))}`
+}
+
 interface Props {
   /** Muda quando outra nota é aberta; recria o editor. */
   docKey: string
@@ -31,7 +38,7 @@ export function Editor({ docKey, value, onChange }: Props): React.JSX.Element {
       root: host.current,
       defaultValue: value,
       features: CREPE_FEATURES,
-      featureConfigs: crepeConfig(t.editor)
+      featureConfigs: crepeConfig(t.editor, (url) => noteFileUrl(docKey, url))
     })
     // Mesmo formato que o TalkFlowBy escreve: listas com "-" e sem <br /> para linha vazia.
     crepe.editor.config((ctx) => {

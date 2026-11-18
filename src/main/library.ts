@@ -1,7 +1,7 @@
 import { shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import type { Folders, LibraryNode } from '../shared/types'
 import { safeName, uniqueName } from './pipeline/filename'
 
@@ -70,9 +70,23 @@ export async function renameNote(root: string, rel: string, newTitle: string): P
   return target
 }
 
+/** Diagramas gerados para a nota ("<nota> - fluxo.svg"), que vão junto para a Lixeira. */
+async function attachments(full: string): Promise<string[]> {
+  const base = basename(full).replace(/\.md$/i, '')
+  try {
+    return (await readdir(dirname(full)))
+      .filter((f) => f.startsWith(`${base} - `) && f.toLowerCase().endsWith('.svg'))
+      .map((f) => join(dirname(full), f))
+  } catch {
+    return []
+  }
+}
+
 /** Vai para a Lixeira do sistema, nunca apaga de vez. */
 export async function trashNote(root: string, rel: string): Promise<void> {
-  await shell.trashItem(resolveInside(root, rel))
+  const full = resolveInside(root, rel)
+  for (const a of await attachments(full)) await shell.trashItem(a).catch(() => undefined)
+  await shell.trashItem(full)
 }
 
 /** Várias de uma vez; devolve quantas foram para a Lixeira. */
@@ -80,7 +94,7 @@ export async function trashNotes(root: string, rels: string[]): Promise<number> 
   let done = 0
   for (const rel of rels) {
     try {
-      await shell.trashItem(resolveInside(root, rel))
+      await trashNote(root, rel)
       done++
     } catch {
       // Arquivo já sumiu ou está em uso: segue com os outros.

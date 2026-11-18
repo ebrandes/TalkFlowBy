@@ -9,11 +9,11 @@ export const en = {
   rail: {
     newNote: 'New note',
     settings: 'Settings',
-    search: 'Search titles',
+    search: 'Search notes',
     meetings: 'Meetings',
     notes: 'Notes',
     range: 'Range shown',
-    nothingFound: (q: string) => `Nothing titled “${q}”.`,
+    nothingFound: (q: string) => `Nothing found for “${q}”.`,
     emptyMeetings: 'Recorded meetings show up here, filed by month.',
     emptyNotes: 'Loose notes live here.',
     createFirst: 'Create the first one'
@@ -103,7 +103,9 @@ export const en = {
     appLanguage: 'App language',
     notes: 'Notes',
     folder: 'Folder',
+    folderHint: 'Point it at your Obsidian vault if you like. Notes already saved stay where they are.',
     open: 'Open',
+    change: 'Change…',
     meetings: 'Meetings',
     ask: 'Ask to record when I join a meeting',
     askHint: 'Teams and Google Meet in the browser',
@@ -111,10 +113,14 @@ export const en = {
     askAgain: 'Ask again',
     keepAudio: 'Keep the audio after transcribing',
     keepAudioHint: 'When off, the audio is deleted once the note is ready',
+    drawFlows: 'Draw the workflow',
+    drawFlowsHint: 'When the meeting describes a process, a diagram goes at the end of the note',
     silenceStop: 'Stop after silence',
     silenceStopHint: 'Ends the recording when nobody has spoken for a while',
     silenceNever: 'Never',
     minutes: (n: number) => `${n} minutes`,
+    checkUpdates: 'Check for updates',
+    checkUpdatesHint: 'Looks for new versions on GitHub every few hours',
     openAtLogin: 'Open at login',
     openAtLoginHint: 'Stays in the tray, ready to ask',
     transcription: 'Transcription',
@@ -172,13 +178,23 @@ export const en = {
     lists: 'Lists',
     bullet: 'Bulleted list',
     ordered: 'Numbered list',
-    task: 'To-do list'
+    task: 'To-do list',
+    uploadImage: 'Upload image',
+    imageLink: 'or paste an image link',
+    imageCaption: 'Add a caption'
   },
 
   autoStop: {
     meetingEnded: (app: string) => `Recording stopped: the ${app} call ended. Your note will be ready in a few minutes.`,
     silence: (min: number) => `Recording stopped after ${min} minutes of silence. Your note will be ready in a few minutes.`,
     recovered: (n: number) => (n === 1 ? 'An interrupted recording was recovered and is being processed.' : `${n} interrupted recordings were recovered and are being processed.`)
+  },
+
+  update: {
+    available: (v: string) => `Version ${v} is available`,
+    ready: (v: string) => `Version ${v} is ready`,
+    download: 'Download',
+    restart: 'Restart to update'
   },
 
   tray: {
@@ -206,6 +222,8 @@ export const en = {
     decisions: 'Decisions',
     nextSteps: 'Next steps',
     transcript: 'Transcript',
+    flow: 'Workflow',
+    flowImage: 'Workflow diagram',
     noSummary: 'The summary was not generated. The full transcript is below.',
     noSpeech: 'No speech was recognized in this recording.'
   }

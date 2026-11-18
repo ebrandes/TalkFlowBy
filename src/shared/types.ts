@@ -27,6 +27,13 @@ export interface Task {
   responsavel?: string
 }
 
+/** Fluxo de trabalho descrito na reunião, quando houver. */
+export interface Flow {
+  titulo: string
+  passos: { id: string; rotulo: string }[]
+  ligacoes: { de: string; para: string; rotulo?: string }[]
+}
+
 /** O que o Haiku devolve. O markdown é montado em código a partir disto. */
 export interface Summary {
   assunto: string
@@ -34,6 +41,7 @@ export interface Summary {
   topicos: Topic[]
   decisoes: string[]
   tarefas: Task[]
+  fluxo?: Flow | null
 }
 
 export interface MeetingMeta {
@@ -74,9 +82,13 @@ export interface Settings {
   detectMeetings: boolean
   /** Modelo do Whisper: melhor, equilibrado ou mais rápido. */
   transcriptionQuality: import('./models').TranscriptionQuality
+  /** Desenhar o fluxo no fim da nota quando a reunião descreve um processo. */
+  drawFlows: boolean
   /** Minutos sem som para parar a gravação sozinha; 0 desliga. */
   silenceStopMinutes: number
   mutedApps: string[]
+  /** Procurar versão nova no GitHub. */
+  checkUpdates: boolean
   openAtLogin: boolean
 }
 

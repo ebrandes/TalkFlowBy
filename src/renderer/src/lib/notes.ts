@@ -44,14 +44,14 @@ const findFolder = (tree: LibraryNode[], name: string): LibraryNode[] =>
   tree.find((n) => n.kind === 'folder' && n.name === name)?.children ?? []
 
 /** Reuniões agrupadas por mês, mais recentes primeiro. */
-export function meetingGroups(tree: LibraryNode[], query: string, folders: Folders, t: Dict): Group[] {
+export function meetingGroups(tree: LibraryNode[], query: string, folders: Folders, t: Dict, inContent: Set<string> = new Set()): Group[] {
   const q = query.trim().toLowerCase()
   const items = files(findFolder(tree, folders.meetings))
     .map((f) => {
       const meeting = parseMeetingName(f.name)
       return { path: f.path, title: meeting?.subject ?? f.name, meeting, modifiedAt: f.modifiedAt }
     })
-    .filter((i) => !q || i.title.toLowerCase().includes(q))
+    .filter((i) => !q || i.title.toLowerCase().includes(q) || inContent.has(i.path))
     .sort((a, b) => b.path.localeCompare(a.path, 'pt-BR', { numeric: true }))
 
   const groups: Group[] = []
@@ -64,11 +64,11 @@ export function meetingGroups(tree: LibraryNode[], query: string, folders: Folde
   return groups
 }
 
-export function noteItems(tree: LibraryNode[], query: string, folders: Folders): ListItem[] {
+export function noteItems(tree: LibraryNode[], query: string, folders: Folders, inContent: Set<string> = new Set()): ListItem[] {
   const q = query.trim().toLowerCase()
   return files(findFolder(tree, folders.notes))
     .map((f) => ({ path: f.path, title: f.name, meeting: null, modifiedAt: f.modifiedAt }))
-    .filter((i) => !q || i.title.toLowerCase().includes(q))
+    .filter((i) => !q || i.title.toLowerCase().includes(q) || inContent.has(i.path))
     .sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
 }
 

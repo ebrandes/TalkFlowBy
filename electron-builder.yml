@@ -1,5 +1,10 @@
 appId: com.talkflowby.app
 productName: TalkFlowBy
+# Versões novas vêm das releases do GitHub (o Windows baixa sozinho pelo latest.yml).
+publish:
+  provider: github
+  owner: ebrandes
+  repo: TalkFlowBy
 directories:
   output: dist
   buildResources: build
@@ -25,7 +30,6 @@ mac:
   artifactName: ${productName}-${version}-mac-${arch}.${ext}
   category: public.app-category.productivity
   minimumSystemVersion: "14.2"
-  identity: null
   extendInfo:
     NSMicrophoneUsageDescription: TalkFlowBy records your voice in the meetings you choose to record.
     NSAudioCaptureUsageDescription: TalkFlowBy records the call audio (the other participants' voices) in the meetings you choose to record.

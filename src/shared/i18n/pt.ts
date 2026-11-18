@@ -10,11 +10,11 @@ export const pt: Dict = {
   rail: {
     newNote: 'Nova nota',
     settings: 'Configurações',
-    search: 'Buscar pelo título',
+    search: 'Buscar nas notas',
     meetings: 'Reuniões',
     notes: 'Notas',
     range: 'Intervalo listado',
-    nothingFound: (q) => `Nada com “${q}” no título.`,
+    nothingFound: (q) => `Nada encontrado para “${q}”.`,
     emptyMeetings: 'As reuniões gravadas aparecem aqui, organizadas por mês.',
     emptyNotes: 'Notas soltas ficam aqui.',
     createFirst: 'Criar a primeira'
@@ -104,7 +104,9 @@ export const pt: Dict = {
     appLanguage: 'Idioma do app',
     notes: 'Notas',
     folder: 'Pasta',
+    folderHint: 'Pode apontar para o seu vault do Obsidian. As notas já salvas continuam onde estão.',
     open: 'Abrir',
+    change: 'Trocar…',
     meetings: 'Reuniões',
     ask: 'Perguntar se quero gravar quando entro numa reunião',
     askHint: 'Teams e Google Meet no navegador',
@@ -112,10 +114,14 @@ export const pt: Dict = {
     askAgain: 'Voltar a perguntar',
     keepAudio: 'Guardar o áudio depois de transcrever',
     keepAudioHint: 'Desligado, o áudio é apagado quando a nota fica pronta',
+    drawFlows: 'Desenhar o fluxo',
+    drawFlowsHint: 'Quando a reunião descreve um processo, um diagrama vai no fim da nota',
     silenceStop: 'Parar depois de silêncio',
     silenceStopHint: 'Encerra a gravação quando ninguém fala por um tempo',
     silenceNever: 'Nunca',
     minutes: (n) => `${n} minutos`,
+    checkUpdates: 'Procurar atualizações',
+    checkUpdatesHint: 'Procura versão nova no GitHub a cada poucas horas',
     openAtLogin: 'Abrir junto com o computador',
     openAtLoginHint: 'Fica na bandeja, pronto para perguntar',
     transcription: 'Transcrição',
@@ -173,13 +179,23 @@ export const pt: Dict = {
     lists: 'Listas',
     bullet: 'Lista',
     ordered: 'Lista numerada',
-    task: 'Tarefas'
+    task: 'Tarefas',
+    uploadImage: 'Enviar imagem',
+    imageLink: 'ou cole o link de uma imagem',
+    imageCaption: 'Adicionar legenda'
   },
 
   autoStop: {
     meetingEnded: (app) => `Gravação encerrada: a chamada no ${app} terminou. A nota fica pronta em alguns minutos.`,
     silence: (min) => `Gravação encerrada depois de ${min} minutos de silêncio. A nota fica pronta em alguns minutos.`,
     recovered: (n) => (n === 1 ? 'Uma gravação interrompida foi recuperada e está sendo processada.' : `${n} gravações interrompidas foram recuperadas e estão sendo processadas.`)
+  },
+
+  update: {
+    available: (v) => `Versão ${v} disponível`,
+    ready: (v) => `Versão ${v} pronta`,
+    download: 'Baixar',
+    restart: 'Reiniciar para atualizar'
   },
 
   tray: {
@@ -207,6 +223,8 @@ export const pt: Dict = {
     decisions: 'Decisões',
     nextSteps: 'Próximos passos',
     transcript: 'Transcrição',
+    flow: 'Fluxo',
+    flowImage: 'Diagrama do fluxo',
     noSummary: 'O resumo não foi gerado. A transcrição completa está abaixo.',
     noSpeech: 'Nenhuma fala foi reconhecida nesta gravação.'
   }

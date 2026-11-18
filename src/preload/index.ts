@@ -30,6 +30,7 @@ const api = {
   library: {
     tree: (): Promise<LibraryNode[]> => ipcRenderer.invoke('library:tree'),
     read: (rel: string): Promise<string> => ipcRenderer.invoke('library:read', rel),
+    search: (query: string): Promise<{ path: string; snippet: string }[]> => ipcRenderer.invoke('library:search', query),
     write: (rel: string, content: string): Promise<void> => ipcRenderer.invoke('library:write', rel, content),
     create: (title?: string): Promise<string> => ipcRenderer.invoke('library:create', title),
     rename: (rel: string, title: string): Promise<string> => ipcRenderer.invoke('library:rename', rel, title),
@@ -37,6 +38,7 @@ const api = {
     trashMany: (rels: string[]): Promise<number> => ipcRenderer.invoke('library:trashMany', rels),
     reveal: (rel: string): Promise<void> => ipcRenderer.invoke('library:reveal', rel),
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
+    chooseRoot: (): Promise<Settings> => ipcRenderer.invoke('library:chooseRoot'),
     onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb)
   },
   recording: {
@@ -67,7 +69,12 @@ const api = {
   prompt: {
     answer: (answer: 'record' | 'later' | 'never'): Promise<void> => ipcRenderer.invoke('prompt:answer', answer)
   },
-  window: { show: (): Promise<void> => ipcRenderer.invoke('window:show') }
+  window: { show: (): Promise<void> => ipcRenderer.invoke('window:show') },
+  update: {
+    get: (): Promise<{ version: string; state: 'available' | 'ready' } | null> => ipcRenderer.invoke('update:get'),
+    apply: (): Promise<void> => ipcRenderer.invoke('update:apply'),
+    onInfo: (cb: (info: { version: string; state: 'available' | 'ready' }) => void): Unsubscribe => on('update:info', cb)
+  }
 }
 
 contextBridge.exposeInMainWorld('talkflow', api)
