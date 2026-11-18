@@ -1,5 +1,6 @@
 import { app, shell } from 'electron'
 import electronUpdater from 'electron-updater'
+import { isNewer } from '../shared/version'
 
 const REPO = 'ebrandes/TalkFlowBy'
 const RELEASES = `https://github.com/${REPO}/releases/latest`
@@ -9,18 +10,6 @@ export interface UpdateInfo {
   version: string
   /** "ready": baixada e pronta para instalar (Windows). "available": só avisar e abrir o download (Mac). */
   state: 'available' | 'ready'
-}
-
-/** "0.1.10" > "0.1.9": compara número a número. */
-export function isNewer(latest: string, current: string): boolean {
-  const a = latest.replace(/^v/, '').split('.').map(Number)
-  const b = current.replace(/^v/, '').split('.').map(Number)
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    const x = a[i] ?? 0
-    const y = b[i] ?? 0
-    if (x !== y) return x > y
-  }
-  return false
 }
 
 /**

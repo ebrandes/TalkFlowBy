@@ -41,6 +41,10 @@ jobs:
         # Sem os segredos de assinatura o instalador sai sem assinar (com aviso do sistema).
         # Com eles, sai assinado e, no Mac, notarizado. Veja docs/SIGNING.md.
         run: |
+          # Segredo que não existe chega como texto vazio; o electron-builder trataria como caminho de arquivo.
+          [ -z "$CSC_LINK" ] && unset CSC_LINK CSC_KEY_PASSWORD
+          [ -z "$WIN_CSC_LINK" ] && unset WIN_CSC_LINK WIN_CSC_KEY_PASSWORD
+          [ -z "$APPLE_ID" ] && unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
           EXTRA=""
           if [ "$RUNNER_OS" = "macOS" ] && [ -n "$APPLE_ID" ] && [ -n "$CSC_LINK" ]; then EXTRA="-c.mac.notarize=true"; fi
           ${{ matrix.dist }} $EXTRA
