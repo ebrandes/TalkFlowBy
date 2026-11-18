@@ -1,8 +1,8 @@
 import { EventEmitter } from 'node:events'
 import type { DetectedMeeting } from '../../shared/types'
 import { micwatchPath } from '../setup/binaries'
-import { watchMac } from './mac'
-import { pollWindows } from './windows'
+import { watchHelper, watchMac } from './mac'
+import { meetingsFromWinReport, pollWindows } from './windows'
 
 /** Tempo com o microfone aberto antes de perguntar (evita aviso por um teste rápido). */
 export const START_AFTER_MS = 5_000
@@ -72,6 +72,11 @@ export class MeetingDetector extends EventEmitter<DetectorEvents> {
       const bin = await micwatchPath()
       if (bin) this.stopFn = watchMac(bin, (apps) => this.update(apps))
     } else if (process.platform === 'win32') {
+      const bin = await micwatchPath()
+      if (bin) {
+        this.stopFn = watchHelper(bin, meetingsFromWinReport, (apps) => this.update(apps))
+        return
+      }
       const poll = setInterval(async () => this.update(await pollWindows()), WIN_POLL_MS)
       this.stopFn = () => clearInterval(poll)
     }

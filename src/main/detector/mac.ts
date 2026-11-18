@@ -19,17 +19,24 @@ export function meetingsFromReport(line: string): DetectedMeeting[] | null {
 
 /** Mantém o `micwatch` rodando e avisa a cada mudança. Reinicia se ele cair. */
 export function watchMac(binary: string, onChange: (apps: DetectedMeeting[]) => void): () => void {
+  return watchHelper(binary, meetingsFromReport, onChange)
+}
+
+/** Roda um `micwatch` (Mac ou Windows) que imprime uma linha por relatório; reinicia se ele cair. */
+export function watchHelper(binary: string, parse: (line: string) => DetectedMeeting[] | null, onChange: (apps: DetectedMeeting[]) => void): () => void {
   let child: ChildProcess | null = null
   let stopped = false
   let restartTimer: NodeJS.Timeout | null = null
 
   const startChild = (): void => {
-    child = spawn(binary, ['2'], { stdio: ['ignore', 'pipe', 'ignore'] })
+    child = spawn(binary, ['2'], { stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true })
     const rl = createInterface({ input: child.stdout! })
     rl.on('line', (line) => {
-      const apps = meetingsFromReport(line)
+      const apps = parse(line)
       if (apps) onChange(apps)
     })
+    // Sem isso, um antivírus bloqueando o helper derrubaria o processo principal.
+    child.on('error', () => {})
     child.on('exit', () => {
       if (!stopped) restartTimer = setTimeout(startChild, 5000)
     })

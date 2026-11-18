@@ -76,7 +76,7 @@ export async function fireworksPaths(): Promise<{ python: string; script: string
 }
 
 export async function micwatchPath(): Promise<string | null> {
-  const bundled = join(bundledBinDir(), 'micwatch')
+  const bundled = join(bundledBinDir(), isWin ? 'micwatch.exe' : 'micwatch')
   return (await isExecutable(bundled)) ? bundled : null
 }
 

@@ -38,6 +38,24 @@ export function matchMac(bundleId: string): DetectedMeeting | null {
   return app ? { appId: app.id, appName: app.name } : null
 }
 
+/** Processos que só hospedam o áudio de outro app; quem conta é o pai. */
+const HOSTS = ['msedgewebview2.exe']
+
+/**
+ * Acha o app de reunião pela cadeia de processos do `micwatch.exe` (quem captura, depois os pais).
+ * Sobe só por hospedeiros (WebView2) e processos auxiliares do mesmo .exe: um programa aberto
+ * a partir do navegador não vira "Google Meet".
+ */
+export function matchWindowsChain(chain: string[]): DetectedMeeting | null {
+  const names = chain.map((n) => n.toLowerCase())
+  let i = 0
+  while (i < names.length - 1 && (HOSTS.includes(names[i]) || names[i + 1] === names[i])) i++
+  const exe = names[i]
+  if (!exe || HOSTS.includes(exe) || isSelf(exe)) return null
+  const app = KNOWN_APPS.find((a) => a.win.some((p) => p.endsWith('.exe') && p === exe))
+  return app ? { appId: app.id, appName: app.name } : null
+}
+
 export function matchWindows(registryKey: string): DetectedMeeting | null {
   const key = registryKey.toLowerCase()
   if (isSelf(key)) return null

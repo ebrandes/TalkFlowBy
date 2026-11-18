@@ -1,10 +1,27 @@
 import { execFile } from 'node:child_process'
 import type { DetectedMeeting } from '../../shared/types'
-import { matchWindows } from './apps'
+import { matchWindows, matchWindowsChain } from './apps'
+
+/** Lê uma linha do `micwatch.exe` (WASAPI): `{"apps":[{"pid":1,"chain":["ms-teams.exe","explorer.exe"]}]}`. */
+export function meetingsFromWinReport(line: string): DetectedMeeting[] | null {
+  try {
+    const report = JSON.parse(line) as { apps?: { chain?: string[] }[] }
+    const seen = new Map<string, DetectedMeeting>()
+    for (const app of report.apps ?? []) {
+      const m = matchWindowsChain(app.chain ?? [])
+      if (m) seen.set(m.appId, m)
+    }
+    return [...seen.values()]
+  } catch {
+    return null
+  }
+}
 
 const ROOT = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\microphone'
 
 /**
+ * Reserva para quando o `micwatch.exe` não existe: o registro do consentimento do microfone.
+ * Em versões recentes do Windows 11 ele parou de ser atualizado, por isso não é o caminho principal.
  * Lê a saída de `reg query ... /s` e devolve as chaves que estão usando o microfone agora.
  * O Windows grava `LastUsedTimeStop = 0` enquanto o app está com o microfone aberto.
  */

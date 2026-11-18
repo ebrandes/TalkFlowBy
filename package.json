@@ -42,7 +42,7 @@
     "build:micwatch": "node scripts/build-micwatch.mjs",
     "fetch:binaries": "node scripts/fetch-binaries.mjs",
     "dist:mac": "npm run build:micwatch && npm run fetch:binaries && electron-vite build && electron-builder --mac --publish never",
-    "dist:win": "npm run fetch:binaries && electron-vite build && electron-builder --win --publish never",
+    "dist:win": "npm run build:micwatch && npm run fetch:binaries && electron-vite build && electron-builder --win --publish never",
     "dev:ui": "vite --config vite.ui.config.mts"
   },
   "dependencies": {

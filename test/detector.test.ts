@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { matchMac } from '../src/main/detector/apps'
+import { matchMac, matchWindowsChain } from '../src/main/detector/apps'
 import { END_AFTER_MS, MeetingDetector, START_AFTER_MS } from '../src/main/detector/index'
 import { meetingsFromReport } from '../src/main/detector/mac'
-import { meetingsFromKeys, parseConsentStore } from '../src/main/detector/windows'
+import { meetingsFromKeys, meetingsFromWinReport, parseConsentStore } from '../src/main/detector/windows'
 
 const REG = String.raw`
 HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone
@@ -27,6 +27,32 @@ describe('Windows', () => {
     const keys = parseConsentStore(REG)
     expect(keys).toHaveLength(2)
     expect(meetingsFromKeys(keys)).toEqual([{ appId: 'teams', appName: 'Microsoft Teams' }])
+  })
+})
+
+describe('Windows (micwatch.exe)', () => {
+  it('acha o app pela cadeia de processos, passando pelo WebView2', () => {
+    expect(matchWindowsChain(['ms-teams.exe', 'ms-teams.exe', 'explorer.exe'])?.appId).toBe('teams')
+    expect(matchWindowsChain(['msedgewebview2.exe', 'msedgewebview2.exe', 'ms-teams.exe', 'explorer.exe'])?.appId).toBe('teams')
+    expect(matchWindowsChain(['chrome.exe', 'chrome.exe', 'explorer.exe'])?.appId).toBe('chrome')
+    expect(matchWindowsChain(['msedge.exe', 'explorer.exe'])?.appId).toBe('edge')
+    expect(matchWindowsChain(['Zoom.exe', 'explorer.exe'])?.appId).toBe('zoom')
+  })
+
+  it('ignora o próprio app, WebView2 de outros apps e programas abertos pelo navegador', () => {
+    expect(matchWindowsChain(['TalkFlowBy.exe', 'TalkFlowBy.exe', 'explorer.exe'])).toBeNull()
+    expect(matchWindowsChain(['msedgewebview2.exe', 'olk.exe', 'explorer.exe'])).toBeNull()
+    expect(matchWindowsChain(['Discord.exe', 'chrome.exe', 'explorer.exe'])).toBeNull()
+    expect(matchWindowsChain(['ffmpeg.exe', 'TalkFlowBy.exe'])).toBeNull()
+    expect(matchWindowsChain(['xarc.exe'])).toBeNull()
+    expect(matchWindowsChain([])).toBeNull()
+  })
+
+  it('lê o relatório do helper', () => {
+    const line = '{"apps":[{"pid":1,"chain":["ms-teams.exe","explorer.exe"]},{"pid":2,"chain":["ms-teams.exe","explorer.exe"]},{"pid":3,"chain":["Spotify.exe"]}]}'
+    expect(meetingsFromWinReport(line)).toEqual([{ appId: 'teams', appName: 'Microsoft Teams' }])
+    expect(meetingsFromWinReport('{"apps":[]}')).toEqual([])
+    expect(meetingsFromWinReport('lixo')).toBeNull()
   })
 })
 

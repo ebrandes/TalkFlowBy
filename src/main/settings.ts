@@ -5,9 +5,12 @@ import { join } from 'node:path'
 import { dict, langFromLocale } from '../shared/i18n'
 import { defaultQuality } from '../shared/models'
 import type { Settings } from '../shared/types'
+import { followUiLanguage, repairedLanguage } from './language'
 
 interface Stored extends Omit<Settings, 'hasApiKey'> {
   apiKeyEncrypted?: string
+  /** O idioma das reuniões já foi acertado com o do app (veja `migrateLanguage`). */
+  languageMigrated?: boolean
 }
 
 const file = (): string => join(app.getPath('userData'), 'settings.json')
@@ -20,6 +23,14 @@ function defaultLanguage(): string {
   return 'en'
 }
 
+/** Corrige, uma vez, o idioma das reuniões de quem veio da 0.2.0 (veja `repairedLanguage`). */
+function migrateLanguage(stored: Partial<Stored>): Partial<Stored> {
+  if (stored.languageMigrated || !stored.uiLanguage || !stored.language) return {}
+  const ui = langFromLocale(app.getPreferredSystemLanguages()[0] ?? app.getLocale())
+  const language = repairedLanguage(stored, { ui, language: defaultLanguage() })
+  return language ? { language, languageMigrated: true } : { languageMigrated: true }
+}
+
 function defaults(): Stored {
   const uiLanguage = langFromLocale(app.getPreferredSystemLanguages()[0] ?? app.getLocale())
   return {
@@ -27,6 +38,7 @@ function defaults(): Stored {
     uiLanguage,
     folders: { ...dict(uiLanguage).folders },
     language: defaultLanguage(),
+    languageMigrated: true,
     summaryProvider: 'auto',
     keepAudio: false,
     detectMeetings: true,
@@ -51,9 +63,10 @@ function load(): Stored {
       stored = {}
     }
   }
-  cache = { ...defaults(), ...stored, ...inherited(stored) }
+  const migrated = migrateLanguage(stored)
+  cache = { ...defaults(), ...stored, ...inherited(stored), ...migrated }
   // Fixa idioma e nomes de pasta na primeira abertura; trocar o idioma do sistema depois não move as notas.
-  if (!stored.folders || !stored.uiLanguage) void save(cache)
+  if (!stored.folders || !stored.uiLanguage || migrated.languageMigrated) void save(cache)
   return cache
 }
 
@@ -80,12 +93,13 @@ async function save(next: Stored): Promise<void> {
 }
 
 export function getSettings(): Settings {
-  const { apiKeyEncrypted, ...rest } = load()
+  const { apiKeyEncrypted, languageMigrated: _, ...rest } = load()
   return { ...rest, hasApiKey: Boolean(apiKeyEncrypted) }
 }
 
 export async function updateSettings(patch: Partial<Omit<Settings, 'hasApiKey'>>): Promise<Settings> {
-  await save({ ...load(), ...patch })
+  const current = load()
+  await save({ ...current, ...followUiLanguage(current, patch) })
   if (patch.openAtLogin !== undefined && app.isPackaged) {
     app.setLoginItemSettings({ openAtLogin: patch.openAtLogin, args: ['--hidden'] })
   }
