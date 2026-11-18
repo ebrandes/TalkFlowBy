@@ -93,7 +93,23 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
 
         <section className="set-group">
           <h2>{t.transcription}</h2>
-          <ModelLine model={model} />
+          <div className="set-row">
+            <label className="set-label" htmlFor="quality">
+              <span>{t.quality}</span>
+              <span className="hint">{t.qualityHint}</span>
+            </label>
+            <select
+              id="quality"
+              className="field select"
+              value={settings.transcriptionQuality}
+              onChange={(e) => void update({ transcriptionQuality: e.target.value as S['transcriptionQuality'] })}
+            >
+              <option value="best">{t.qualityBest}</option>
+              <option value="balanced">{t.qualityBalanced}</option>
+              <option value="fast">{t.qualityFast}</option>
+            </select>
+          </div>
+          <ModelLine model={model} quality={settings.transcriptionQuality} />
           <div className="set-row">
             <label className="set-label" htmlFor="lang">
               <span>{t.meetingLanguage}</span>

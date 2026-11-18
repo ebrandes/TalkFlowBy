@@ -28,6 +28,7 @@ export interface RunDeps {
   meetingsFolder: string
   whisper: string
   model: string
+  greedy?: boolean
   language: string
   keepAudio: boolean
   summary: SummarizeOptions
@@ -81,6 +82,7 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
       chunks: item.chunks,
       speaker: item.speaker,
       language: deps.language,
+      greedy: deps.greedy,
       onProgress: (f) => onStatus({ stage: 'transcribing', progress: (before + f * item.chunks.length) / total })
     })
     before += item.chunks.length

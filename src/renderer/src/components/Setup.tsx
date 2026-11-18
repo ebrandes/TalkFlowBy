@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { WHISPER_MODELS, type TranscriptionQuality } from '../../../shared/models'
 import type { ModelStatus } from '../../../shared/types'
 import { useT } from '../i18n'
 
@@ -28,14 +29,15 @@ function Done({ label }: { label: string }): React.JSX.Element {
 }
 
 /** Linha do modelo de transcrição: pronto, baixando ou faltando. */
-export function ModelLine({ model }: { model: ModelStatus }): React.JSX.Element {
+export function ModelLine({ model, quality = 'best' }: { model: ModelStatus; quality?: TranscriptionQuality }): React.JSX.Element {
   const t = useT().setup
+  const info = WHISPER_MODELS[quality]
   const pct = Math.round((model.progress ?? 0) * 100)
   return (
     <div className="set-row">
       <span className="set-label">
         <span>{t.model}</span>
-        <span className="hint">{model.ready ? t.modelReady : (model.error ?? t.modelMissing)}</span>
+        <span className="hint">{model.ready ? t.modelReady(info.name) : (model.error ?? t.modelMissing(info.sizeMb))}</span>
       </span>
       {model.ready ? (
         <Done label={t.ready} />
@@ -98,7 +100,7 @@ export function PermissionLines(): React.JSX.Element {
 }
 
 /** Primeira abertura: o que falta para gravar, em uma frase cada. Some quando tudo está pronto. */
-export function SetupCard({ model }: { model: ModelStatus }): React.JSX.Element | null {
+export function SetupCard({ model, quality }: { model: ModelStatus; quality?: TranscriptionQuality }): React.JSX.Element | null {
   const t = useT().setup
   const [perms] = usePermissions()
   const isMac = window.talkflow.platform === 'darwin'
@@ -107,7 +109,7 @@ export function SetupCard({ model }: { model: ModelStatus }): React.JSX.Element 
   return (
     <section className="setup" aria-label={t.title}>
       <h2>{t.title}</h2>
-      {!model.ready && <ModelLine model={model} />}
+      {!model.ready && <ModelLine model={model} quality={quality} />}
       {isMac && !permsOk && <PermissionLines />}
     </section>
   )

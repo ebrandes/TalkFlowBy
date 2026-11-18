@@ -7,6 +7,7 @@ import { MeetingDetector } from './detector/index'
 import { processRecording } from './pipeline/run'
 import { ProcessingQueue, RecordingStore } from './recording'
 import { getApiKey, getSettings, tr, updateSettings } from './settings'
+import { WHISPER_MODELS, type WhisperModel } from '../shared/models'
 import { downloadModel, findModel } from './setup/models'
 import { whisperPath } from './setup/binaries'
 import { AppTray } from './tray'
@@ -60,8 +61,13 @@ export class Controller {
     this.send('recording:state', { recording, startedAt: this.store.current?.startedAt ?? null, origin: this.store.current?.origin ?? null })
   }
 
+  private selectedModel(): WhisperModel {
+    return WHISPER_MODELS[getSettings().transcriptionQuality] ?? WHISPER_MODELS.best
+  }
+
   async refreshModel(): Promise<ModelStatus> {
-    const path = await findModel(app.getPath('userData'))
+    if (this.model.downloading) return this.model
+    const path = await findModel(app.getPath('userData'), this.selectedModel())
     this.model = path ? { ready: true, path } : { ready: false }
     this.send('model:status', this.model)
     return this.model
@@ -72,7 +78,7 @@ export class Controller {
     this.model = { ready: false, downloading: true, progress: 0 }
     this.send('model:status', this.model)
     try {
-      await downloadModel(app.getPath('userData'), (s) => {
+      await downloadModel(app.getPath('userData'), this.selectedModel(), (s) => {
         this.model = s
         this.send('model:status', s)
       })
@@ -101,7 +107,8 @@ export class Controller {
   private async enqueue(sessionDir: string, meta: MeetingMeta): Promise<void> {
     const settings = getSettings()
     const whisper = await whisperPath()
-    const model = this.model.path ?? (await findModel(app.getPath('userData')))
+    const chosen = this.selectedModel()
+    const model = await findModel(app.getPath('userData'), chosen)
     if (!whisper || !model) {
       this.setStatus({ stage: 'error', message: tr().main.missingWhisper })
       return
@@ -115,6 +122,7 @@ export class Controller {
           meetingsFolder: settings.folders.meetings,
           whisper,
           model,
+          greedy: chosen.greedy,
           language: settings.language,
           keepAudio: settings.keepAudio,
           summary: { provider: settings.summaryProvider, apiKey: getApiKey() },

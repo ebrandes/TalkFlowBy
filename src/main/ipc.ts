@@ -16,6 +16,7 @@ export function registerIpc(c: Controller): void {
     if (patch.detectMeetings === false) c.detector.stop()
     if (patch.rootDir) c.send('library:changed', {})
     if (patch.uiLanguage) c.tray?.refresh()
+    if (patch.transcriptionQuality) await c.refreshModel()
     return next
   })
   ipcMain.handle('settings:setApiKey', (_e, key: string | null) => setApiKey(key))

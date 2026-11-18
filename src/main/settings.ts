@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { dict, langFromLocale } from '../shared/i18n'
+import { defaultQuality } from '../shared/models'
 import type { Settings } from '../shared/types'
 
 interface Stored extends Omit<Settings, 'hasApiKey'> {
@@ -30,6 +31,7 @@ function defaults(): Stored {
     keepAudio: false,
     detectMeetings: true,
     silenceStopMinutes: 5,
+    transcriptionQuality: defaultQuality(process.platform, process.arch),
     mutedApps: [],
     openAtLogin: true
   }

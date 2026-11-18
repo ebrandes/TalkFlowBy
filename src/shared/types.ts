@@ -72,6 +72,8 @@ export interface Settings {
   hasApiKey: boolean
   keepAudio: boolean
   detectMeetings: boolean
+  /** Modelo do Whisper: melhor, equilibrado ou mais rápido. */
+  transcriptionQuality: import('./models').TranscriptionQuality
   /** Minutos sem som para parar a gravação sozinha; 0 desliga. */
   silenceStopMinutes: number
   mutedApps: string[]

@@ -69,7 +69,8 @@ Get them from the [latest release](https://github.com/ebrandes/TalkFlowBy/releas
   *Open Anyway*. Or right-click the app and choose *Open*.
 - **Windows:** on the SmartScreen warning, click *More info → Run anyway*.
 
-On first launch TalkFlowBy offers to download the transcription model (about 574 MB, once).
+On first launch TalkFlowBy offers to download the transcription model, once (574 MB on Apple
+Silicon Macs, 190 MB on Windows and Intel Macs).
 On macOS it asks for two permissions: **Microphone** (your voice) and
 **Screen & System Audio Recording** (macOS requires it to capture the call audio; no image
 of your screen is recorded).
@@ -173,8 +174,10 @@ prompt reminds you to tell the other participants.
 - Windows support is new. If something does not work on your machine, please
   [open an issue](https://github.com/ebrandes/TalkFlowBy/issues). There is a short
   [Windows test checklist](docs/TESTING-WINDOWS.md) if you want to help.
-- On Windows, transcription runs on the CPU, so it takes longer than on a Mac with
-  Apple Silicon.
+- Transcription quality is adjustable in Settings: **Best** (Whisper large-v3-turbo, 574 MB),
+  **Balanced** (Whisper small, about 4x faster, 190 MB) or **Fastest** (Whisper base, 60 MB).
+  Macs with Apple Silicon use the graphics chip and default to Best; Windows and Intel Macs
+  transcribe on the CPU and default to Balanced.
 
 ## FAQ
 

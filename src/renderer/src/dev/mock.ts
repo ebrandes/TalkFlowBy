@@ -123,6 +123,7 @@ let settings: Settings = {
   keepAudio: false,
   detectMeetings: true,
   silenceStopMinutes: 5,
+  transcriptionQuality: 'best',
   mutedApps: [],
   openAtLogin: true
 }

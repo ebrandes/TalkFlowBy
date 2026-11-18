@@ -27,6 +27,8 @@ export interface TranscribeOptions {
   chunks: { file: string; offset: number }[]
   speaker: Speaker
   language: string
+  /** Decodificação simples, mais rápida (modelos menores). */
+  greedy?: boolean
   onProgress?: (fraction: number) => void
 }
 
@@ -68,7 +70,8 @@ export async function transcribe(opts: TranscribeOptions): Promise<Segment[]> {
   let done = 0
   for (let i = 0; i < opts.chunks.length; i += BATCH) {
     const files = opts.chunks.slice(i, i + BATCH).map((c) => c.file)
-    const args = ['-m', opts.model, '-l', opts.language, '-t', threads, '-mc', '0', '-oj', ...files]
+    const decode = opts.greedy ? ['-bs', '1', '-bo', '1'] : []
+    const args = ['-m', opts.model, '-l', opts.language, '-t', threads, '-mc', '0', ...decode, '-oj', ...files]
     await runBatch(opts.binary, args, () => {
       done++
       opts.onProgress?.(Math.min(1, done / opts.chunks.length))

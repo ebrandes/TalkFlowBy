@@ -1,6 +1,7 @@
 import { AudioLines, FilePlus2, ListChecks, Mic } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { dict } from '../../shared/i18n'
+import type { TranscriptionQuality } from '../../shared/models'
 import type { Folders, ModelStatus } from '../../shared/types'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Crumbs } from './components/Crumbs'
@@ -110,7 +111,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
             }}
           />
         ) : (
-          <Welcome model={app.model} tab={tab} recording={rec.recording} onNewNote={() => void newNote()} />
+          <Welcome model={app.model} quality={app.settings?.transcriptionQuality} tab={tab} recording={rec.recording} onNewNote={() => void newNote()} />
         )}
       </main>
       <ConfirmDialog
@@ -131,12 +132,20 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
   )
 }
 
-function Welcome({ model, tab, recording, onNewNote }: { model: ModelStatus; tab: Tab; recording: boolean; onNewNote: () => void }): React.JSX.Element {
+interface WelcomeProps {
+  model: ModelStatus
+  quality?: TranscriptionQuality
+  tab: Tab
+  recording: boolean
+  onNewNote: () => void
+}
+
+function Welcome({ model, quality, tab, recording, onNewNote }: WelcomeProps): React.JSX.Element {
   const t = useT().welcome
   return (
     <div className="doc">
       <div className="doc-col welcome">
-        <SetupCard model={model} />
+        <SetupCard model={model} quality={quality} />
         {tab === 'meetings' ? (
           <>
             <h1>{recording ? t.recordingTitle : t.idleTitle}</h1>

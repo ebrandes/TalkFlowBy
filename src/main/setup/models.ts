@@ -4,39 +4,38 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
+import type { WhisperModel } from '../../shared/models'
 import type { ModelStatus } from '../../shared/types'
 
-export const MODEL_FILE = 'ggml-large-v3-turbo-q5_0.bin'
-const MODEL_URL = `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${MODEL_FILE}`
-/** O arquivo tem ~574 MB; abaixo disso o download veio quebrado. */
-const MIN_BYTES = 500 * 1024 * 1024
+const urlOf = (file: string): string => `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${file}`
 
-async function exists(p: string): Promise<boolean> {
+/** Abaixo de 90% do tamanho esperado o download veio quebrado. */
+async function exists(p: string, model: WhisperModel): Promise<boolean> {
   try {
     await access(p)
-    return (await stat(p)).size >= MIN_BYTES
+    return (await stat(p)).size >= model.sizeMb * 1024 * 1024 * 0.9
   } catch {
     return false
   }
 }
 
 /** Lugares onde o modelo pode já estar (por exemplo, baixado pelo whisper.cpp antes). */
-export function modelCandidates(userDataDir: string): string[] {
-  return [join(userDataDir, 'models', MODEL_FILE), join(homedir(), '.cache', 'whisper-cpp', MODEL_FILE)]
+export function modelCandidates(userDataDir: string, model: WhisperModel): string[] {
+  return [join(userDataDir, 'models', model.file), join(homedir(), '.cache', 'whisper-cpp', model.file)]
 }
 
-export async function findModel(userDataDir: string): Promise<string | null> {
-  for (const p of modelCandidates(userDataDir)) if (await exists(p)) return p
+export async function findModel(userDataDir: string, model: WhisperModel): Promise<string | null> {
+  for (const p of modelCandidates(userDataDir, model)) if (await exists(p, model)) return p
   return null
 }
 
 /** Baixa o modelo para a pasta do app, informando o progresso de 0 a 1. */
-export async function downloadModel(userDataDir: string, onProgress: (s: ModelStatus) => void): Promise<string> {
-  const target = modelCandidates(userDataDir)[0]
+export async function downloadModel(userDataDir: string, model: WhisperModel, onProgress: (s: ModelStatus) => void): Promise<string> {
+  const target = modelCandidates(userDataDir, model)[0]
   const partial = `${target}.part`
   await mkdir(dirname(target), { recursive: true })
 
-  const res = await fetch(MODEL_URL)
+  const res = await fetch(urlOf(model.file))
   if (!res.ok || !res.body) throw new Error(`Não foi possível baixar o modelo (${res.status}).`)
   const total = Number(res.headers.get('content-length') ?? 0)
   let received = 0
