@@ -163,7 +163,11 @@ export const pt: Dict = {
     pause: 'Pausar',
     resume: 'Continuar',
     stop: 'Encerrar e salvar',
-    move: 'Arraste para mover'
+    move: 'Arraste para mover',
+    capture: 'Capturar tela',
+    captures: (n) => (n === 1 ? '1 tela capturada' : `${n} telas capturadas`),
+    captureFailed: 'Não foi possível capturar a tela.',
+    captureNoPermission: 'Não foi possível capturar a tela. Libere "Gravação de Tela e Áudio do Sistema" para o TalkFlowBy nos Ajustes do Sistema.'
   },
 
   prompt: {
@@ -236,6 +240,8 @@ export const pt: Dict = {
     nextSteps: 'Próximos passos',
     transcript: 'Transcrição',
     flow: 'Fluxo',
+    screen: 'Tela',
+    screensFolder: 'telas',
     flowImage: 'Diagrama do fluxo',
     noSummary: 'O resumo não foi gerado. A transcrição completa está abaixo.',
     noSpeech: 'Nenhuma fala foi reconhecida nesta gravação.'

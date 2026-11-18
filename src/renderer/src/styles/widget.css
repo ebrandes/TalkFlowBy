@@ -111,6 +111,40 @@ body.widget-body,
   background: color-mix(in srgb, var(--rec) 85%, black);
 }
 
+.widget-btn.capture {
+  position: relative;
+}
+
+.widget-count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--violet);
+  color: var(--violet-ink);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+
+.widget.flash {
+  animation: widget-flash 450ms ease-out;
+}
+
+@keyframes widget-flash {
+  0% {
+    background: var(--violet-tint);
+    border-color: var(--violet);
+  }
+  100% {
+    background: var(--raised);
+  }
+}
+
 .widget-btn:disabled {
   opacity: 0.5;
   cursor: default;

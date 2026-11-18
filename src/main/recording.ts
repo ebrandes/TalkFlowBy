@@ -2,6 +2,7 @@ import { createWriteStream, type WriteStream } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { PipelineStatus, Track } from '../shared/types'
+import type { Shot } from './pipeline/shots'
 
 export interface ActiveSession {
   id: string
@@ -13,6 +14,8 @@ export interface ActiveSession {
   pausedMs: number
   /** Início da pausa atual. */
   pausedAt: Date | null
+  /** Capturas de tela feitas durante a gravação. */
+  shots: Shot[]
 }
 
 /** Recebe os pedaços de áudio que a janela manda e grava em `.audio/<sessão>/`. */
@@ -31,7 +34,7 @@ export class RecordingStore {
     const id = startedAt.toISOString().replace(/[:.]/g, '-')
     const dir = join(this.rootDir(), '.audio', id)
     await mkdir(dir, { recursive: true })
-    this.active = { id, dir, startedAt, origin, streams: new Map(), pausedMs: 0, pausedAt: null }
+    this.active = { id, dir, startedAt, origin, streams: new Map(), pausedMs: 0, pausedAt: null, shots: [] }
     return this.active
   }
 
@@ -55,6 +58,24 @@ export class RecordingStore {
       s.streams.set(track, stream)
     }
     stream.write(Buffer.from(chunk))
+  }
+
+  /**
+   * Guarda uma captura na pasta da gravação, com o segundo da reunião em que foi feita.
+   * A lista vai para `shots.json` na hora, então uma queda do app não perde as capturas.
+   */
+  async addShot(full: Buffer, small: Buffer, offsetSec: number): Promise<number> {
+    const s = this.active
+    if (!s) return 0
+    const n = String(s.shots.length + 1).padStart(3, '0')
+    await mkdir(join(s.dir, 'shots'), { recursive: true })
+    // Caminhos com "/": a pasta pode ser aberta depois em outro sistema.
+    const shot: Shot = { file: `shots/${n}.jpg`, small: `shots/${n}.small.jpg`, offsetSec }
+    await writeFile(join(s.dir, shot.file), full)
+    await writeFile(join(s.dir, shot.small), small)
+    s.shots.push(shot)
+    await writeFile(join(s.dir, 'shots.json'), JSON.stringify(s.shots))
+    return s.shots.length
   }
 
   /** Fecha os arquivos e devolve a sessão pronta para processar. */

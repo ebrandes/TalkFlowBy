@@ -1,4 +1,4 @@
-import { GripVertical, Pause, Play, Square } from 'lucide-react'
+import { Camera, GripVertical, Pause, Play, Square } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { dict, langFromLocale, type Lang } from '../../../shared/i18n'
 import { elapsedSec, IDLE, type RecordingState } from '../../../shared/recording'
@@ -15,12 +15,20 @@ export function WidgetApp(): React.JSX.Element {
   const [state, setState] = useState<RecordingState>(IDLE)
   const [elapsed, setElapsed] = useState(0)
   const [busy, setBusy] = useState(false)
+  const [flash, setFlash] = useState(false)
 
   useEffect(() => {
     const api = window.talkflow.recording
     void api.state().then(setState)
     return api.onState((s) => {
-      setState(s)
+      setState((prev) => {
+        // Uma captura nova pisca a pílula, para dar retorno sem tirar o foco.
+        if (s.shots > prev.shots) {
+          setFlash(true)
+          setTimeout(() => setFlash(false), 450)
+        }
+        return s
+      })
       setBusy(false)
     })
   }, [])
@@ -32,20 +40,30 @@ export function WidgetApp(): React.JSX.Element {
     return () => clearInterval(id)
   }, [state])
 
-  const command = (cmd: 'pause' | 'resume' | 'stop'): void => {
-    setBusy(true)
+  const command = (cmd: 'pause' | 'resume' | 'stop' | 'capture'): void => {
+    if (cmd !== 'capture') setBusy(true)
     void window.talkflow.widget.command(cmd)
   }
 
   const label = state.paused ? t.paused : t.recording
   return (
-    <div className={`widget${state.paused ? ' paused' : ''} platform-${window.talkflow.platform}`} role="status" aria-label={`${label} ${clock(elapsed)}`}>
+    <div className={`widget${state.paused ? ' paused' : ''}${flash ? ' flash' : ''} platform-${window.talkflow.platform}`} role="status" aria-label={`${label} ${clock(elapsed)}`}>
       <GripVertical className="widget-grip" size={14} strokeWidth={2} aria-hidden />
       <span className="widget-dot" aria-hidden />
       <span className="widget-time" title={t.move}>
         <span className="widget-state">{label}</span>
         <span className="widget-clock">{clock(elapsed)}</span>
       </span>
+      <button
+        className="widget-btn capture"
+        onClick={() => command('capture')}
+        disabled={!state.recording}
+        title={state.shots ? `${t.capture} · ${t.captures(state.shots)}` : t.capture}
+        aria-label={t.capture}
+      >
+        <Camera size={15} strokeWidth={2} />
+        {state.shots > 0 && <span className="widget-count">{state.shots}</span>}
+      </button>
       <button
         className="widget-btn"
         onClick={() => command(state.paused ? 'resume' : 'pause')}

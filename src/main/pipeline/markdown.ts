@@ -72,11 +72,26 @@ function tasksBlock(summary: Summary): string[] {
     })
 }
 
-function transcriptBlock(turns: Turn[], d: Doc): string[] {
+/** Captura de tela para a nota: link relativo e o momento da reunião. */
+export interface NoteShot {
+  link: string
+  label: string
+  offsetSec: number
+}
+
+const image = (s: NoteShot): string => `![${escapeInline(s.label)}](${s.link})`
+
+/** Transcrição com cada captura no ponto da conversa em que foi feita. */
+function transcriptBlock(turns: Turn[], d: Doc, shots: NoteShot[] = []): string[] {
   const out: string[] = []
   const label = (s: Turn['speaker']): string => (s === 'Você' ? d.you : d.others)
-  // Sem colchetes no horário: o editor escaparia "[00:00]" como "\[00:00]" ao salvar.
-  for (const t of turns) out.push(`**${formatClock(t.start)} · ${label(t.speaker)}:** ${escapeInline(t.text)}`, '')
+  let m = 0
+  for (const t of turns) {
+    while (m < shots.length && shots[m].offsetSec <= t.start) out.push(image(shots[m++]), '')
+    // Sem colchetes no horário: o editor escaparia "[00:00]" como "\[00:00]" ao salvar.
+    out.push(`**${formatClock(t.start)} · ${label(t.speaker)}:** ${escapeInline(t.text)}`, '')
+  }
+  while (m < shots.length) out.push(image(shots[m++]), '')
   if (out[out.length - 1] === '') out.pop()
   return out
 }
@@ -99,7 +114,7 @@ function flowSection(flow: FlowBlock | undefined, d: Doc): string[] {
 }
 
 /** Monta a nota da reunião. O formato é fixo; o modelo só fornece o conteúdo. */
-export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null, turns: Turn[], d: Doc = pt.doc, flow?: FlowBlock): string {
+export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null, turns: Turn[], d: Doc = pt.doc, flow?: FlowBlock, shots: NoteShot[] = []): string {
   const title = summary?.assunto.trim() || d.untitled
   const parts: string[] = [...frontmatter(meta, d), '', `# ${escapeInline(title)}`, '']
 
@@ -113,8 +128,11 @@ export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null,
     parts.push(`> ${d.noSummary}`, '')
   }
 
-  parts.push(...section(d.transcript, transcriptBlock(turns, d)))
-  if (turns.length === 0) parts.push(`## ${d.transcript}`, '', d.noSpeech, '')
+  if (turns.length > 0) parts.push(...section(d.transcript, transcriptBlock(turns, d, shots)))
+  else {
+    parts.push(`## ${d.transcript}`, '', d.noSpeech, '')
+    if (shots.length) parts.push(...transcriptBlock([], d, shots), '')
+  }
   parts.push(...flowSection(flow, d))
 
   while (parts[parts.length - 1] === '') parts.pop()

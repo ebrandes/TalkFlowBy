@@ -58,7 +58,7 @@ export function registerIpc(c: Controller): void {
   )
   ipcMain.handle('rec:state', () => c.recordingState())
   ipcMain.handle('rec:setPaused', (_e, paused: boolean) => c.setPaused(paused))
-  ipcMain.handle('widget:command', (_e, cmd: 'pause' | 'resume' | 'stop') => c.widgetCommand(cmd))
+  ipcMain.handle('widget:command', (_e, cmd: 'pause' | 'resume' | 'stop' | 'capture') => c.widgetCommand(cmd))
   ipcMain.handle('pipeline:status', () => c.status)
 
   ipcMain.handle('model:status', () => c.refreshModel())

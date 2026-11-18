@@ -79,8 +79,11 @@ export const SYSTEM_PROMPT = [
   '  linking step ids, with a short label only when it adds a condition or a date. Otherwise set fluxo to null.'
 ].join('\n')
 
-export function buildUserPrompt(transcript: string): string {
-  return `Organize this meeting.\n\n<transcript>\n${transcript}\n</transcript>`
+export function buildUserPrompt(transcript: string, screenshots = 0): string {
+  const shots = screenshots
+    ? `\n\n${screenshots} screenshot(s) of what was on screen during the meeting follow the transcript, each after its label. Lines like [Screen 2 · 12:30] in the transcript mark when each one was taken. Use what they show (slides, documents, numbers, decisions on screen) in the summary, without describing the images themselves.`
+    : ''
+  return `Organize this meeting.${shots}\n\n<transcript>\n${transcript}\n</transcript>`
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '')

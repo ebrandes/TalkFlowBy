@@ -13,7 +13,8 @@ import { downloadModel, findModel } from './setup/models'
 import { whisperPath } from './setup/binaries'
 import { AppTray } from './tray'
 import { createMainWindow, createPromptWindow, createWidgetWindow } from './windows'
-import { IDLE, type RecordingState } from '../shared/recording'
+import { elapsedSec, IDLE, type RecordingState } from '../shared/recording'
+import { captureScreen } from './screenshot'
 
 /** Estado do app inteiro: janelas, bandeja, detector, gravação e fila de processamento. */
 export class Controller {
@@ -75,7 +76,8 @@ export class Controller {
       origin: s.origin ?? null,
       paused: Boolean(s.pausedAt),
       pausedMs: s.pausedMs,
-      pausedAt: s.pausedAt?.toISOString() ?? null
+      pausedAt: s.pausedAt?.toISOString() ?? null,
+      shots: s.shots.length
     }
   }
 
@@ -98,7 +100,8 @@ export class Controller {
   }
 
   /** Botões do widget: a gravação mora na janela principal, então a ordem vai para lá. */
-  widgetCommand(cmd: 'pause' | 'resume' | 'stop'): void {
+  widgetCommand(cmd: 'pause' | 'resume' | 'stop' | 'capture'): void {
+    if (cmd === 'capture') return void this.captureShot()
     if (!this.store.current) return
     this.send(`command:${cmd}`, {})
   }
@@ -190,6 +193,20 @@ export class Controller {
     if (this.prompt && this.promptFor?.appId === m.appId) this.prompt.close()
     if (!this.store.current || this.detector.anyInCall()) return
     this.send('command:stop', { reason: 'meeting-ended', app: m.appName })
+  }
+
+  /** Print da tela, marcado no tempo da reunião; vira imagem na transcrição e entra no resumo. */
+  async captureShot(): Promise<void> {
+    if (!this.store.current) return
+    const offset = elapsedSec(this.recordingState())
+    try {
+      const shot = await captureScreen(this.widget)
+      await this.store.addShot(shot.full, shot.small, offset)
+      this.setRecording(true)
+    } catch (err) {
+      const t = tr().widget
+      this.notify((err as Error).message === 'screen-permission' ? t.captureNoPermission : t.captureFailed)
+    }
   }
 
   notify(body: string): void {

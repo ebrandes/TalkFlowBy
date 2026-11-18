@@ -53,7 +53,7 @@ const api = {
     onResumeCommand: (cb: () => void): Unsubscribe => on('command:resume', cb)
   },
   widget: {
-    command: (cmd: 'pause' | 'resume' | 'stop'): Promise<void> => ipcRenderer.invoke('widget:command', cmd)
+    command: (cmd: 'pause' | 'resume' | 'stop' | 'capture'): Promise<void> => ipcRenderer.invoke('widget:command', cmd)
   },
   pipeline: {
     status: (): Promise<PipelineStatus> => ipcRenderer.invoke('pipeline:status'),

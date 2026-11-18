@@ -8,9 +8,11 @@ export interface RecordingState {
   pausedMs: number
   /** Quando a pausa atual começou. */
   pausedAt: string | null
+  /** Quantas capturas de tela já foram feitas nesta gravação. */
+  shots: number
 }
 
-export const IDLE: RecordingState = { recording: false, startedAt: null, origin: null, paused: false, pausedMs: 0, pausedAt: null }
+export const IDLE: RecordingState = { recording: false, startedAt: null, origin: null, paused: false, pausedMs: 0, pausedAt: null, shots: 0 }
 
 /** Segundos gravados de fato: do início até agora, menos as pausas. */
 export function elapsedSec(s: RecordingState, now = Date.now()): number {

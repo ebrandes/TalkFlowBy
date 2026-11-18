@@ -162,7 +162,11 @@ export const en = {
     pause: 'Pause',
     resume: 'Resume',
     stop: 'Stop and save',
-    move: 'Drag to move'
+    move: 'Drag to move',
+    capture: 'Capture screen',
+    captures: (n: number) => (n === 1 ? '1 screen captured' : `${n} screens captured`),
+    captureFailed: 'Could not capture the screen.',
+    captureNoPermission: 'Could not capture the screen. Allow Screen & System Audio Recording for TalkFlowBy in System Settings.'
   },
 
   prompt: {
@@ -236,6 +240,8 @@ export const en = {
     transcript: 'Transcript',
     flow: 'Workflow',
     flowImage: 'Workflow diagram',
+    screen: 'Screen',
+    screensFolder: 'screens',
     noSummary: 'The summary was not generated. The full transcript is below.',
     noSpeech: 'No speech was recognized in this recording.'
   }

@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { dict, type Lang } from '../../shared/i18n'
 import type { MeetingMeta, PipelineStatus, Segment, Speaker, Summary, Track } from '../../shared/types'
@@ -9,7 +9,8 @@ import { meetingRelPath, uniqueName } from './filename'
 import { fireworksPaths } from '../setup/binaries'
 import { mermaid, renderWithFireworks, usableFlow } from './flow'
 import { buildMeetingMarkdown, type FlowBlock } from './markdown'
-import { mergeTracks, turnsToPlainText } from './merge'
+import { mergeTracks } from './merge'
+import { pickForSummary, placeShots, plainTextWithShots, readShots, shotLabel } from './shots'
 import { cutChunks, detectSpeech } from './chunks'
 import { peakVolumeDb, toWav16k } from './transcode'
 import { transcribe } from './whisper'
@@ -93,12 +94,18 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   }
   const turns = mergeTracks(segments['Você'], segments['Outros'])
 
+  // Capturas de tela: marcadas na transcrição e mandadas junto para o resumo.
+  const shots = (await readShots(input.sessionDir)).map((s, i) => ({ ...s, index: i + 1, label: shotLabel(t.doc.screen, i + 1, s.offsetSec) }))
+  const forSummary = pickForSummary(shots)
+
   let summary: Summary | null = null
   let warning: string | undefined
   if (turns.length > 0) {
     onStatus({ stage: 'summarizing' })
     try {
-      summary = await summarize(turnsToPlainText(turns, { Você: t.doc.you, Outros: t.doc.others }), deps.summary)
+      const text = plainTextWithShots(turns, { Você: t.doc.you, Outros: t.doc.others }, forSummary)
+      const images = await Promise.all(forSummary.map(async (s) => ({ label: s.label, jpeg: await readFile(join(input.sessionDir, s.small)) })))
+      summary = await summarize(text, deps.summary, images)
     } catch (err) {
       warning = `Summary not generated: ${(err as Error).message}`
     }
@@ -111,7 +118,9 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   const full = join(deps.rootDir, rel)
   await mkdir(dirname(full), { recursive: true })
   const flow = deps.drawFlows === false ? undefined : await drawFlow(summary, full, meeting, deps.lang)
-  await writeFile(full, buildMeetingMarkdown(input.meta, summary, turns, t.doc, flow), 'utf8')
+  const placed = await placeShots(shots, input.sessionDir, full, t.doc.screensFolder, t.doc.screen.toLowerCase())
+  const noteShots = placed.map((p) => ({ link: p.link, offsetSec: p.offsetSec, label: shotLabel(t.doc.screen, p.index, p.offsetSec) }))
+  await writeFile(full, buildMeetingMarkdown(input.meta, summary, turns, t.doc, flow, noteShots), 'utf8')
 
   if (deps.keepAudio) await markDone(input.sessionDir, rel)
   else await rm(input.sessionDir, { recursive: true, force: true })

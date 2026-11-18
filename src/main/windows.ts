@@ -98,7 +98,7 @@ let widgetPos: { x: number; y: number } | null = null
  */
 export function createWidgetWindow(lang: string): BrowserWindow {
   const { workArea } = screen.getPrimaryDisplay()
-  const width = 280
+  const width = 320
   const height = 52
   const fallback = { x: workArea.x + Math.round((workArea.width - width) / 2), y: workArea.y + 12 }
   // A posição salva só vale se ainda cabe numa tela (o monitor pode ter sido desligado).
@@ -129,6 +129,8 @@ export function createWidgetWindow(lang: string): BrowserWindow {
   if (process.platform !== 'darwin') win.removeMenu()
   win.setAlwaysOnTop(true, 'floating')
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })
+  // Fora de capturas e compartilhamentos de tela: quem vê sua tela na chamada não vê o widget.
+  win.setContentProtection(true)
   win.on('moved', () => {
     const [x, y] = win.getPosition()
     widgetPos = { x, y }

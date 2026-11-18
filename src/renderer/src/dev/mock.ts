@@ -176,7 +176,8 @@ window.talkflow = {
       origin: null,
       paused: params.has('paused'),
       pausedMs: 0,
-      pausedAt: params.has('paused') ? new Date().toISOString() : null
+      pausedAt: params.has('paused') ? new Date().toISOString() : null,
+      shots: Number(params.get('shots') ?? 0)
     }),
     onState: noop,
     onStartCommand: noop,
