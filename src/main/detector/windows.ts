@@ -1,20 +1,37 @@
 import { execFile } from 'node:child_process'
 import type { DetectedMeeting } from '../../shared/types'
 import { matchWindows, matchWindowsChain } from './apps'
+import type { WindowInfo } from './calls'
 
-/** Lê uma linha do `micwatch.exe` (WASAPI): `{"apps":[{"pid":1,"chain":["ms-teams.exe","explorer.exe"]}]}`. */
-export function meetingsFromWinReport(line: string): DetectedMeeting[] | null {
+export interface WinReport {
+  apps: DetectedMeeting[]
+  /** Títulos das janelas dos apps de reunião; ausente em helpers antigos. */
+  windows?: WindowInfo[]
+}
+
+/**
+ * Lê uma linha do `micwatch.exe` (WASAPI):
+ * `{"apps":[{"pid":1,"chain":["ms-teams.exe","explorer.exe"]}],"windows":[{"exe":"ms-teams.exe","title":"Daily | Microsoft Teams"}]}`.
+ */
+export function parseWinReport(line: string): WinReport | null {
   try {
-    const report = JSON.parse(line) as { apps?: { chain?: string[] }[] }
+    const report = JSON.parse(line) as { apps?: { chain?: string[] }[]; windows?: { exe?: unknown; title?: unknown }[] }
     const seen = new Map<string, DetectedMeeting>()
     for (const app of report.apps ?? []) {
       const m = matchWindowsChain(app.chain ?? [])
       if (m) seen.set(m.appId, m)
     }
-    return [...seen.values()]
+    const windows = Array.isArray(report.windows)
+      ? report.windows.filter((w) => typeof w.exe === 'string' && typeof w.title === 'string').map((w) => ({ exe: w.exe as string, title: w.title as string }))
+      : undefined
+    return { apps: [...seen.values()], windows }
   } catch {
     return null
   }
+}
+
+export function meetingsFromWinReport(line: string): DetectedMeeting[] | null {
+  return parseWinReport(line)?.apps ?? null
 }
 
 const ROOT = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\microphone'

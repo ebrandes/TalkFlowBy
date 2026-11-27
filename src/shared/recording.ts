@@ -12,6 +12,20 @@ export interface RecordingState {
   shots: number
 }
 
+/** Dados extras de uma gravação que começou pela detecção de reunião. */
+export interface StartExtra {
+  title?: string
+  auto?: boolean
+  appId?: string
+}
+
+/** Ordem de começar a gravar, vinda da bandeja, do aviso de reunião ou da detecção. */
+export interface StartCommand extends StartExtra {
+  origin?: string
+  /** Fecha a gravação atual antes (outra reunião começou). */
+  restart?: boolean
+}
+
 export const IDLE: RecordingState = { recording: false, startedAt: null, origin: null, paused: false, pausedMs: 0, pausedAt: null, shots: 0 }
 
 /** Segundos gravados de fato: do início até agora, menos as pausas. */

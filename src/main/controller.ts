@@ -1,10 +1,11 @@
-import { BrowserWindow, Notification, app, globalShortcut, shell } from 'electron'
+import { BrowserWindow, Notification, app, globalShortcut, net, shell } from 'electron'
 import { readFile, statfs } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DetectedMeeting, MeetingMeta, ModelStatus, PipelineStatus } from '../shared/types'
 import { findFailed, findPending, markFailed, resetAttempts, type FailedSession } from './recovery'
 import { Updater, type UpdateInfo } from './updater'
-import { MeetingDetector } from './detector/index'
+import { MeetingDetector, type CallInfo } from './detector/index'
+import { SummaryRetry } from './summary-retry'
 import { processRecording } from './pipeline/run'
 import { detectVoices } from './voices'
 import { ProcessingQueue, RecordingStore } from './recording'
@@ -25,6 +26,11 @@ import { summarize } from './pipeline/summarize'
 import { rebuildWithSummary, splitMeetingNote, transcriptForSummary } from './pipeline/resummarize'
 import { SyncService } from './sync-service'
 
+/** Gravação automática mais curta que isso (segundos) não vira nota. */
+const MIN_AUTO_SEC = 20
+/** Conferências (a cada 15 s) com som ainda tocando antes de encerrar mesmo assim: 3 minutos. */
+const END_FORCE_TRIES = 12
+
 /** Estado do app inteiro: janelas, bandeja, detector, gravação e fila de processamento. */
 export class Controller {
   main: BrowserWindow | null = null
@@ -32,13 +38,27 @@ export class Controller {
   prompt: BrowserWindow | null = null
   /** Widget flutuante enquanto grava: tempo, pausar e encerrar. */
   widget: BrowserWindow | null = null
-  promptFor: DetectedMeeting | null = null
+  promptFor: CallInfo | null = null
   model: ModelStatus = { ready: false }
   status: PipelineStatus = { stage: 'idle' }
   readonly store = new RecordingStore(() => getSettings().rootDir)
   readonly queue = new ProcessingQueue((s) => this.setStatus(s))
   readonly detector = new MeetingDetector((id) => getSettings().mutedApps.includes(id))
   update: UpdateInfo | null = null
+  /** Notas salvas sem resumo (sem internet): o resumo é gerado quando der. */
+  readonly summaryRetry = new SummaryRetry(
+    join(app.getPath('userData'), 'summary-retry.json'),
+    () => getSettings().rootDir,
+    (rel) => this.resummarize(rel),
+    () => net.isOnline(),
+    (paths) => {
+      for (const rel of paths) this.send('note:changedOutside', { path: rel })
+      this.send('library:changed', {})
+      this.notify(tr().autoStop.summaryRetried(paths.length))
+    }
+  )
+  /** A chamada acabou mas ainda havia som: confere de novo até a gravação parar ou a chamada voltar. */
+  private endCheck: NodeJS.Timeout | null = null
   /** Avisa a janela quando as notas mudam no disco (Obsidian, sincronização, Explorer). */
   readonly watcher = new NotesWatcher(
     () => this.send('library:changed', {}),
@@ -68,12 +88,15 @@ export class Controller {
     this.registerShortcuts()
     this.detector.on('start', (m) => this.onMeetingStart(m))
     this.detector.on('end', (m) => this.onMeetingEnd(m))
+    this.detector.on('switch', (from, to) => this.onMeetingSwitch(from, to))
     if (getSettings().detectMeetings) await this.detector.start()
     this.watcher.start(getSettings().rootDir)
     await this.refreshModel()
     await this.recoverPending()
     if (getSettings().checkUpdates) this.updater.start()
     this.sync.restart()
+    this.summaryRetry.start()
+    setTimeout(() => void this.summaryRetry.run(), 30_000)
   }
 
   /** Atalho global para gravar/parar, valendo com o app em segundo plano. */
@@ -216,6 +239,11 @@ export class Controller {
     await live?.stop()
     this.setRecording(false)
     if (!done) return
+    // Gravação automática de poucos segundos: tela de teste, entrou e saiu. Vai para a Lixeira.
+    if (done.session.auto && done.durationSec < MIN_AUTO_SEC) {
+      await shell.trashItem(done.session.dir).catch(() => undefined)
+      return
+    }
     const meta = JSON.parse(await readFile(join(done.session.dir, 'meta.json'), 'utf8'))
     await this.enqueue(done.session.dir, { ...meta, startedAt: new Date(meta.startedAt) })
   }
@@ -255,7 +283,10 @@ export class Controller {
           drawFlows: settings.drawFlows,
           voices: settings.separateVoices ? detectVoices : undefined,
           summary: { provider: settings.summaryProvider, apiKey: getApiKey() },
-          onStatus: (s) => this.setStatus(s)
+          onStatus: (s) => this.setStatus(s),
+          onSummaryFailed: (rel) => void this.summaryRetry.add(rel),
+          // Gravação automática sem nenhuma fala (alguém deixou o Teams aberto): não vira nota vazia.
+          discardEmpty: meta.auto ? (dir) => shell.trashItem(dir).catch(() => undefined) : undefined
         }
       ))
     )
@@ -298,8 +329,20 @@ export class Controller {
     this.send('recordings:changed', {})
   }
 
-  private onMeetingStart(m: DetectedMeeting): void {
-    if (this.store.current || this.prompt) return
+  private onMeetingStart(m: CallInfo): void {
+    this.cancelEndCheck()
+    if (this.store.current) {
+      // Gravação já em curso (pelo botão ou de antes da queda): passa a acompanhar esta chamada.
+      if (!this.store.current.appId) this.store.current.appId = m.appId
+      return
+    }
+    if (getSettings().autoRecord && m.confident) {
+      if (this.prompt) this.prompt.close()
+      this.startAuto(m)
+      this.notify(tr().autoStop.autoStarted(m.appName, m.title))
+      return
+    }
+    if (this.prompt) return
     this.promptFor = m
     this.prompt = createPromptWindow(m.appId, m.appName, getSettings().uiLanguage)
     this.prompt.on('closed', () => {
@@ -308,11 +351,56 @@ export class Controller {
     })
   }
 
+  private startAuto(m: CallInfo, restart = false): void {
+    this.send('command:start', { origin: m.appName, title: m.title, auto: true, appId: m.appId, restart })
+  }
+
   /** A chamada acabou: fecha o aviso e para a gravação, tenha ela começado pelo aviso ou pelo botão. */
   private onMeetingEnd(m: DetectedMeeting): void {
     if (this.prompt && this.promptFor?.appId === m.appId) this.prompt.close()
     if (!this.store.current || this.detector.anyInCall()) return
     this.send('command:stop', { reason: 'meeting-ended', app: m.appName })
+    // A janela só para se não houver mais som; enquanto houver, confere de novo.
+    // Depois de uns minutos encerra de qualquer jeito (música tocando depois da reunião, por exemplo).
+    this.cancelEndCheck()
+    let tries = 0
+    this.endCheck = setInterval(() => {
+      if (!this.store.current || this.detector.anyInCall()) return this.cancelEndCheck()
+      tries++
+      this.send('command:stop', { reason: 'meeting-ended', app: m.appName, force: tries >= END_FORCE_TRIES })
+    }, 15_000)
+  }
+
+  private cancelEndCheck(): void {
+    if (this.endCheck) clearInterval(this.endCheck)
+    this.endCheck = null
+  }
+
+  /** Saiu de uma reunião e entrou em outra: fecha a gravação da primeira e começa a da segunda. */
+  private onMeetingSwitch(from: CallInfo, to: CallInfo): void {
+    this.cancelEndCheck()
+    const rec = this.store.current
+    if (!rec || (rec.appId && rec.appId !== from.appId)) return this.onMeetingStart(to)
+    if (getSettings().autoRecord && to.confident) {
+      this.startAuto(to, true)
+      this.notify(tr().autoStop.switched(to.appName, to.title))
+      return
+    }
+    // Sem gravar sozinho: encerra a anterior e pergunta pela nova.
+    this.send('command:stop', { reason: 'meeting-switched', app: from.appName })
+    void this.whenStopped().then(() => this.onMeetingStart(to))
+  }
+
+  /** Espera a gravação atual fechar (até uns 15 s). */
+  private async whenStopped(): Promise<void> {
+    for (let i = 0; i < 30 && this.store.current; i++) await new Promise((r) => setTimeout(r, 500))
+  }
+
+  /** A gravação parou por silêncio, mas a chamada pode continuar: se continuar, grava de novo. */
+  onSilenceStopped(): void {
+    for (const id of ['teams', 'chrome', 'edge', 'firefox', 'brave', 'arc', 'safari', 'zoom']) {
+      if (this.detector.inCall(id) && this.detector.isActive(id)) this.detector.rearm(id)
+    }
   }
 
   /** Print da tela, marcado no tempo da reunião; vira imagem na transcrição e entra no resumo. */
@@ -354,7 +442,7 @@ export class Controller {
     const m = this.promptFor
     this.prompt?.close()
     if (!m) return
-    if (answer === 'record') this.send('command:start', { origin: m.appName })
+    if (answer === 'record') this.send('command:start', { origin: m.appName, title: m.title, appId: m.appId })
     if (answer === 'never') {
       const muted = new Set(getSettings().mutedApps)
       muted.add(m.appId)

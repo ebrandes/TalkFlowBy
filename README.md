@@ -181,7 +181,18 @@ prompt reminds you to tell the other participants.
   the same choice. Transcription and summaries work in the language spoken in the meeting
   (English, Portuguese, Spanish, or automatic detection).
 - Meeting detection recognizes Microsoft Teams, Zoom and Google Meet in Chrome, Edge,
-  Safari, Arc, Firefox and Brave. You can always start a recording manually.
+  Safari, Arc, Firefox and Brave. By default it **records on its own**, from the moment the
+  call opens the microphone until it ends. You can always start a recording manually.
+  - On Windows it also reads the titles of the Teams meeting window and the Meet tab, so it
+    knows *which* meeting is open: leave one meeting and join another and you get two
+    separate notes, named after each meeting.
+  - While the meeting window stays open, a dropped connection does not stop the recording,
+    even if Teams lets go of the microphone while reconnecting.
+  - In a browser it records on its own only when it sees a meeting tab (Meet or Teams on the
+    web); otherwise it asks, so a voice message in WhatsApp Web is not recorded.
+  - Automatic recordings of a few seconds, or with nobody speaking, are moved to the
+    trash instead of becoming empty notes.
+  - Turn off "Record on its own" in Settings to be asked before every meeting.
 - Windows support is new. If something does not work on your machine, please
   [open an issue](https://github.com/ebrandes/TalkFlowBy/issues). There is a short
   [Windows test checklist](docs/TESTING-WINDOWS.md) if you want to help.
@@ -211,11 +222,12 @@ repository you own (see below).
 **Does it work with Zoom, Microsoft Teams and Google Meet?**
 Yes. It records your microphone and your computer's audio, so it works with any call app.
 It also detects Teams, Zoom and Google Meet (in Chrome, Edge, Safari, Arc, Firefox and Brave)
-and asks if you want to record.
+and records them on its own (or asks first, if you prefer).
 
 **Does it work offline?**
 Recording and transcription work fully offline. Only the summary step needs internet, to
-reach Claude.
+reach Claude. If the internet is down when a meeting ends, the note is saved with the
+transcript and the summary is added on its own once the connection is back.
 
 **Do I need to pay for anything?**
 No subscription for TalkFlowBy. Summaries use your existing Claude subscription through

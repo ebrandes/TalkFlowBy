@@ -54,15 +54,16 @@ export async function findPending(audioDir: string): Promise<PendingSession[]> {
     const interrupted = !hasMeta || Boolean(progress) || !hasWav
     if (!interrupted) continue
 
-    let meta = hasMeta ? await readJson<{ startedAt: string; durationSec: number; origin?: string }>(join(dir, 'meta.json')) : null
+    let meta = hasMeta ? await readJson<{ startedAt: string; durationSec: number; origin?: string; title?: string; auto?: boolean }>(join(dir, 'meta.json')) : null
     if (!meta) {
+      const begun = await readJson<{ origin?: string; title?: string; auto?: boolean }>(join(dir, 'start.json'))
       const startedAt = startFromDirName(entry.name)
       if (!startedAt) continue
       const lastWrite = Math.max(...(await Promise.all(audio.map(async (f) => (await stat(join(dir, f))).mtimeMs))))
-      meta = { startedAt: startedAt.toISOString(), durationSec: Math.max(1, (lastWrite - startedAt.getTime()) / 1000) }
+      meta = { startedAt: startedAt.toISOString(), durationSec: Math.max(1, (lastWrite - startedAt.getTime()) / 1000), ...begun }
       await writeFile(join(dir, 'meta.json'), JSON.stringify(meta))
     }
-    pending.push({ dir, meta: { startedAt: new Date(meta.startedAt), durationSec: meta.durationSec, origin: meta.origin } })
+    pending.push({ dir, meta: { startedAt: new Date(meta.startedAt), durationSec: meta.durationSec, origin: meta.origin, title: meta.title, auto: meta.auto } })
   }
   return pending
 }

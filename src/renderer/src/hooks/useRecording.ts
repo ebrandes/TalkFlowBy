@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Dict } from '../../../shared/i18n'
-import { elapsedSec, IDLE, type RecordingState } from '../../../shared/recording'
+import { elapsedSec, IDLE, type RecordingState, type StartCommand } from '../../../shared/recording'
 import { recorder } from '../recorder'
 
 /** Som mais recente que isso indica que a chamada continua. */
 const STILL_TALKING_MS = 20_000
+/**
+ * Gravação que começou sozinha: quem decide o fim é a detecção da reunião. O silêncio só para
+ * depois de bem mais tempo (sala de espera, todo mundo mudo), para não cortar a reunião no meio.
+ */
+const AUTO_SILENCE_MIN_MINUTES = 20
 
 export interface RecordingView {
   recording: boolean
@@ -14,7 +19,7 @@ export interface RecordingView {
   elapsed: number
   busy: boolean
   warning: string | null
-  start: (origin?: string) => Promise<void>
+  start: (origin?: string, cmd?: StartCommand) => Promise<void>
   stop: () => Promise<void>
   pause: () => Promise<void>
   resume: () => Promise<void>
@@ -28,18 +33,23 @@ export function useRecording(t: Dict['recorder'], silenceMinutes: number): Recor
   const [warning, setWarning] = useState<string | null>(null)
   const busyRef = useRef(false)
 
-  const start = useCallback(async (from?: string) => {
+  const start = useCallback(async (from?: string, cmd: StartCommand = {}) => {
     if (busyRef.current || recorder.active) return
     busyRef.current = true
     setBusy(true)
     setWarning(null)
+    const minutes = cmd.auto && silenceMinutes > 0 ? Math.max(silenceMinutes, AUTO_SILENCE_MIN_MINUTES) : silenceMinutes
     try {
-      const { systemAudio } = await recorder.start(from, {
-        silenceMinutes,
-        onSilence: () => {
-          void stopRef.current().then(() => window.talkflow.recording.autoStopped({ reason: 'silence', minutes: silenceMinutes }))
-        }
-      })
+      const { systemAudio } = await recorder.start(
+        from,
+        {
+          silenceMinutes: minutes,
+          onSilence: () => {
+            void stopRef.current().then(() => window.talkflow.recording.autoStopped({ reason: 'silence', minutes }))
+          }
+        },
+        { title: cmd.title, auto: cmd.auto, appId: cmd.appId }
+      )
       if (!systemAudio) setWarning(t.micOnly)
     } catch (err) {
       setWarning(t.failed((err as Error).message))
@@ -80,13 +90,18 @@ export function useRecording(t: Dict['recorder'], silenceMinutes: number): Recor
         setState(s)
         if (!s.recording) setWarning(null)
       }),
-      api.onStartCommand((p) => void start(p.origin)),
+      api.onStartCommand((p) => {
+        // Outra reunião começou: fecha a gravação atual (vira uma nota) e abre a nova.
+        if (p.restart && recorder.active) return void stopRef.current().then(() => start(p.origin, p))
+        void start(p.origin, p)
+      }),
       api.onPauseCommand(() => void pause()),
       api.onResumeCommand(() => void resume()),
       api.onStopCommand((p) => {
         if (p.reason !== 'meeting-ended') return void stop()
-        // Em pausa o medidor de som não conta: a chamada acabou, encerra.
-        if (recorder.paused) return void stop().then(() => window.talkflow.recording.autoStopped({ reason: 'meeting', app: p.app ?? '' }))
+        if (!recorder.active) return
+        // Em pausa o medidor de som não conta: a chamada acabou, encerra. Idem depois de minutos conferindo.
+        if (recorder.paused || p.force) return void stop().then(() => window.talkflow.recording.autoStopped({ reason: 'meeting', app: p.app ?? '' }))
         // O app da chamada soltou o microfone; se ainda tem gente falando, não é o fim.
         if (recorder.msSinceSound() < STILL_TALKING_MS) return
         void stop().then(() => window.talkflow.recording.autoStopped({ reason: 'meeting', app: p.app ?? '' }))

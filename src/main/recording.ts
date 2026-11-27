@@ -9,6 +9,12 @@ export interface ActiveSession {
   dir: string
   startedAt: Date
   origin?: string
+  /** Nome da reunião visto na janela. */
+  title?: string
+  /** Começou sozinha, pela detecção da reunião. */
+  auto?: boolean
+  /** App da chamada que esta gravação acompanha (para parar quando ela acabar). */
+  appId?: string
   streams: Map<Track, WriteStream>
   /** Pausas já encerradas, em ms. */
   pausedMs: number
@@ -28,13 +34,15 @@ export class RecordingStore {
     return this.active
   }
 
-  async begin(origin?: string): Promise<ActiveSession> {
+  async begin(origin?: string, extra: { title?: string; auto?: boolean; appId?: string } = {}): Promise<ActiveSession> {
     if (this.active) return this.active
     const startedAt = new Date()
     const id = startedAt.toISOString().replace(/[:.]/g, '-')
     const dir = join(this.rootDir(), '.audio', id)
     await mkdir(dir, { recursive: true })
-    this.active = { id, dir, startedAt, origin, streams: new Map(), pausedMs: 0, pausedAt: null, shots: [] }
+    // start.json já no começo: se o app cair, a recuperação sabe o nome e a origem da reunião.
+    await writeFile(join(dir, 'start.json'), JSON.stringify({ origin, title: extra.title, auto: extra.auto }))
+    this.active = { id, dir, startedAt, origin, title: extra.title, auto: extra.auto, appId: extra.appId, streams: new Map(), pausedMs: 0, pausedAt: null, shots: [] }
     return this.active
   }
 
@@ -88,7 +96,7 @@ export class RecordingStore {
     s.pausedAt = null
     // A duração da nota é o tempo gravado, sem as pausas.
     const durationSec = (Date.now() - s.startedAt.getTime() - s.pausedMs) / 1000
-    await writeFile(join(s.dir, 'meta.json'), JSON.stringify({ startedAt: s.startedAt, durationSec, origin: s.origin }))
+    await writeFile(join(s.dir, 'meta.json'), JSON.stringify({ startedAt: s.startedAt, durationSec, origin: s.origin, title: s.title, auto: s.auto }))
     return { session: s, durationSec }
   }
 }

@@ -39,9 +39,15 @@ PC. Each one takes a minute or two. Please report anything that fails in an
 ## 6. Meeting detection
 
 1. Join a Microsoft Teams call (or Google Meet in Chrome or Edge).
-2. Within about 5 seconds, a small prompt asks *Record this meeting?* with **Close** and **Record**.
-3. Click **Record**, talk a little, then leave the call.
-4. About 30 seconds later the recording stops by itself and a notification says why.
+2. Within about 5 seconds the recording starts by itself and a notification says
+   *Recording the meeting "<name>"*. (With *Record on its own* off, a prompt asks first.)
+3. Talk a little, leave the call and join another one right away. A notification says
+   *New meeting*, and the first call becomes its own note.
+4. Leave the second call. About 25 seconds later the recording stops by itself.
+5. Dropped connection: during a Teams call, turn off Wi-Fi for a minute and turn it back on.
+   The recording keeps going while the meeting window is open, and it stays one note.
+6. Summary without internet: end a call with Wi-Fi off. The note is saved with the
+   transcript; once Wi-Fi is back, within about 5 minutes the summary appears in it.
 
 ## 7. Recovery
 

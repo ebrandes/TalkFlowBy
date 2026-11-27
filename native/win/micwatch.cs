@@ -4,9 +4,13 @@
 //
 // Uso: micwatch.exe [segundos]
 // A cada intervalo imprime uma linha JSON:
-//   {"apps":[{"pid":1234,"chain":["msedgewebview2.exe","ms-teams.exe","explorer.exe"]}]}
+//   {"apps":[{"pid":1234,"chain":["msedgewebview2.exe","ms-teams.exe","explorer.exe"]}],
+//    "windows":[{"exe":"ms-teams.exe","title":"Daily | Microsoft Teams"}]}
 // "chain" é o nome do .exe que captura seguido dos processos pais, para achar o app por trás do
-// WebView2 ou de um processo auxiliar do navegador. Sai sozinho quando o app fecha a saída.
+// WebView2 ou de um processo auxiliar do navegador. "windows" são os títulos das janelas visíveis
+// do Teams, do Zoom e dos navegadores: é por eles que o app sabe *qual* reunião está aberta
+// (a janela da chamada do Teams, a aba do Meet) e separa uma chamada da seguinte.
+// Sai sozinho quando o app fecha a saída.
 //
 // Compilado com o csc.exe do .NET Framework que já vem no Windows (scripts/build-micwatch.mjs).
 using System;
@@ -83,6 +87,18 @@ static class MicWatch {
   [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32FirstW(IntPtr snap, ref PROCESSENTRY32 e);
   [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32NextW(IntPtr snap, ref PROCESSENTRY32 e);
   [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
+
+  delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
+  [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc cb, IntPtr lParam);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowTextW(IntPtr hwnd, StringBuilder text, int max);
+  [DllImport("user32.dll")] static extern int GetWindowTextLengthW(IntPtr hwnd);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+
+  /** Só as janelas destes programas interessam (o resto nem sai do helper). */
+  static readonly HashSet<string> WindowApps = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+    "ms-teams.exe", "teams.exe", "msedgewebview2.exe", "chrome.exe", "msedge.exe", "firefox.exe", "brave.exe", "arc.exe", "zoom.exe"
+  };
 
   const int eCapture = 1;
   const int DEVICE_STATE_ACTIVE = 1;
@@ -165,6 +181,41 @@ static class MicWatch {
     return pids;
   }
 
+  /** Títulos das janelas visíveis dos apps de reunião e navegadores. */
+  static List<KeyValuePair<string, string>> Windows(Dictionary<uint, Proc> procs) {
+    var list = new List<KeyValuePair<string, string>>();
+    EnumWindows((hwnd, l) => {
+      try {
+        if (!IsWindowVisible(hwnd)) return true;
+        int len = GetWindowTextLengthW(hwnd);
+        if (len <= 0) return true;
+        uint pid;
+        GetWindowThreadProcessId(hwnd, out pid);
+        Proc p;
+        if (!procs.TryGetValue(pid, out p) || !WindowApps.Contains(p.Name)) return true;
+        var sb = new StringBuilder(Math.Min(len, 512) + 1);
+        GetWindowTextW(hwnd, sb, sb.Capacity);
+        string title = sb.ToString().Trim();
+        if (title.Length > 0 && list.Count < 64) list.Add(new KeyValuePair<string, string>(p.Name, title));
+      } catch (Exception) {
+        // Uma janela que some no meio da leitura não derruba o relatório.
+      }
+      return true;
+    }, IntPtr.Zero);
+    return list;
+  }
+
+  static void Json(StringBuilder sb, string s) {
+    sb.Append('"');
+    foreach (char c in s) {
+      if (c == '"') sb.Append("\\\"");
+      else if (c == '\\') sb.Append("\\\\");
+      else if (c < ' ') sb.Append("\\u").Append(((int)c).ToString("x4"));
+      else sb.Append(c);
+    }
+    sb.Append('"');
+  }
+
   static string Report(Dictionary<uint, Proc> procs) {
     var sb = new StringBuilder("{\"apps\":[");
     bool first = true;
@@ -188,6 +239,21 @@ static class MicWatch {
         sb.Append('"').Append(chain[k]).Append('"');
       }
       sb.Append("]}");
+    }
+    sb.Append("],\"windows\":[");
+    first = true;
+    try {
+      foreach (var w in Windows(procs)) {
+        if (!first) sb.Append(',');
+        first = false;
+        sb.Append("{\"exe\":");
+        Json(sb, w.Key);
+        sb.Append(",\"title\":");
+        Json(sb, w.Value);
+        sb.Append('}');
+      }
+    } catch (Exception) {
+      // Sem os títulos o app ainda sabe quem usa o microfone.
     }
     return sb.Append("]}").ToString();
   }

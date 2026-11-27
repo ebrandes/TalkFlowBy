@@ -193,8 +193,10 @@ export const pt: Dict = {
     open: 'Abrir',
     change: 'Trocar…',
     meetings: 'Reuniões',
-    ask: 'Perguntar se quero gravar quando entro numa reunião',
-    askHint: 'Teams e Google Meet no navegador',
+    ask: 'Detectar quando entro numa reunião',
+    askHint: 'Teams, Zoom e Google Meet no navegador',
+    autoRecord: 'Gravar sozinho, sem perguntar',
+    autoRecordHint: 'Grava toda reunião do começo ao fim. Saiu de uma e entrou em outra, vira outra nota. Desligado, pergunta antes.',
     muted: 'Não pergunta mais para',
     askAgain: 'Voltar a perguntar',
     liveTranscription: 'Transcrever durante a reunião',
@@ -313,6 +315,9 @@ export const pt: Dict = {
     lowDisk: (gb) => `Só ${gb} GB livres no disco. Uma gravação longa pode não caber.`,
     meetingEnded: (app) => `Gravação encerrada: a chamada no ${app} terminou. A nota fica pronta em alguns minutos.`,
     silence: (min) => `Gravação encerrada depois de ${min} minutos de silêncio. A nota fica pronta em alguns minutos.`,
+    autoStarted: (app, title) => (title ? `Gravando a reunião "${title}" (${app}).` : `Gravando a reunião do ${app}.`),
+    switched: (app, title) => (title ? `Nova reunião no ${app}: "${title}". A anterior virou uma nota separada.` : `Nova reunião no ${app}. A anterior virou uma nota separada.`),
+    summaryRetried: (n) => (n === 1 ? 'A internet voltou: o resumo que faltava foi gerado.' : `A internet voltou: ${n} resumos que faltavam foram gerados.`),
     recovered: (n) => (n === 1 ? 'Uma gravação interrompida foi recuperada e está sendo processada.' : `${n} gravações interrompidas foram recuperadas e estão sendo processadas.`)
   },
 
@@ -360,7 +365,7 @@ export const pt: Dict = {
   doc: {
     you: 'Você',
     others: 'Outros',
-    keys: { date: 'data', duration: 'duracao', source: 'origem' },
+    keys: { date: 'data', duration: 'duracao', source: 'origem', meeting: 'reuniao' },
     untitled: 'Reunião sem assunto',
     fileSubject: 'Reunião',
     topics: 'Tópicos',

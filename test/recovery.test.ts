@@ -40,6 +40,13 @@ describe('recuperação de gravações', () => {
     expect(recovered.startedAt).toBe('2026-11-18T03:43:11.649Z')
   })
 
+  it('gravação automática que caiu no meio guarda o nome da reunião', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'tfb-'))
+    session(root, '2026-11-27T15-00-00-000Z', { 'mic.webm': audio, 'start.json': JSON.stringify({ origin: 'Microsoft Teams', title: 'Daily', auto: true }) })
+    const [found] = await findPending(root)
+    expect(found.meta).toMatchObject({ origin: 'Microsoft Teams', title: 'Daily', auto: true })
+  })
+
   it('conta as tentativas de processamento', async () => {
     const root = mkdtempSync(join(tmpdir(), 'tfb-'))
     const dir = session(root, 'x', {})

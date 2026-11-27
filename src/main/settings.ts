@@ -45,6 +45,7 @@ function defaults(): Stored {
     liveTranscription: true,
     pinned: [],
     detectMeetings: true,
+    autoRecord: true,
     silenceStopMinutes: 5,
     drawFlows: true,
     separateVoices: true,
