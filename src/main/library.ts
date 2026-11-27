@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import type { Folders, LibraryNode } from '../shared/types'
+import { answerNoteBody, answerTitle, type AnswerNoteInput, type AnswerNoteLabels } from '../shared/answer-note'
 import { safeName, uniqueName } from './pipeline/filename'
 import { forgetOwnWrite, rememberOwnWrite } from './watcher'
 
@@ -61,6 +62,14 @@ export async function writeNote(root: string, rel: string, content: string): Pro
 export async function createNote(root: string, notesFolder: string, title: string): Promise<string> {
   const rel = uniqueName(`${notesFolder}/${safeName(title)}.md`, (p) => existsSync(join(root, p)))
   await writeNote(root, rel, `# ${title}\n\n`)
+  return rel
+}
+
+/** Guarda a resposta da pesquisa inteligente como nota nova em Notas, com links para as notas citadas. */
+export async function saveAnswerNote(root: string, notesFolder: string, input: AnswerNoteInput, labels: AnswerNoteLabels): Promise<string> {
+  const title = answerTitle(input.question)
+  const rel = uniqueName(`${notesFolder}/${safeName(title)}.md`, (p) => existsSync(join(root, p)))
+  await writeNote(root, rel, answerNoteBody(rel, title, input, labels))
   return rel
 }
 

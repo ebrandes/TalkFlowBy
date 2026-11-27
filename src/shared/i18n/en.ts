@@ -112,6 +112,10 @@ export const en = {
     thinking: 'Reading the notes…',
     copy: 'Copy answer (Markdown)',
     copied: 'Answer copied',
+    saveNote: 'Save as note',
+    saved: 'Saved in Notes',
+    saveFailed: 'Could not save the note.',
+    askedAt: (when: string) => `Asked TalkFlowBy on ${when}. The numbers link to the notes the answer came from.`,
     sources: 'Sources',
     noSources: 'The answer did not cite any note.',
     partial: (omitted: number, trimmed: number) =>

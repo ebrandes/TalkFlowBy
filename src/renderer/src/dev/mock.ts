@@ -1,3 +1,4 @@
+import { answerNoteBody, answerTitle } from '../../../shared/answer-note'
 // Só em desenvolvimento, fora do Electron: imita a ponte do preload para revisar as telas no navegador.
 // Conteúdo sintético, apenas para teste visual.
 import { dict, type Lang } from '../../../shared/i18n'
@@ -178,6 +179,12 @@ window.talkflow = {
     onNoteChangedOutside: noop
   },
   ai: {
+    saveNote: async (input) => {
+      const title = answerTitle(input.question)
+      const rel = `${F.notes}/${title}.md`
+      files.set(rel, answerNoteBody(rel, title, input, { asked: dict(lang).ask.askedAt(new Date().toLocaleString()), sources: dict(lang).ask.sources }))
+      return rel
+    },
     ask: async (question, path) => {
       await new Promise((r) => setTimeout(r, 900))
       const notes = path ? [path] : [...files.keys()]

@@ -1,4 +1,4 @@
-import { Copy, FileText, Sparkles, X } from 'lucide-react'
+import { Copy, FilePlus2, FileText, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { AskResult } from '../../../shared/types'
 import { useT } from '../i18n'
@@ -14,6 +14,8 @@ interface Props {
   onScope: (s: AskScope) => void
   onClose: () => void
   onOpenNote: (path: string) => void
+  /** A resposta virou uma nota nova em Notas. */
+  onSaved: (path: string) => void
   onToast: (message: string) => void
 }
 
@@ -26,6 +28,7 @@ export function AskDialog(p: Props): React.JSX.Element {
   const input = useRef<HTMLTextAreaElement>(null)
   const [question, setQuestion] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
+  const [saving, setSaving] = useState(false)
   const run = useRef(0)
   const scope: AskScope = p.notePath ? p.scope : 'all'
 
@@ -63,6 +66,21 @@ export function AskDialog(p: Props): React.JSX.Element {
     if (state.kind !== 'done') return
     await navigator.clipboard.writeText(toMarkdown(state.result))
     p.onToast(t.copied)
+  }
+
+  const save = async (): Promise<void> => {
+    if (state.kind !== 'done' || saving) return
+    setSaving(true)
+    try {
+      const { answer, notes, sources } = state.result
+      const rel = await window.talkflow.ai.saveNote({ question: state.question, answer, notes, sources })
+      p.onToast(t.saved)
+      p.onSaved(rel)
+    } catch {
+      p.onToast(t.saveFailed)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const examples = scope === 'note' ? t.examples.note : t.examples.all
@@ -152,10 +170,16 @@ export function AskDialog(p: Props): React.JSX.Element {
             {(state.result.omitted > 0 || state.result.trimmed > 0) && <p className="ask-hint">{t.partial(state.result.omitted, state.result.trimmed)}</p>}
             <div className="ask-foot">
               <Sources result={state.result} onOpenNote={p.onOpenNote} />
-              <button className="btn ghost" onClick={() => void copy()}>
-                <Copy size={14} strokeWidth={1.75} aria-hidden />
-                {t.copy}
-              </button>
+              <div className="ask-actions">
+                <button className="btn ghost" onClick={() => void copy()}>
+                  <Copy size={14} strokeWidth={1.75} aria-hidden />
+                  {t.copy}
+                </button>
+                <button className="btn primary" onClick={() => void save()} disabled={saving}>
+                  <FilePlus2 size={14} strokeWidth={1.75} aria-hidden />
+                  {t.saveNote}
+                </button>
+              </div>
             </div>
           </>
         )}

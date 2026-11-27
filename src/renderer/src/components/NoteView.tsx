@@ -1,6 +1,7 @@
 import { FileCode2, FolderOpen, Pin, PinOff, RefreshCw, Sparkles, Trash2, UserPen } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useT } from '../i18n'
+import { noteFromLink } from '../lib/answer'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
 import { dropPending, flush, scheduleSave } from '../lib/saver'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -22,10 +23,12 @@ interface Props {
   onToast: (message: string, action?: { label: string; run: () => void }) => void
   /** Abre a pesquisa inteligente sobre esta nota. */
   onAsk: () => void
+  /** Abre outra nota (link para um .md dentro da pasta). */
+  onOpenNote: (path: string) => void
 }
 
 /** Abre uma nota: carimbo (se for reunião) e o editor com salvamento automático. */
-export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned, onAsk }: Props): React.JSX.Element {
+export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned, onAsk, onOpenNote }: Props): React.JSX.Element {
   const t = useT()
   const [loaded, setLoaded] = useState<{ path: string; front: string; body: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -220,7 +223,18 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
             </button>
           </div>
         </div>
-        <div ref={editorBox}>
+        <div
+          ref={editorBox}
+          onClickCapture={(e) => {
+            // Link para outra nota (como os da resposta salva) abre a nota no app.
+            const a = (e.target as HTMLElement).closest('a')
+            const target = a && noteFromLink(path, a.getAttribute('href') ?? '')
+            if (!target) return
+            e.preventDefault()
+            e.stopPropagation()
+            void flush().then(() => onOpenNote(target))
+          }}
+        >
           <Editor key={revision} docKey={path} value={loaded.body} onChange={onChange} />
         </div>
         <ConfirmDialog

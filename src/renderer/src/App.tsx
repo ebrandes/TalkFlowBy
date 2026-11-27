@@ -171,6 +171,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
             pinned={app.settings?.pinned.includes(app.selected) ?? false}
             onPinned={app.setSettings}
             onAsk={() => openAsk('note')}
+            onOpenNote={open}
             onDeleted={async (undoId) => {
               const was = app.selected
               await app.refresh()
@@ -199,6 +200,11 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
         onClose={() => setAsking(false)}
         onOpenNote={(rel) => {
           setAsking(false)
+          open(rel)
+        }}
+        onSaved={async (rel) => {
+          setAsking(false)
+          await app.refresh()
           open(rel)
         }}
         onToast={showToast}

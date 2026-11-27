@@ -113,6 +113,10 @@ export const pt: Dict = {
     thinking: 'Lendo as notas…',
     copy: 'Copiar resposta (Markdown)',
     copied: 'Resposta copiada',
+    saveNote: 'Salvar como nota',
+    saved: 'Salva em Notas',
+    saveFailed: 'Não foi possível salvar a nota.',
+    askedAt: (when) => `Pergunta feita ao TalkFlowBy em ${when}. Os números levam às notas de onde veio a resposta.`,
     sources: 'Fontes',
     noSources: 'A resposta não citou nenhuma nota.',
     partial: (omitted, trimmed) =>
