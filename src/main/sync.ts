@@ -18,8 +18,8 @@ import { dirname, join } from 'node:path'
 
 export const BRANCH = 'main'
 
-/** O que fica fora do repositório: áudio temporário e lixo de sistema. */
-export const IGNORED = ['.audio/', '.DS_Store', 'Thumbs.db', 'desktop.ini', '*.tmp', '.~lock.*']
+/** O que fica fora do repositório: áudio temporário, backups (zips com todas as notas) e lixo de sistema. */
+export const IGNORED = ['.audio/', '.backups/', '.DS_Store', 'Thumbs.db', 'desktop.ini', '*.tmp', '.~lock.*']
 
 export interface SyncResult {
   /** Caminhos (relativos, com `/`) que chegaram de outro computador. */
@@ -116,7 +116,7 @@ export async function backupFolder(root: string, backupDir: string, when: Date):
   const target = join(backupDir, `TalkFlowBy-${when.toISOString().replace(/[:.]/g, '-')}`)
   await mkdir(target, { recursive: true })
   for (const entry of await readdir(root)) {
-    if (entry === '.git' || entry === '.audio') continue
+    if (entry === '.git' || entry === '.audio' || entry === '.backups') continue
     await cp(join(root, entry), join(target, entry), { recursive: true, preserveTimestamps: true })
   }
   return target
