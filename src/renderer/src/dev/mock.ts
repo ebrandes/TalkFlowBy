@@ -127,6 +127,7 @@ let settings: Settings = {
   liveTranscription: true,
   pinned: [],
   detectMeetings: true,
+  autoRecord: true,
   silenceStopMinutes: 5,
   drawFlows: true,
   separateVoices: true,

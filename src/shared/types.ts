@@ -51,6 +51,10 @@ export interface MeetingMeta {
   startedAt: Date
   durationSec: number
   origin?: string
+  /** Nome da reunião visto na janela do Teams ou na aba do Meet. */
+  title?: string
+  /** Começou sozinha, pela detecção da reunião. */
+  auto?: boolean
 }
 
 export type NodeKind = 'folder' | 'file'
@@ -85,6 +89,8 @@ export interface Settings {
   /** Transcrever durante a reunião, para a nota ficar pronta logo depois do fim. */
   liveTranscription: boolean
   detectMeetings: boolean
+  /** Ao detectar uma reunião, grava sem perguntar. */
+  autoRecord: boolean
   /** Modelo do Whisper: melhor, equilibrado ou mais rápido. */
   transcriptionQuality: import('./models').TranscriptionQuality
   /** Desenhar o fluxo no fim da nota quando a reunião descreve um processo. */

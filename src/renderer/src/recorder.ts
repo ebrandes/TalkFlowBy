@@ -1,4 +1,5 @@
 import type { Track } from '../../shared/types'
+import type { StartExtra } from '../../shared/recording'
 import { SilenceWatch } from './silence'
 
 const MIME = 'audio/webm;codecs=opus'
@@ -29,7 +30,7 @@ export class Recorder {
     return this.recorders.length > 0
   }
 
-  async start(origin: string | undefined, opts: RecorderOptions): Promise<RecorderStart> {
+  async start(origin: string | undefined, opts: RecorderOptions, extra: StartExtra = {}): Promise<RecorderStart> {
     if (this.active) return { systemAudio: true }
     const mic = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -51,7 +52,7 @@ export class Recorder {
       systemAudio = false
     }
 
-    await window.talkflow.recording.begin(origin)
+    await window.talkflow.recording.begin(origin, extra)
     this.record(mic, 'mic')
     this.silence.start(this.streams, opts.silenceMinutes * 60_000, opts.onSilence)
     return { systemAudio }

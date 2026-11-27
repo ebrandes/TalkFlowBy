@@ -192,8 +192,10 @@ export const en = {
     open: 'Open',
     change: 'Change…',
     meetings: 'Meetings',
-    ask: 'Ask to record when I join a meeting',
-    askHint: 'Teams and Google Meet in the browser',
+    ask: 'Notice when I join a meeting',
+    askHint: 'Teams, Zoom and Google Meet in the browser',
+    autoRecord: 'Record on its own, without asking',
+    autoRecordHint: 'Records every meeting from start to end. Leave one and join another, and it becomes a new note. Off: asks first.',
     muted: 'No longer asks for',
     askAgain: 'Ask again',
     liveTranscription: 'Transcribe during the meeting',
@@ -312,6 +314,9 @@ export const en = {
     lowDisk: (gb: string) => `Only ${gb} GB free on disk. A long recording may not fit.`,
     meetingEnded: (app: string) => `Recording stopped: the ${app} call ended. Your note will be ready in a few minutes.`,
     silence: (min: number) => `Recording stopped after ${min} minutes of silence. Your note will be ready in a few minutes.`,
+    autoStarted: (app: string, title?: string) => (title ? `Recording the meeting "${title}" (${app}).` : `Recording the ${app} meeting.`),
+    switched: (app: string, title?: string) => (title ? `New meeting in ${app}: "${title}". The previous one became a separate note.` : `New meeting in ${app}. The previous one became a separate note.`),
+    summaryRetried: (n: number) => (n === 1 ? 'Back online: the missing summary was generated.' : `Back online: ${n} missing summaries were generated.`),
     recovered: (n: number) => (n === 1 ? 'An interrupted recording was recovered and is being processed.' : `${n} interrupted recordings were recovered and are being processed.`)
   },
 
@@ -359,7 +364,7 @@ export const en = {
   doc: {
     you: 'You',
     others: 'Others',
-    keys: { date: 'date', duration: 'duration', source: 'source' },
+    keys: { date: 'date', duration: 'duration', source: 'source', meeting: 'meeting' },
     untitled: 'Meeting without a subject',
     fileSubject: 'Meeting',
     topics: 'Topics',

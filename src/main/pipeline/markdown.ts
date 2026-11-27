@@ -36,6 +36,7 @@ function frontmatter(meta: MeetingMeta, d: Doc): string[] {
   const k = d.keys
   const out = ['---', `${k.date}: ${formatDateTime(meta.startedAt)}`, `${k.duration}: ${formatDuration(meta.durationSec)}`]
   if (meta.origin) out.push(`${k.source}: ${yamlValue(meta.origin)}`)
+  if (meta.title) out.push(`${k.meeting}: ${yamlValue(meta.title)}`)
   out.push('---')
   return out
 }

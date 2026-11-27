@@ -41,6 +41,13 @@ export interface RunDeps {
   drawFlows?: boolean
   summary: SummarizeOptions
   onStatus: (s: PipelineStatus) => void
+  /** O resumo não saiu (sem internet, por exemplo): a nota foi salva só com a transcrição. */
+  onSummaryFailed?: (notePath: string) => void
+  /**
+   * Gravação sem nenhuma fala: em vez de virar nota vazia, vai para cá (a Lixeira do sistema).
+   * Só para as gravações que começaram sozinhas; sem isso, vira nota como sempre.
+   */
+  discardEmpty?: (sessionDir: string) => Promise<void>
 }
 
 /** Gravação → wav → Whisper → junção → Haiku → .md. Devolve o caminho relativo da nota. */
@@ -89,6 +96,11 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
     if (voices) segments['Outros'] = assignVoices(segments['Outros'], voices)
   }
   const turns = mergeTracks(segments['Você'], segments['Outros'])
+  if (turns.length === 0 && deps.discardEmpty) {
+    await deps.discardEmpty(input.sessionDir)
+    onStatus({ stage: 'idle' })
+    return ''
+  }
 
   // Capturas de tela: marcadas na transcrição e mandadas junto para o resumo.
   const shots = (await readShots(input.sessionDir)).map((s, i) => ({ ...s, index: i + 1, label: shotLabel(t.doc.screen, i + 1, s.offsetSec) }))
@@ -108,7 +120,7 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   }
 
   onStatus({ stage: 'saving' })
-  const assunto = summary?.assunto || t.doc.fileSubject
+  const assunto = summary?.assunto || input.meta.title || t.doc.fileSubject
   const timeSep = deps.lang === 'pt' ? 'h' : '.'
   const rel = uniqueName(meetingRelPath(input.meta.startedAt, assunto, deps.meetingsFolder, timeSep), (p) => existsSync(join(deps.rootDir, p)))
   const full = join(deps.rootDir, rel)
@@ -120,6 +132,7 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
 
   if (deps.keepAudio) await markDone(input.sessionDir, rel)
   else await rm(input.sessionDir, { recursive: true, force: true })
+  if (!summary && turns.length > 0) deps.onSummaryFailed?.(rel)
   onStatus({ stage: 'done', notePath: rel, message: warning })
   return rel
 }

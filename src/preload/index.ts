@@ -1,7 +1,7 @@
 import type { AnswerNoteInput } from '../shared/answer-note'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { AskResult, FailedRecording, OpenTask, LibraryNode, ModelStatus, PipelineStatus, Settings, SyncStatus, Track } from '../shared/types'
-import type { RecordingState } from '../shared/recording'
+import type { RecordingState, StartCommand, StartExtra } from '../shared/recording'
 
 type Unsubscribe = () => void
 
@@ -59,15 +59,15 @@ const api = {
     onStatus: (cb: (s: SyncStatus) => void): Unsubscribe => on('sync:status', cb)
   },
   recording: {
-    begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),
+    begin: (origin?: string, extra?: StartExtra): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin, extra),
     chunk: (track: Track, data: ArrayBuffer): void => ipcRenderer.send('rec:chunk', track, data),
     stop: (): Promise<void> => ipcRenderer.invoke('rec:stop'),
     autoStopped: (info: { reason: 'silence'; minutes: number } | { reason: 'meeting'; app: string }): Promise<void> =>
       ipcRenderer.invoke('rec:autoStopped', info),
     state: (): Promise<RecordingState> => ipcRenderer.invoke('rec:state'),
     onState: (cb: (s: RecordingState) => void): Unsubscribe => on('recording:state', cb),
-    onStartCommand: (cb: (p: { origin?: string }) => void): Unsubscribe => on('command:start', cb),
-    onStopCommand: (cb: (p: { reason?: string; app?: string }) => void): Unsubscribe => on('command:stop', cb),
+    onStartCommand: (cb: (p: StartCommand) => void): Unsubscribe => on('command:start', cb),
+    onStopCommand: (cb: (p: { reason?: string; app?: string; force?: boolean }) => void): Unsubscribe => on('command:stop', cb),
     setPaused: (paused: boolean): Promise<void> => ipcRenderer.invoke('rec:setPaused', paused),
     onPauseCommand: (cb: () => void): Unsubscribe => on('command:pause', cb),
     onResumeCommand: (cb: () => void): Unsubscribe => on('command:resume', cb)

@@ -72,6 +72,9 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
         <section className="set-group">
           <h2>{t.meetings}</h2>
           <Toggle label={t.ask} hint={t.askHint} checked={settings.detectMeetings} onChange={(v) => void update({ detectMeetings: v })} />
+          {settings.detectMeetings && (
+            <Toggle label={t.autoRecord} hint={t.autoRecordHint} checked={settings.autoRecord} onChange={(v) => void update({ autoRecord: v })} />
+          )}
           {settings.mutedApps.length > 0 && (
             <div className="set-row">
               <div className="set-label">

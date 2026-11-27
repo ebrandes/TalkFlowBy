@@ -92,8 +92,12 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('sync:now', () => c.sync.now())
   ipcMain.handle('sync:openBackup', () => c.sync.status.backup && shell.openPath(c.sync.status.backup))
 
-  ipcMain.handle('rec:begin', async (_e, origin?: string) => {
-    const s = await c.store.begin(origin)
+  ipcMain.handle('rec:begin', async (_e, origin?: string, extra?: { title?: string; auto?: boolean; appId?: string }) => {
+    const s = await c.store.begin(origin, {
+      title: typeof extra?.title === 'string' ? extra.title.slice(0, 200) : undefined,
+      auto: extra?.auto === true,
+      appId: typeof extra?.appId === 'string' ? extra.appId : undefined
+    })
     void c.startLive(s.dir)
     void c.warnIfLowDisk()
     c.setRecording(true)
@@ -102,9 +106,10 @@ export function registerIpc(c: Controller): void {
   })
   ipcMain.on('rec:chunk', (_e, track: Track, chunk: ArrayBuffer) => c.store.append(track, chunk))
   ipcMain.handle('rec:stop', () => c.finishRecording())
-  ipcMain.handle('rec:autoStopped', (_e, info: { reason: 'silence'; minutes: number } | { reason: 'meeting'; app: string }) =>
+  ipcMain.handle('rec:autoStopped', (_e, info: { reason: 'silence'; minutes: number } | { reason: 'meeting'; app: string }) => {
     c.notify(info.reason === 'silence' ? tr().autoStop.silence(info.minutes) : tr().autoStop.meetingEnded(info.app))
-  )
+    if (info.reason === 'silence') c.onSilenceStopped()
+  })
   ipcMain.handle('rec:state', () => c.recordingState())
   ipcMain.handle('rec:setPaused', (_e, paused: boolean) => c.setPaused(paused))
   ipcMain.handle('widget:command', (_e, cmd: 'pause' | 'resume' | 'stop' | 'capture') => c.widgetCommand(cmd))
