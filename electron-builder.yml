@@ -13,6 +13,7 @@ files:
   - package.json
 asarUnpack:
   - node_modules/ffmpeg-static/**
+  - node_modules/sherpa-onnx-*/**
 extraResources:
   - from: resources/bin
     to: bin

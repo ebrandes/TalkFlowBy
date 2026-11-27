@@ -43,7 +43,9 @@ origem: Google Meet (Chrome)
 
 **00:00 · Você:** Bom dia. Vamos fechar o calendário de dezembro. A minha proposta é publicar oito vídeos, dois por semana, começando no dia 2.
 
-**00:11 · Outros:** Concordo com os oito vídeos. Mas a cota de vozes acaba no dia 20, então precisamos de um plano para os Shorts.
+**00:11 · Outros 1:** Concordo com os oito vídeos. Mas a cota de vozes acaba no dia 20, então precisamos de um plano para os Shorts.
+
+**00:24 · Outros 2:** Eu meço a cota até sexta e trago os números.
 `
 const sampleEn = `---
 date: 2026-11-17 14:30
@@ -126,6 +128,7 @@ let settings: Settings = {
   detectMeetings: true,
   silenceStopMinutes: 5,
   drawFlows: true,
+  separateVoices: true,
   transcriptionQuality: 'best',
   mutedApps: [],
   checkUpdates: true,

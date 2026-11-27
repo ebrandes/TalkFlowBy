@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { copyFile, mkdir, readFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import type { Turn } from '../../shared/types'
-import { formatClock } from './merge'
+import { formatClock, speakerLabel } from './merge'
 
 /** Captura de tela feita durante a gravação, com caminhos relativos à pasta da gravação. */
 export interface Shot {
@@ -78,7 +78,7 @@ export function plainTextWithShots(turns: Turn[], labels: Record<Turn['speaker']
   let m = 0
   for (const t of turns) {
     while (m < marks.length && marks[m].offsetSec <= t.start) lines.push(`[${marks[m++].label}]`)
-    lines.push(`[${formatClock(t.start)}] ${labels[t.speaker]}: ${t.text}`)
+    lines.push(`[${formatClock(t.start)}] ${speakerLabel(t, labels)}: ${t.text}`)
   }
   while (m < marks.length) lines.push(`[${marks[m++].label}]`)
   return lines.join('\n')

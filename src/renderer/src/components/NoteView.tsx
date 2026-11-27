@@ -5,7 +5,7 @@ import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } f
 import { dropPending, flush, scheduleSave } from '../lib/saver'
 import { ConfirmDialog } from './ConfirmDialog'
 import { NameDialog } from './NameDialog'
-import { hasOthers, renameOthers } from '../../../shared/speakers'
+import { othersLabels, renameSpeakers } from '../../../shared/speakers'
 import type { Settings } from '../../../shared/types'
 import { Editor } from './Editor'
 import { FindBar } from './FindBar'
@@ -85,10 +85,10 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
     [path]
   )
 
-  const renameSpeaker = (name: string): void => {
+  const renameSpeaker = (names: Record<string, string>): void => {
     setNaming(false)
     if (!loaded) return
-    const next = renameOthers(body, name)
+    const next = renameSpeakers(body, names)
     if (next === body) return
     const md = joinFrontmatter(loaded.front, next)
     scheduleSave(path, md)
@@ -144,6 +144,7 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
   const meta = splitFrontmatter(`${loaded.front}\n`).meta
   const noSummary = loaded.body.includes('O resumo não foi gerado') || loaded.body.includes('The summary was not generated')
   const fullMarkdown = joinFrontmatter(loaded.front, body)
+  const voices = othersLabels(body)
   markdownRef.current = fullMarkdown
   const onChange = (markdown: string): void => {
     setBody(markdown)
@@ -176,7 +177,7 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
                 <RefreshCw size={17} strokeWidth={1.75} className={summarizing ? 'spin' : undefined} />
               </button>
             )}
-            {meeting && hasOthers(body) && (
+            {meeting && voices.length > 0 && (
               <button className="icon-btn" title={t.note.renameSpeaker} aria-label={t.note.renameSpeaker} onClick={() => setNaming(true)}>
                 <UserPen size={17} strokeWidth={1.75} />
               </button>
@@ -236,8 +237,9 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
         />
         <NameDialog
           open={naming}
-          title={t.note.renameSpeakerTitle}
-          hint={t.note.renameSpeakerHint}
+          title={voices.length > 1 ? t.note.renameVoicesTitle : t.note.renameSpeakerTitle}
+          hint={voices.length > 1 ? t.note.renameVoicesHint : t.note.renameSpeakerHint}
+          fields={voices}
           placeholder={t.note.renameSpeakerPlaceholder}
           apply={t.note.renameSpeakerApply}
           onApply={renameSpeaker}

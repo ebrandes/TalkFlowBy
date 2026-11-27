@@ -1,7 +1,7 @@
 import type { Dict } from '../../shared/i18n'
 import { pt } from '../../shared/i18n/pt'
 import type { MeetingMeta, Summary, Turn } from '../../shared/types'
-import { formatClock } from './merge'
+import { formatClock, speakerLabel } from './merge'
 
 const pad = (n: number): string => String(n).padStart(2, '0')
 
@@ -77,12 +77,12 @@ const image = (s: NoteShot): string => `![${escapeInline(s.label)}](${s.link})`
 /** Transcrição com cada captura no ponto da conversa em que foi feita. */
 function transcriptBlock(turns: Turn[], d: Doc, shots: NoteShot[] = []): string[] {
   const out: string[] = []
-  const label = (s: Turn['speaker']): string => (s === 'Você' ? d.you : d.others)
+  const labels = { Você: d.you, Outros: d.others }
   let m = 0
   for (const t of turns) {
     while (m < shots.length && shots[m].offsetSec <= t.start) out.push(image(shots[m++]), '')
     // Sem colchetes no horário: o editor escaparia "[00:00]" como "\[00:00]" ao salvar.
-    out.push(`**${formatClock(t.start)} · ${label(t.speaker)}:** ${escapeInline(t.text)}`, '')
+    out.push(`**${formatClock(t.start)} · ${speakerLabel(t, labels)}:** ${escapeInline(t.text)}`, '')
   }
   while (m < shots.length) out.push(image(shots[m++]), '')
   if (out[out.length - 1] === '') out.pop()

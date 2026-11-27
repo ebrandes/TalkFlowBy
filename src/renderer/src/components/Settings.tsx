@@ -103,6 +103,12 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
             checked={settings.liveTranscription}
             onChange={(v) => void update({ liveTranscription: v })}
           />
+          <Toggle
+            label={t.separateVoices}
+            hint={t.separateVoicesHint}
+            checked={settings.separateVoices}
+            onChange={(v) => void update({ separateVoices: v })}
+          />
           <Toggle label={t.drawFlows} hint={t.drawFlowsHint} checked={settings.drawFlows} onChange={(v) => void update({ drawFlows: v })} />
           <Toggle label={t.keepAudio} hint={t.keepAudioHint} checked={settings.keepAudio} onChange={(v) => void update({ keepAudio: v })} />
           <Toggle label={t.checkUpdates} hint={t.checkUpdatesHint} checked={settings.checkUpdates} onChange={(v) => void update({ checkUpdates: v })} />

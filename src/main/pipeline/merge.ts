@@ -93,22 +93,27 @@ export function mergeTracks(mic: Segment[], system: Segment[]): Turn[] {
   for (const seg of all) {
     const text = collapseRepeats(seg.text)
     const prev = turns[turns.length - 1]
-    const sameSpeaker = prev && prev.speaker === seg.speaker
+    const sameSpeaker = prev && prev.speaker === seg.speaker && prev.voice === seg.voice
     const shortGap = seg.start - lastEnd <= MAX_GAP_SEC
     const fits = prev && prev.text.length + text.length < MAX_TURN_CHARS
     if (sameSpeaker && shortGap && fits) {
       prev.text = `${prev.text} ${text}`
     } else {
-      turns.push({ speaker: seg.speaker, start: seg.start, text })
+      turns.push(seg.voice ? { speaker: seg.speaker, voice: seg.voice, start: seg.start, text } : { speaker: seg.speaker, start: seg.start, text })
     }
     lastEnd = Math.max(lastEnd, seg.end)
   }
   return turns
 }
 
+/** Nome de quem falou: "Você", "Outros" ou "Outros 2" quando as vozes foram separadas. */
+export function speakerLabel(t: Pick<Turn, 'speaker' | 'voice'>, labels: Record<Turn['speaker'], string>): string {
+  return t.voice ? `${labels[t.speaker]} ${t.voice}` : labels[t.speaker]
+}
+
 /** Texto corrido para mandar ao modelo de resumo. */
 export function turnsToPlainText(turns: Turn[], labels: Record<Turn['speaker'], string> = { Você: 'Você', Outros: 'Outros' }): string {
-  return turns.map((t) => `[${formatClock(t.start)}] ${labels[t.speaker]}: ${t.text}`).join('\n')
+  return turns.map((t) => `[${formatClock(t.start)}] ${speakerLabel(t, labels)}: ${t.text}`).join('\n')
 }
 
 export function formatClock(totalSec: number): string {

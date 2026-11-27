@@ -5,6 +5,8 @@ export type Speaker = 'Você' | 'Outros'
 /** Trecho transcrito de uma trilha, em segundos desde o início da gravação. */
 export interface Segment {
   speaker: Speaker
+  /** Voz dentro de "Outros" (1, 2, 3…), quando o app separou quem falou. */
+  voice?: number
   start: number
   end: number
   text: string
@@ -13,6 +15,7 @@ export interface Segment {
 /** Turno de fala: segmentos seguidos da mesma pessoa agrupados num parágrafo. */
 export interface Turn {
   speaker: Speaker
+  voice?: number
   start: number
   text: string
 }
@@ -86,6 +89,8 @@ export interface Settings {
   transcriptionQuality: import('./models').TranscriptionQuality
   /** Desenhar o fluxo no fim da nota quando a reunião descreve um processo. */
   drawFlows: boolean
+  /** Separar as vozes de "Outros" (Outros 1, Outros 2…), no próprio computador. */
+  separateVoices: boolean
   /** Minutos sem som para parar a gravação sozinha; 0 desliga. */
   silenceStopMinutes: number
   mutedApps: string[]
@@ -117,6 +122,7 @@ export type PipelineStage =
   | 'recording'
   | 'converting'
   | 'transcribing'
+  | 'voices'
   | 'summarizing'
   | 'saving'
   | 'done'

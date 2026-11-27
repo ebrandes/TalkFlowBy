@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { dict, type Lang } from '../../shared/i18n'
 import type { MeetingMeta, PipelineStatus, Segment, Speaker, Summary } from '../../shared/types'
@@ -13,6 +13,8 @@ import { mergeTracks } from './merge'
 import { pickForSummary, placeShots, plainTextWithShots, readShots, shotLabel } from './shots'
 import { prepareRange, readProgress, removeChunks, TRACKS } from './track'
 import { transcribe } from './whisper'
+import { toWav16k } from './transcode'
+import { assignVoices, type VoiceTurn } from '../voices/assign'
 import { markDone, markProcessing } from '../recovery'
 import { friendlyError } from '../errors'
 
@@ -33,6 +35,8 @@ export interface RunDeps {
   greedy?: boolean
   language: string
   keepAudio: boolean
+  /** Separa as vozes de "Outros" (Outros 1, Outros 2…); sem isso, fica só "Outros". */
+  voices?: (wav: string, durationSec: number) => Promise<VoiceTurn[] | null>
   /** Desenhar o fluxo no fim da nota quando houver um. */
   drawFlows?: boolean
   summary: SummarizeOptions
@@ -57,6 +61,9 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
     })
   )
 
+  // A separação de vozes roda em paralelo com o Whisper, sobre o áudio inteiro do sistema.
+  const voicesJob = deps.voices ? findVoices(input.sessionDir, deps.voices) : Promise.resolve(null)
+
   const total = prepared.reduce((n, p) => n + p.chunks.length, 0) || 1
   let before = 0
   const segments: Record<Speaker, Segment[]> = { Você: [], Outros: [] }
@@ -75,6 +82,11 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
     segments[item.speaker] = [...item.earlier, ...fresh]
     await removeChunks(item.chunks)
     before += item.chunks.length
+  }
+  if (deps.voices && segments['Outros'].length) {
+    onStatus({ stage: 'voices' })
+    const voices = await voicesJob
+    if (voices) segments['Outros'] = assignVoices(segments['Outros'], voices)
   }
   const turns = mergeTracks(segments['Você'], segments['Outros'])
 
@@ -110,6 +122,23 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   else await rm(input.sessionDir, { recursive: true, force: true })
   onStatus({ stage: 'done', notePath: rel, message: warning })
   return rel
+}
+
+/** Converte o áudio do sistema e separa as vozes. Qualquer falha só deixa a nota com "Outros". */
+async function findVoices(dir: string, detect: NonNullable<RunDeps['voices']>): Promise<VoiceTurn[] | null> {
+  const src = join(dir, 'system.webm')
+  if (!existsSync(src)) return null
+  const wav = join(dir, 'voices.wav')
+  try {
+    await toWav16k(src, wav, 0)
+    // wav de 16 kHz, 16 bits, mono: 32 000 bytes por segundo depois do cabeçalho.
+    const durationSec = Math.max(0, ((await stat(wav)).size - 44) / 32_000)
+    return durationSec < 5 ? null : await detect(wav, durationSec)
+  } catch {
+    return null
+  } finally {
+    await rm(wav, { force: true }).catch(() => undefined)
+  }
 }
 
 /** Desenha o fluxo ao lado da nota com o fireworks-tech-graph; sem a skill, devolve o Mermaid. */

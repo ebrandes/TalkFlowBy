@@ -9,6 +9,7 @@ import { Stamp } from './Stamp'
 /** As mesmas palavras do carimbo da nota: gravando → transcrevendo → resumindo → resumido. */
 function stageLabel(stage: PipelineStatus['stage'], t: Dict['bar']): string | undefined {
   if (stage === 'converting' || stage === 'transcribing') return t.transcribing
+  if (stage === 'voices') return t.voices
   if (stage === 'summarizing' || stage === 'saving') return t.summarizing
   if (stage === 'done') return t.summarized
   return undefined
