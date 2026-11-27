@@ -50,7 +50,18 @@ export const en = {
     openClaude: 'Open in Claude',
     copied: 'Copied to the clipboard',
     copiedForClaude: 'Note copied. If it is not already in Claude, paste it with Ctrl+V or ⌘V.',
-    noTranscript: 'This note has no transcript.'
+    noTranscript: 'This note has no transcript.',
+    copyMarkdown: 'Copy Markdown (Ctrl+Shift+C / ⌘⇧C)',
+    copiedMarkdown: 'Note Markdown copied'
+  },
+
+  find: {
+    placeholder: 'Find in note',
+    count: (i: number, n: number) => `${i} of ${n}`,
+    none: 'No matches',
+    prev: 'Previous (Shift+Enter)',
+    next: 'Next (Enter)',
+    close: 'Close (Esc)'
   },
 
   confirm: {
