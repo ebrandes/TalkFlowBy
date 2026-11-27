@@ -174,3 +174,30 @@ button {
   border-color: var(--violet);
   box-shadow: 0 0 0 3px var(--violet-tint);
 }
+
+/* Botão que pede atenção (por exemplo, nota sem resumo). */
+.icon-btn.attention {
+  color: var(--warn);
+  background: var(--warn-tint);
+}
+
+.icon-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

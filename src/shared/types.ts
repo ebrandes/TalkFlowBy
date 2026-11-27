@@ -129,3 +129,12 @@ export interface ModelStatus {
 }
 
 export type Track = 'mic' | 'system'
+
+/** Gravação que deu erro ao virar nota; o áudio continua guardado. */
+export interface FailedRecording {
+  id: string
+  startedAt: string
+  durationSec: number
+  error: string
+  attempts: number
+}

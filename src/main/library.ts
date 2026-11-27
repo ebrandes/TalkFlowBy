@@ -4,6 +4,7 @@ import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promi
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import type { Folders, LibraryNode } from '../shared/types'
 import { safeName, uniqueName } from './pipeline/filename'
+import { forgetOwnWrite, rememberOwnWrite } from './watcher'
 
 const toPosix = (p: string): string => p.split(sep).join('/')
 
@@ -45,12 +46,15 @@ export async function listTree(root: string, folders: Folders): Promise<LibraryN
 }
 
 export async function readNote(root: string, rel: string): Promise<string> {
-  return readFile(resolveInside(root, rel), 'utf8')
+  const content = await readFile(resolveInside(root, rel), 'utf8')
+  rememberOwnWrite(rel, content)
+  return content
 }
 
 export async function writeNote(root: string, rel: string, content: string): Promise<void> {
   const full = resolveInside(root, rel)
   await mkdir(dirname(full), { recursive: true })
+  rememberOwnWrite(rel, content)
   await writeFile(full, content, 'utf8')
 }
 
@@ -67,6 +71,8 @@ export async function renameNote(root: string, rel: string, newTitle: string): P
   const target = uniqueName(`${folder}/${safeName(newTitle)}.md`, (p) => p !== rel && existsSync(join(root, p)))
   if (target === rel) return rel
   await rename(from, resolveInside(root, target))
+  forgetOwnWrite(rel)
+  rememberOwnWrite(target, await readFile(resolveInside(root, target), 'utf8'))
   return target
 }
 

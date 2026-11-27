@@ -1,8 +1,8 @@
-import { FolderOpen, Trash2 } from 'lucide-react'
+import { FolderOpen, RefreshCw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useT } from '../i18n'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
-import { flush, scheduleSave } from '../lib/saver'
+import { dropPending, flush, scheduleSave } from '../lib/saver'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Editor } from './Editor'
 import { ShareMenu } from './ShareMenu'
@@ -22,6 +22,9 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
   const [error, setError] = useState<string | null>(null)
   const [body, setBody] = useState('')
   const [confirming, setConfirming] = useState(false)
+  /** Muda quando o conteúdo vem de fora do editor (resumo novo, edição em outro app); recria o editor. */
+  const [revision, setRevision] = useState(0)
+  const [summarizing, setSummarizing] = useState(false)
 
   const name = path.split('/').pop()!.replace(/\.md$/i, '')
   const meeting = parseMeetingName(name)
@@ -45,6 +48,40 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path])
+
+  const replaceContent = (md: string): void => {
+    const { front, body } = splitFrontmatter(md)
+    setLoaded({ path, front, body })
+    setBody(body)
+    setRevision((r) => r + 1)
+    onPreview(summaryPreview(body))
+  }
+
+  // Editada no Obsidian, no Explorer ou pela sincronização: mostra a versão do disco.
+  useEffect(
+    () =>
+      window.talkflow.library.onNoteChangedOutside((p) => {
+        if (p.path !== path) return
+        dropPending(path)
+        void window.talkflow.library.read(path).then((md) => {
+          replaceContent(md)
+          onToast(t.note.changedOutside)
+        })
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [path]
+  )
+
+  const resummarize = async (): Promise<void> => {
+    setSummarizing(true)
+    await flush()
+    const res = await window.talkflow.library.resummarize(path)
+    setSummarizing(false)
+    if (res.ok) {
+      replaceContent(res.markdown)
+      onToast(t.note.resummarized)
+    } else onToast(res.error)
+  }
 
   if (error) {
     return (
@@ -75,6 +112,18 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
             <span />
           )}
           <div className="doc-tools">
+            {meeting && (
+              <button
+                className={`icon-btn${noSummary ? ' attention' : ''}`}
+                title={summarizing ? t.note.resummarizing : t.note.resummarize}
+                aria-label={summarizing ? t.note.resummarizing : t.note.resummarize}
+                aria-busy={summarizing}
+                disabled={summarizing}
+                onClick={() => void resummarize()}
+              >
+                <RefreshCw size={17} strokeWidth={1.75} className={summarizing ? 'spin' : undefined} />
+              </button>
+            )}
             <ShareMenu markdown={joinFrontmatter(loaded.front, body)} body={body} onToast={onToast} />
             <button
               className="icon-btn"
@@ -94,7 +143,7 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
             </button>
           </div>
         </div>
-        <Editor docKey={path} value={loaded.body} onChange={onChange} />
+        <Editor key={revision} docKey={path} value={loaded.body} onChange={onChange} />
         <ConfirmDialog
           open={confirming}
           title={t.confirm.trashOne}

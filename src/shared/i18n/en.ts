@@ -37,6 +37,10 @@ export const en = {
   },
 
   note: {
+    resummarize: 'Summarize again',
+    resummarizing: 'Summarizing…',
+    resummarized: 'Summary updated',
+    changedOutside: 'This note changed outside TalkFlowBy and was reloaded.',
     summarized: 'Summarized',
     noSummary: 'No summary',
     openError: 'This note could not be opened. It may have been moved or deleted.',
@@ -203,6 +207,7 @@ export const en = {
   },
 
   autoStop: {
+    lowDisk: (gb: string) => `Only ${gb} GB free on disk. A long recording may not fit.`,
     meetingEnded: (app: string) => `Recording stopped: the ${app} call ended. Your note will be ready in a few minutes.`,
     silence: (min: number) => `Recording stopped after ${min} minutes of silence. Your note will be ready in a few minutes.`,
     recovered: (n: number) => (n === 1 ? 'An interrupted recording was recovered and is being processed.' : `${n} interrupted recordings were recovered and are being processed.`)
@@ -221,6 +226,25 @@ export const en = {
     stop: 'Stop recording',
     quit: 'Quit',
     recordingTip: 'TalkFlowBy — recording'
+  },
+
+  errors: {
+    whisper: 'Transcription failed. Try again; if it keeps failing, pick a lighter quality in Settings.',
+    ffmpeg: 'Could not read the recorded audio. The audio was kept and can be retried.',
+    summaryTimeout: 'The summary took too long and was cancelled. Use “Summarize again” on the note.',
+    noProvider: 'No way to summarize: install Claude Code or save an Anthropic API key in Settings.',
+    offline: 'No internet connection to summarize. Use “Summarize again” on the note when you are back online.',
+    claude: 'Claude could not summarize this meeting. Use “Summarize again” on the note.',
+    generic: (detail: string) => `Something went wrong: ${detail}`,
+    summaryNotGenerated: (reason: string) => `Note saved without a summary. ${reason}`
+  },
+
+  failed: {
+    title: (n: number) => (n === 1 ? 'One recording could not be processed' : `${n} recordings could not be processed`),
+    lead: 'The audio is safe. Try again, or move it to the Trash.',
+    retry: 'Try again',
+    discard: 'Move to Trash',
+    when: (date: string, min: number) => `${date} · ${min} min`
   },
 
   main: {

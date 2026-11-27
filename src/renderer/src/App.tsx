@@ -5,6 +5,7 @@ import type { TranscriptionQuality } from '../../shared/models'
 import type { Folders, ModelStatus } from '../../shared/types'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Crumbs } from './components/Crumbs'
+import { FailedRecordings } from './components/FailedRecordings'
 import { NoteView } from './components/NoteView'
 import { SettingsView } from './components/Settings'
 import { SetupCard } from './components/Setup'
@@ -146,6 +147,7 @@ function Welcome({ model, quality, tab, recording, onNewNote }: WelcomeProps): R
     <div className="doc">
       <div className="doc-col welcome">
         <SetupCard model={model} quality={quality} />
+        {tab === 'meetings' && <FailedRecordings />}
         {tab === 'meetings' ? (
           <>
             <h1>{recording ? t.recordingTitle : t.idleTitle}</h1>

@@ -14,6 +14,7 @@ import { pickForSummary, placeShots, plainTextWithShots, readShots, shotLabel } 
 import { prepareRange, readProgress, removeChunks, TRACKS } from './track'
 import { transcribe } from './whisper'
 import { markDone, markProcessing } from '../recovery'
+import { friendlyError } from '../errors'
 
 export interface RunInput {
   sessionDir: string
@@ -90,7 +91,7 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
       const images = await Promise.all(forSummary.map(async (s) => ({ label: s.label, jpeg: await readFile(join(input.sessionDir, s.small)) })))
       summary = await summarize(text, deps.summary, images)
     } catch (err) {
-      warning = `Summary not generated: ${(err as Error).message}`
+      warning = t.errors.summaryNotGenerated(friendlyError(err, t.errors))
     }
   }
 

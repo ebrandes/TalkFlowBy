@@ -162,9 +162,11 @@ window.talkflow = {
     trash: async (rel) => void files.delete(rel),
     trashMany: async (rels) => rels.filter((r) => files.delete(r)).length,
     reveal: async () => undefined,
+    resummarize: async (rel) => ({ ok: true as const, markdown: files.get(rel) ?? '' }),
     openRoot: async () => '',
     chooseRoot: async () => settings,
-    onChanged: noop
+    onChanged: noop,
+    onNoteChangedOutside: noop
   },
   recording: {
     begin: async () => ({ id: 'x', startedAt: new Date().toISOString() }),
@@ -188,6 +190,12 @@ window.talkflow = {
     onResumeCommand: noop
   },
   widget: { command: async () => undefined },
+  failed: {
+    list: async () => [],
+    retry: async () => undefined,
+    discard: async () => undefined,
+    onChanged: noop
+  },
   pipeline: {
     status: async () => (stage ? { stage: stage as never, progress: 0.4, meeting: '17 nov 16:05' } : { stage: 'idle' }),
     onStatus: noop

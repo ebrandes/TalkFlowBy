@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
+import type { FailedRecording, LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
 import type { RecordingState } from '../shared/recording'
 
 type Unsubscribe = () => void
@@ -34,9 +34,11 @@ const api = {
     trash: (rel: string): Promise<void> => ipcRenderer.invoke('library:trash', rel),
     trashMany: (rels: string[]): Promise<number> => ipcRenderer.invoke('library:trashMany', rels),
     reveal: (rel: string): Promise<void> => ipcRenderer.invoke('library:reveal', rel),
+    resummarize: (rel: string): Promise<{ ok: true; markdown: string } | { ok: false; error: string }> => ipcRenderer.invoke('note:resummarize', rel),
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
     chooseRoot: (): Promise<Settings> => ipcRenderer.invoke('library:chooseRoot'),
-    onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb)
+    onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb),
+    onNoteChangedOutside: (cb: (p: { path: string }) => void): Unsubscribe => on('note:changedOutside', cb)
   },
   recording: {
     begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),
@@ -54,6 +56,12 @@ const api = {
   },
   widget: {
     command: (cmd: 'pause' | 'resume' | 'stop' | 'capture'): Promise<void> => ipcRenderer.invoke('widget:command', cmd)
+  },
+  failed: {
+    list: (): Promise<FailedRecording[]> => ipcRenderer.invoke('recordings:failed'),
+    retry: (id: string): Promise<void> => ipcRenderer.invoke('recordings:retry', id),
+    discard: (id: string): Promise<void> => ipcRenderer.invoke('recordings:discard', id),
+    onChanged: (cb: () => void): Unsubscribe => on('recordings:changed', cb)
   },
   pipeline: {
     status: (): Promise<PipelineStatus> => ipcRenderer.invoke('pipeline:status'),

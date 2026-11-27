@@ -1,8 +1,8 @@
-import { BrowserWindow, Notification, app } from 'electron'
-import { readFile } from 'node:fs/promises'
+import { BrowserWindow, Notification, app, shell } from 'electron'
+import { readFile, statfs } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DetectedMeeting, MeetingMeta, ModelStatus, PipelineStatus } from '../shared/types'
-import { findPending } from './recovery'
+import { findFailed, findPending, markFailed, resetAttempts, type FailedSession } from './recovery'
 import { Updater, type UpdateInfo } from './updater'
 import { MeetingDetector } from './detector/index'
 import { processRecording } from './pipeline/run'
@@ -16,6 +16,11 @@ import { AppTray } from './tray'
 import { createMainWindow, createPromptWindow, createWidgetWindow } from './windows'
 import { elapsedSec, IDLE, type RecordingState } from '../shared/recording'
 import { captureScreen } from './screenshot'
+import { readNote, writeNote } from './library'
+import { NotesWatcher } from './watcher'
+import { friendlyError } from './errors'
+import { summarize } from './pipeline/summarize'
+import { rebuildWithSummary, splitMeetingNote, transcriptForSummary } from './pipeline/resummarize'
 
 /** Estado do app inteiro: janelas, bandeja, detector, gravação e fila de processamento. */
 export class Controller {
@@ -31,8 +36,15 @@ export class Controller {
   readonly queue = new ProcessingQueue((s) => this.setStatus(s))
   readonly detector = new MeetingDetector((id) => getSettings().mutedApps.includes(id))
   update: UpdateInfo | null = null
+  /** Avisa a janela quando as notas mudam no disco (Obsidian, sincronização, Explorer). */
+  readonly watcher = new NotesWatcher(
+    () => this.send('library:changed', {}),
+    (rel) => this.send('note:changedOutside', { path: rel })
+  )
   /** Transcrição durante a reunião, enquanto grava. */
   private live: LiveTranscriber | null = null
+  /** Pastas de gravação na fila ou sendo processadas. */
+  private readonly queued = new Set<string>()
   readonly updater = new Updater((info) => {
     this.update = info
     this.send('update:info', info)
@@ -48,6 +60,7 @@ export class Controller {
     this.detector.on('start', (m) => this.onMeetingStart(m))
     this.detector.on('end', (m) => this.onMeetingEnd(m))
     if (getSettings().detectMeetings) await this.detector.start()
+    this.watcher.start(getSettings().rootDir)
     await this.refreshModel()
     await this.recoverPending()
     if (getSettings().checkUpdates) this.updater.start()
@@ -136,6 +149,20 @@ export class Controller {
     }
   }
 
+  /**
+   * Avisa se o disco está quase cheio. Uma hora de reunião ocupa uns 45 MB de áudio, e o
+   * processamento cria por pouco tempo uns 250 MB de wav.
+   */
+  async warnIfLowDisk(): Promise<void> {
+    try {
+      const fs = await statfs(getSettings().rootDir)
+      const free = fs.bavail * fs.bsize
+      if (free < 2 * 1024 ** 3) this.notify(tr().autoStop.lowDisk((free / 1024 ** 3).toFixed(1)))
+    } catch {
+      // Sem como medir: segue gravando.
+    }
+  }
+
   /** Gravação começou: transcreve em segundo plano para a nota sair logo depois do fim. */
   async startLive(sessionDir: string): Promise<void> {
     const settings = getSettings()
@@ -174,6 +201,8 @@ export class Controller {
     const pending = await findPending(join(getSettings().rootDir, '.audio'))
     for (const p of pending) await this.enqueue(p.dir, p.meta)
     if (pending.length) this.notify(tr().autoStop.recovered(pending.length))
+    const failed = await this.failedRecordings()
+    if (failed.length) this.notify(tr().failed.title(failed.length))
   }
 
   private async enqueue(sessionDir: string, meta: MeetingMeta): Promise<void> {
@@ -185,8 +214,9 @@ export class Controller {
       this.setStatus({ stage: 'error', message: tr().main.missingWhisper })
       return
     }
+    this.queued.add(sessionDir)
     this.queue.push(() =>
-      processRecording(
+      this.runJob(sessionDir, () => processRecording(
         { sessionDir, meta },
         {
           rootDir: settings.rootDir,
@@ -202,8 +232,45 @@ export class Controller {
           summary: { provider: settings.summaryProvider, apiKey: getApiKey() },
           onStatus: (s) => this.setStatus(s)
         }
-      )
+      ))
     )
+  }
+
+  /** Roda o processamento; se der erro, guarda o motivo e avisa a janela da lista de problemas. */
+  private async runJob(sessionDir: string, job: () => Promise<string>): Promise<void> {
+    try {
+      await job()
+    } catch (err) {
+      const message = friendlyError(err, tr().errors)
+      await markFailed(sessionDir, message).catch(() => undefined)
+      throw new Error(message)
+    } finally {
+      this.queued.delete(sessionDir)
+      this.send('recordings:changed', {})
+    }
+  }
+
+  /** Gravações que deram erro e não estão na fila agora. */
+  async failedRecordings(): Promise<FailedSession[]> {
+    const all = await findFailed(join(getSettings().rootDir, '.audio'))
+    return all.filter((f) => !this.queued.has(f.dir))
+  }
+
+  async retryRecording(id: string): Promise<void> {
+    const f = (await this.failedRecordings()).find((x) => x.id === id)
+    if (!f) return
+    await resetAttempts(f.dir)
+    const meta = JSON.parse(await readFile(join(f.dir, 'meta.json'), 'utf8').catch(() => JSON.stringify({ startedAt: f.startedAt, durationSec: f.durationSec })))
+    await this.enqueue(f.dir, { ...meta, startedAt: new Date(meta.startedAt) })
+    this.send('recordings:changed', {})
+  }
+
+  /** Manda a pasta da gravação para a Lixeira do sistema (dá para recuperar de lá). */
+  async discardRecording(id: string): Promise<void> {
+    const f = (await this.failedRecordings()).find((x) => x.id === id)
+    if (!f) return
+    await shell.trashItem(f.dir)
+    this.send('recordings:changed', {})
   }
 
   private onMeetingStart(m: DetectedMeeting): void {
@@ -234,6 +301,23 @@ export class Controller {
     } catch (err) {
       const t = tr().widget
       this.notify((err as Error).message === 'screen-permission' ? t.captureNoPermission : t.captureFailed)
+    }
+  }
+
+  /** Gera o resumo de novo a partir da transcrição que está na nota. */
+  async resummarize(rel: string): Promise<{ ok: true; markdown: string } | { ok: false; error: string }> {
+    const settings = getSettings()
+    const t = tr()
+    try {
+      const md = await readNote(settings.rootDir, rel)
+      const parts = splitMeetingNote(md)
+      if (!parts || !parts.transcript.trim()) return { ok: false, error: tr().note.noTranscript }
+      const summary = await summarize(transcriptForSummary(parts.transcript), { provider: settings.summaryProvider, apiKey: getApiKey() })
+      const next = rebuildWithSummary(parts, summary, settings.drawFlows)
+      await writeNote(settings.rootDir, rel, next)
+      return { ok: true, markdown: next }
+    } catch (err) {
+      return { ok: false, error: friendlyError(err, t.errors) }
     }
   }
 

@@ -15,7 +15,10 @@ export function registerIpc(c: Controller): void {
     const next = await updateSettings(patch)
     if (patch.detectMeetings === true) await c.detector.start()
     if (patch.detectMeetings === false) c.detector.stop()
-    if (patch.rootDir) c.send('library:changed', {})
+    if (patch.rootDir) {
+      c.watcher.start(next.rootDir)
+      c.send('library:changed', {})
+    }
     if (patch.uiLanguage) c.tray?.refresh()
     if (patch.transcriptionQuality) await c.refreshModel()
     if (patch.checkUpdates === true) c.updater.start()
@@ -32,6 +35,7 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('library:rename', (_e, rel: string, title: string) => lib.renameNote(root(), rel, title))
   ipcMain.handle('library:trash', (_e, rel: string) => lib.trashNote(root(), rel))
   ipcMain.handle('library:trashMany', (_e, rels: string[]) => lib.trashNotes(root(), rels))
+  ipcMain.handle('note:resummarize', (_e, rel: string) => c.resummarize(rel))
   ipcMain.handle('library:reveal', (_e, rel: string) => lib.revealNote(root(), rel))
   ipcMain.handle('library:openRoot', () => shell.openPath(root()))
   // Trocar a pasta das notas (por exemplo, para um vault do Obsidian).
@@ -41,6 +45,7 @@ export function registerIpc(c: Controller): void {
     if (res.canceled || !res.filePaths[0]) return getSettings()
     const next = await updateSettings({ rootDir: res.filePaths[0] })
     await lib.ensureRoot(next.rootDir, next.folders)
+    c.watcher.start(next.rootDir)
     c.send('library:changed', {})
     return next
   })
@@ -48,6 +53,7 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('rec:begin', async (_e, origin?: string) => {
     const s = await c.store.begin(origin)
     void c.startLive(s.dir)
+    void c.warnIfLowDisk()
     c.setRecording(true)
     c.setStatus({ stage: 'recording' })
     return { id: s.id, startedAt: s.startedAt.toISOString() }
@@ -61,6 +67,9 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('rec:setPaused', (_e, paused: boolean) => c.setPaused(paused))
   ipcMain.handle('widget:command', (_e, cmd: 'pause' | 'resume' | 'stop' | 'capture') => c.widgetCommand(cmd))
   ipcMain.handle('pipeline:status', () => c.status)
+  ipcMain.handle('recordings:failed', async () => (await c.failedRecordings()).map(({ dir: _dir, ...rest }) => rest))
+  ipcMain.handle('recordings:retry', (_e, id: string) => c.retryRecording(id))
+  ipcMain.handle('recordings:discard', (_e, id: string) => c.discardRecording(id))
 
   ipcMain.handle('model:status', () => c.refreshModel())
   ipcMain.handle('model:download', () => c.downloadModel())

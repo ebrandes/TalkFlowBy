@@ -38,6 +38,10 @@ export const pt: Dict = {
   },
 
   note: {
+    resummarize: 'Gerar resumo de novo',
+    resummarizing: 'Resumindo…',
+    resummarized: 'Resumo atualizado',
+    changedOutside: 'Esta nota mudou fora do TalkFlowBy e foi recarregada.',
     summarized: 'Resumido',
     noSummary: 'Sem resumo',
     openError: 'Não foi possível abrir esta nota. Ela pode ter sido movida ou apagada.',
@@ -204,6 +208,7 @@ export const pt: Dict = {
   },
 
   autoStop: {
+    lowDisk: (gb) => `Só ${gb} GB livres no disco. Uma gravação longa pode não caber.`,
     meetingEnded: (app) => `Gravação encerrada: a chamada no ${app} terminou. A nota fica pronta em alguns minutos.`,
     silence: (min) => `Gravação encerrada depois de ${min} minutos de silêncio. A nota fica pronta em alguns minutos.`,
     recovered: (n) => (n === 1 ? 'Uma gravação interrompida foi recuperada e está sendo processada.' : `${n} gravações interrompidas foram recuperadas e estão sendo processadas.`)
@@ -222,6 +227,25 @@ export const pt: Dict = {
     stop: 'Parar gravação',
     quit: 'Sair',
     recordingTip: 'TalkFlowBy — gravando'
+  },
+
+  errors: {
+    whisper: 'A transcrição falhou. Tente de novo; se continuar, escolha uma qualidade mais leve nas Configurações.',
+    ffmpeg: 'Não deu para ler o áudio gravado. O áudio ficou guardado e dá para tentar de novo.',
+    summaryTimeout: 'O resumo demorou demais e foi cancelado. Use “Gerar resumo de novo” na nota.',
+    noProvider: 'Sem como resumir: instale o Claude Code ou salve uma chave da API da Anthropic nas Configurações.',
+    offline: 'Sem internet para resumir. Use “Gerar resumo de novo” na nota quando a conexão voltar.',
+    claude: 'O Claude não conseguiu resumir esta reunião. Use “Gerar resumo de novo” na nota.',
+    generic: (detail) => `Algo deu errado: ${detail}`,
+    summaryNotGenerated: (reason) => `Nota salva sem resumo. ${reason}`
+  },
+
+  failed: {
+    title: (n) => (n === 1 ? 'Uma gravação não pôde ser processada' : `${n} gravações não puderam ser processadas`),
+    lead: 'O áudio está guardado. Tente de novo ou mande para a Lixeira.',
+    retry: 'Tentar de novo',
+    discard: 'Mandar para a Lixeira',
+    when: (date, min) => `${date} · ${min} min`
   },
 
   main: {

@@ -107,10 +107,22 @@ export interface FlowBlock {
   mermaid?: string
 }
 
-function flowSection(flow: FlowBlock | undefined, d: Doc): string[] {
+export function flowSection(flow: FlowBlock | undefined, d: Doc): string[] {
   if (!flow?.image && !flow?.mermaid) return []
   const body = flow.image ? [`![${d.flowImage}](${encodeURI(flow.image)})`] : ['```mermaid', flow.mermaid!, '```']
   return [`## ${d.flow}`, '', ...body, '']
+}
+
+/** O bloco do resumo, entre o título e a transcrição. */
+export function summaryParts(summary: Summary | null, d: Doc): string[] {
+  if (!summary) return [`> ${d.noSummary}`, '']
+  const parts: string[] = []
+  const resumo = quote(summary.resumo)
+  if (resumo.length) parts.push(...resumo, '')
+  parts.push(...section(d.topics, topicsBlock(summary)))
+  parts.push(...section(d.decisions, summary.decisoes.filter((x) => x.trim()).map((x) => `- ${escapeInline(x)}`)))
+  parts.push(...section(d.nextSteps, tasksBlock(summary)))
+  return parts
 }
 
 /** Monta a nota da reunião. O formato é fixo; o modelo só fornece o conteúdo. */
@@ -118,15 +130,7 @@ export function buildMeetingMarkdown(meta: MeetingMeta, summary: Summary | null,
   const title = summary?.assunto.trim() || d.untitled
   const parts: string[] = [...frontmatter(meta, d), '', `# ${escapeInline(title)}`, '']
 
-  if (summary) {
-    const resumo = quote(summary.resumo)
-    if (resumo.length) parts.push(...resumo, '')
-    parts.push(...section(d.topics, topicsBlock(summary)))
-    parts.push(...section(d.decisions, summary.decisoes.filter((x) => x.trim()).map((x) => `- ${escapeInline(x)}`)))
-    parts.push(...section(d.nextSteps, tasksBlock(summary)))
-  } else {
-    parts.push(`> ${d.noSummary}`, '')
-  }
+  parts.push(...summaryParts(summary, d))
 
   if (turns.length > 0) parts.push(...section(d.transcript, transcriptBlock(turns, d, shots)))
   else {

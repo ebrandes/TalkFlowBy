@@ -41,12 +41,50 @@ export function isNoise(text: string): boolean {
   return t.length === 0 || NOISE.test(t)
 }
 
+const words = (text: string): string[] =>
+  text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length > 1)
+
+/** Quanto dois textos dividem de palavras (0 a 1), pela menor das duas falas. */
+export function overlapRatio(a: string, b: string): number {
+  const wa = words(a)
+  const wb = new Set(words(b))
+  if (wa.length === 0 || wb.size === 0) return 0
+  const common = new Set(wa.filter((w) => wb.has(w))).size
+  return common / Math.min(new Set(wa).size, wb.size)
+}
+
+/** Quanto antes ou depois o eco pode aparecer em relação à fala original. */
+const ECHO_WINDOW_SEC = 3
+const ECHO_SIMILARITY = 0.6
+
+/**
+ * Sem fone, o microfone capta a voz dos outros saindo do alto-falante, e a mesma frase aparecia
+ * duas vezes ("Você" e "Outros"). Descarta do microfone o trecho quase igual a um do sistema no
+ * mesmo momento.
+ */
+export function dropEcho(mic: Segment[], system: Segment[]): Segment[] {
+  if (system.length === 0) return mic
+  return mic.filter((m) => {
+    // Fala curta ("sim", "beleza") pode ser resposta de verdade: fica.
+    if (new Set(words(m.text)).size < 4) return true
+    const near = system.filter((s) => s.start <= m.end + ECHO_WINDOW_SEC && s.end >= m.start - ECHO_WINDOW_SEC)
+    if (near.length === 0) return true
+    const around = near.map((s) => s.text).join(' ')
+    return overlapRatio(m.text, around) < ECHO_SIMILARITY
+  })
+}
+
 /**
  * Intercala as duas trilhas pelo tempo e agrupa falas seguidas da mesma pessoa.
  * Não mexe nas palavras; só ordena, limpa espaços e junta.
  */
 export function mergeTracks(mic: Segment[], system: Segment[]): Turn[] {
-  const all = [...mic, ...system]
+  const all = [...dropEcho(mic, system), ...system]
     .filter((s) => !isNoise(s.text))
     .sort((a, b) => a.start - b.start || (a.speaker === 'Você' ? -1 : 1))
 
