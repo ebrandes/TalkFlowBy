@@ -127,7 +127,8 @@ let settings: Settings = {
   transcriptionQuality: 'best',
   mutedApps: [],
   checkUpdates: true,
-  openAtLogin: true
+  openAtLogin: true,
+  syncRemote: ''
 }
 
 const noop = (): (() => void) => () => undefined
@@ -164,6 +165,12 @@ window.talkflow = {
     openRoot: async () => '',
     chooseRoot: async () => settings,
     onChanged: noop
+  },
+  sync: {
+    status: async () => (settings.syncRemote ? { state: 'idle', lastSync: new Date().toISOString() } : { state: 'off' }),
+    now: async () => ({ state: 'idle', lastSync: new Date().toISOString() }),
+    openBackup: async () => undefined,
+    onStatus: noop
   },
   recording: {
     begin: async () => ({ id: 'x', startedAt: new Date().toISOString() }),

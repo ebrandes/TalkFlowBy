@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
+import type { LibraryNode, ModelStatus, PipelineStatus, Settings, SyncStatus, Track } from '../shared/types'
 import type { RecordingState } from '../shared/recording'
 
 type Unsubscribe = () => void
@@ -36,7 +36,13 @@ const api = {
     reveal: (rel: string): Promise<void> => ipcRenderer.invoke('library:reveal', rel),
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
     chooseRoot: (): Promise<Settings> => ipcRenderer.invoke('library:chooseRoot'),
-    onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb)
+    onChanged: (cb: (p: { open?: string; synced?: string[] }) => void): Unsubscribe => on('library:changed', cb)
+  },
+  sync: {
+    status: (): Promise<SyncStatus> => ipcRenderer.invoke('sync:status'),
+    now: (): Promise<SyncStatus> => ipcRenderer.invoke('sync:now'),
+    openBackup: (): Promise<void> => ipcRenderer.invoke('sync:openBackup'),
+    onStatus: (cb: (s: SyncStatus) => void): Unsubscribe => on('sync:status', cb)
   },
   recording: {
     begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),

@@ -105,3 +105,15 @@ export function ffmpegPath(): string {
   if (!p) throw new Error('ffmpeg não está disponível para este sistema.')
   return p.replace('app.asar', 'app.asar.unpacked')
 }
+
+/** O Git do computador, para sincronizar as notas. No Windows o instalador põe em "Program Files\Git\cmd". */
+export async function gitPath(): Promise<string | null> {
+  const direct = await findExecutable('git')
+  if (direct || !isWin) return direct
+  const roots = [process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'Programs')]
+  for (const root of roots.filter(Boolean) as string[]) {
+    const full = join(root, 'Git', 'cmd', 'git.exe')
+    if (await isExecutable(full)) return full
+  }
+  return null
+}

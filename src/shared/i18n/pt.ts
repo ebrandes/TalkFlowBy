@@ -149,6 +149,28 @@ export const pt: Dict = {
     keyOptional: 'Opcional se o Claude Code estiver instalado.',
     save: 'Salvar',
     remove: 'Remover',
+    sync: 'Sincronizar entre computadores',
+    syncRemote: 'Repositório Git privado',
+    syncHint: 'Crie um repositório privado vazio (no GitHub, por exemplo) e cole o endereço. O app usa o Git e o login que já estão neste computador. O áudio das gravações nunca sai do computador.',
+    syncPlaceholder: 'https://github.com/voce/minhas-notas.git',
+    syncConnect: 'Conectar',
+    syncDisconnect: 'Desligar',
+    syncNow: 'Sincronizar agora',
+    syncOff: 'Desligada. As notas ficam só neste computador.',
+    syncing: 'Sincronizando…',
+    syncedAt: (when) => `Sincronizado às ${when}. Sincroniza ao abrir, depois de cada nota e a cada 10 minutos.`,
+    syncConflicts: (n) => (n === 1 ? 'Uma nota foi editada em dois computadores: a outra versão foi salva ao lado, marcada "conflito".' : `${n} notas foram editadas em dois computadores: as outras versões foram salvas ao lado, marcadas "conflito".`),
+    syncBackup: 'Antes da primeira sincronização, uma cópia completa da pasta foi guardada.',
+    openBackup: 'Abrir backup',
+    syncErrors: {
+      auth: 'O GitHub recusou o login. Entre uma vez com o Git neste computador (por exemplo, rode "git clone" do repositório no terminal) e tente de novo.',
+      'not-found': 'Repositório não encontrado. Confira o endereço e se a conta do GitHub deste computador tem acesso.',
+      offline: 'Sem conexão com o repositório agora. Tenta de novo em alguns minutos.',
+      'git-missing': 'O Git não está instalado. Instale pelo git-scm.com (no Mac, "xcode-select --install" no terminal) e tente de novo.',
+      'other-repo': 'Esta pasta já é um repositório Git de outra coisa, então o app não mexe nela. Escolha outra pasta ou outro repositório.',
+      'push-rejected': 'Outro computador enviou mudanças ao mesmo tempo várias vezes. Tenta de novo em instantes.'
+    },
+    syncFailed: (msg) => `A sincronização falhou: ${msg}`,
     permissions: 'Permissões do Mac'
   },
 

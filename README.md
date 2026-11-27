@@ -190,13 +190,23 @@ prompt reminds you to tell the other participants.
   Macs with Apple Silicon use the graphics chip and default to Best; Windows and Intel Macs
   transcribe on the CPU and default to Balanced.
 
+- **Sync between computers (optional).** In Settings, paste the address of an empty private
+  Git repository (on GitHub, for example). The app turns the notes folder into a repository and
+  syncs it when it opens, after each new note, a minute after you edit and every 10 minutes.
+  It uses the Git already installed on the computer and its sign-in (macOS Keychain, Git
+  Credential Manager on Windows or an SSH key). Before the first sync it copies the whole
+  folder to a backup in the app's data folder. Recording audio is never synced. If the same
+  note was edited on two computers, this computer's version stays and the other is saved next
+  to it as `<note> (conflito …).md`, so nothing is lost.
+
 ## FAQ
 
 **Is TalkFlowBy a free alternative to Otter.ai, Fireflies, Granola or Notion AI Meeting Notes?**
 It covers the core of what they do: record a meeting, transcribe it, and turn it into a
 summary with decisions and action items. It is free and open source, runs on your computer,
-and never sends a bot into your call. It does not offer cloud sync, team workspaces or
-integrations.
+and never sends a bot into your call. It has no cloud of its own, team workspaces or
+integrations, but it can sync your notes between your computers through a private Git
+repository you own (see below).
 
 **Does it work with Zoom, Microsoft Teams and Google Meet?**
 Yes. It records your microphone and your computer's audio, so it works with any call app.

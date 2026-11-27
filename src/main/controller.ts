@@ -15,6 +15,7 @@ import { AppTray } from './tray'
 import { createMainWindow, createPromptWindow, createWidgetWindow } from './windows'
 import { elapsedSec, IDLE, type RecordingState } from '../shared/recording'
 import { captureScreen } from './screenshot'
+import { SyncService } from './sync-service'
 
 /** Estado do app inteiro: janelas, bandeja, detector, gravação e fila de processamento. */
 export class Controller {
@@ -30,6 +31,11 @@ export class Controller {
   readonly queue = new ProcessingQueue((s) => this.setStatus(s))
   readonly detector = new MeetingDetector((id) => getSettings().mutedApps.includes(id))
   update: UpdateInfo | null = null
+  /** Sincronização das notas com o repositório Git, quando configurada. */
+  readonly sync = new SyncService(
+    (s) => this.send('sync:status', s),
+    (r) => this.send('library:changed', { synced: r.pulled })
+  )
   readonly updater = new Updater((info) => {
     this.update = info
     this.send('update:info', info)
@@ -48,6 +54,7 @@ export class Controller {
     await this.refreshModel()
     await this.recoverPending()
     if (getSettings().checkUpdates) this.updater.start()
+    this.sync.restart()
   }
 
   show(): void {
@@ -64,7 +71,10 @@ export class Controller {
   setStatus(s: PipelineStatus): void {
     this.status = s
     this.send('pipeline:status', s)
-    if (s.stage === 'done') this.send('library:changed', { open: s.notePath })
+    if (s.stage === 'done') {
+      this.send('library:changed', { open: s.notePath })
+      void this.sync.now()
+    }
   }
 
   recordingState(): RecordingState {
