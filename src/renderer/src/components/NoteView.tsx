@@ -1,4 +1,4 @@
-import { FolderOpen, Trash2 } from 'lucide-react'
+import { FolderOpen, Sparkles, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useT } from '../i18n'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
@@ -13,10 +13,12 @@ interface Props {
   onDeleted: () => void
   onPreview: (text: string) => void
   onToast: (message: string) => void
+  /** Abre a pesquisa inteligente sobre esta nota. */
+  onAsk: () => void
 }
 
 /** Abre uma nota: carimbo (se for reunião) e o editor com salvamento automático. */
-export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.JSX.Element {
+export function NoteView({ path, onDeleted, onPreview, onToast, onAsk }: Props): React.JSX.Element {
   const t = useT()
   const [loaded, setLoaded] = useState<{ path: string; front: string; body: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -75,6 +77,14 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
             <span />
           )}
           <div className="doc-tools">
+            <button
+              className="icon-btn"
+              title={`${t.ask.openNote} (${t.ask.shortcut(window.talkflow.platform === 'darwin' ? '⌘' : 'Ctrl')})`}
+              aria-label={t.ask.openNote}
+              onClick={onAsk}
+            >
+              <Sparkles size={17} strokeWidth={1.75} />
+            </button>
             <ShareMenu markdown={joinFrontmatter(loaded.front, body)} body={body} onToast={onToast} />
             <button
               className="icon-btn"

@@ -27,7 +27,7 @@ export function snippetAround(text: string, query: string): string | null {
   return `${start > 0 ? '…' : ''}${plain.slice(start, end).trim()}${end < plain.length ? '…' : ''}`
 }
 
-async function mdFiles(dir: string): Promise<string[]> {
+export async function mdFiles(dir: string): Promise<string[]> {
   const out: string[] = []
   for (const e of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
     if (e.name.startsWith('.')) continue

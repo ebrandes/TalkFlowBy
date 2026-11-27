@@ -1,4 +1,4 @@
-import { FilePlus2, FileText, ListChecks, Search, Settings, Square, SquareCheck } from 'lucide-react'
+import { FilePlus2, FileText, ListChecks, Search, Settings, Sparkles, Square, SquareCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Folders, LibraryNode } from '../../../shared/types'
 import { useT } from '../i18n'
@@ -18,6 +18,8 @@ interface Props {
   onSelect: (rel: string) => void
   onNewNote: () => void
   onSettings: () => void
+  /** Abre a pesquisa inteligente sobre todas as notas. */
+  onAsk: () => void
   /** Pede confirmação e manda as notas marcadas para a Lixeira; devolve quando terminar. */
   onTrashMany: (paths: string[]) => Promise<boolean>
 }
@@ -96,6 +98,15 @@ export function Sidebar(p: Props): React.JSX.Element {
       <label className="search">
         <Search size={15} strokeWidth={1.75} aria-hidden />
         <input className="search-input" placeholder={t.rail.search} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t.rail.search} />
+        <button
+          type="button"
+          className="search-ask"
+          onClick={p.onAsk}
+          aria-label={t.ask.open}
+          title={`${t.ask.open} (${t.ask.shortcut(window.talkflow.platform === 'darwin' ? '⌘' : 'Ctrl')})`}
+        >
+          <Sparkles size={15} strokeWidth={1.75} />
+        </button>
       </label>
 
       <div className="segmented" role="tablist">

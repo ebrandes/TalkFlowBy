@@ -7,6 +7,7 @@ import './styles/app.css'
 import './styles/doc.css'
 import './styles/editor.css'
 import './styles/overlay.css'
+import './styles/ask.css'
 
 if (import.meta.env.DEV && !('talkflow' in window)) await import('./dev/mock')
 

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
+import type { AskResult, LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
 import type { RecordingState } from '../shared/recording'
 
 type Unsubscribe = () => void
@@ -37,6 +37,10 @@ const api = {
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
     chooseRoot: (): Promise<Settings> => ipcRenderer.invoke('library:chooseRoot'),
     onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb)
+  },
+  ai: {
+    /** Pergunta sobre uma nota (`path`) ou sobre todas as notas (`null`). */
+    ask: (question: string, path: string | null): Promise<AskResult> => ipcRenderer.invoke('ai:ask', question, path)
   },
   recording: {
     begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),

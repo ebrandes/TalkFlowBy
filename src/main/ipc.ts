@@ -1,10 +1,11 @@
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import type { Settings, Track } from '../shared/types'
+import { askNotes } from './ask'
 import { askMicrophone, readPermissions } from './capture'
 import type { Controller } from './controller'
 import * as lib from './library'
 import { searchNotes } from './search'
-import { getSettings, setApiKey, tr, updateSettings } from './settings'
+import { getApiKey, getSettings, setApiKey, tr, updateSettings } from './settings'
 
 const root = (): string => getSettings().rootDir
 
@@ -26,6 +27,10 @@ export function registerIpc(c: Controller): void {
 
   ipcMain.handle('library:tree', () => lib.listTree(root(), getSettings().folders))
   ipcMain.handle('library:search', (_e, query: string) => searchNotes(root(), query))
+  ipcMain.handle('ai:ask', (_e, question: string, path: string | null) => {
+    const s = getSettings()
+    return askNotes(root(), question, path, { provider: s.summaryProvider, apiKey: getApiKey(), lang: s.uiLanguage })
+  })
   ipcMain.handle('library:read', (_e, rel: string) => lib.readNote(root(), rel))
   ipcMain.handle('library:write', (_e, rel: string, content: string) => lib.writeNote(root(), rel, content))
   ipcMain.handle('library:create', (_e, title?: string) => lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote))

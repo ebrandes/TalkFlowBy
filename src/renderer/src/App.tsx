@@ -1,8 +1,9 @@
 import { AudioLines, FilePlus2, ListChecks, Mic } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { dict } from '../../shared/i18n'
 import type { TranscriptionQuality } from '../../shared/models'
 import type { Folders, ModelStatus } from '../../shared/types'
+import { AskDialog, type AskScope } from './components/AskDialog'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Crumbs } from './components/Crumbs'
 import { NoteView } from './components/NoteView'
@@ -33,6 +34,28 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [pendingTrash, setPendingTrash] = useState<{ paths: string[]; done: (ok: boolean) => void } | null>(null)
+  const [asking, setAsking] = useState(false)
+  const [askScope, setAskScope] = useState<AskScope>('note')
+
+  const openAsk = (scope: AskScope): void => {
+    setAskScope(scope)
+    setAsking(true)
+  }
+
+  // ⌘J / Ctrl+J abre a pesquisa inteligente sobre a nota aberta (ou sobre todas, sem nota).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault()
+        setAsking((was) => {
+          if (!was) setAskScope(app.selected ? 'note' : 'all')
+          return !was
+        })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [app.selected])
 
   const showToast = (message: string): void => {
     setToast(message)
@@ -79,6 +102,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
         onSelect={open}
         onNewNote={() => void newNote()}
         onSettings={() => setShowSettings(true)}
+        onAsk={() => openAsk('all')}
         onTrashMany={askTrashMany}
       />
       <main className="main">
@@ -105,6 +129,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
             path={app.selected}
             onPreview={setPreview}
             onToast={showToast}
+            onAsk={() => openAsk('note')}
             onDeleted={async () => {
               await app.refresh()
               open(null)
@@ -122,6 +147,18 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
           setPendingTrash(null)
         }}
         onConfirm={() => void confirmTrashMany()}
+      />
+      <AskDialog
+        open={asking}
+        notePath={showSettings ? null : app.selected}
+        scope={askScope}
+        onScope={setAskScope}
+        onClose={() => setAsking(false)}
+        onOpenNote={(rel) => {
+          setAsking(false)
+          open(rel)
+        }}
+        onToast={showToast}
       />
       {toast && (
         <div className="toast" role="status">
