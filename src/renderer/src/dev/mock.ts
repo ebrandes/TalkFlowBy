@@ -176,6 +176,19 @@ window.talkflow = {
     onChanged: noop,
     onNoteChangedOutside: noop
   },
+  ai: {
+    ask: async (question, path) => {
+      await new Promise((r) => setTimeout(r, 900))
+      const notes = path ? [path] : [...files.keys()]
+      return {
+        answer: `Resposta de exemplo para **${question}**:\n\n- \`ebrandes/talkflowby\`: app de notas citado na reunião [1]\n- \`api-pagamentos\`: migração prevista para dia 28 [1]`,
+        notes,
+        sources: notes.slice(0, 1),
+        omitted: 0,
+        trimmed: 0
+      }
+    }
+  },
   recording: {
     begin: async () => ({ id: 'x', startedAt: new Date().toISOString() }),
     chunk: () => undefined,

@@ -1,4 +1,4 @@
-import { FileCode2, FolderOpen, Pin, PinOff, RefreshCw, Trash2, UserPen } from 'lucide-react'
+import { FileCode2, FolderOpen, Pin, PinOff, RefreshCw, Sparkles, Trash2, UserPen } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useT } from '../i18n'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
@@ -20,10 +20,12 @@ interface Props {
   onPinned: (s: Settings) => void
   onPreview: (text: string) => void
   onToast: (message: string, action?: { label: string; run: () => void }) => void
+  /** Abre a pesquisa inteligente sobre esta nota. */
+  onAsk: () => void
 }
 
 /** Abre uma nota: carimbo (se for reunião) e o editor com salvamento automático. */
-export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned }: Props): React.JSX.Element {
+export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned, onAsk }: Props): React.JSX.Element {
   const t = useT()
   const [loaded, setLoaded] = useState<{ path: string; front: string; body: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -190,6 +192,14 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
             </button>
             <button className="icon-btn" title={t.note.copyMarkdown} aria-label={t.note.copyMarkdown} onClick={() => void copyMarkdown()}>
               <FileCode2 size={17} strokeWidth={1.75} />
+            </button>
+            <button
+              className="icon-btn"
+              title={`${t.ask.openNote} (${t.ask.shortcut(window.talkflow.platform === 'darwin' ? '⌘' : 'Ctrl')})`}
+              aria-label={t.ask.openNote}
+              onClick={onAsk}
+            >
+              <Sparkles size={17} strokeWidth={1.75} />
             </button>
             <ShareMenu markdown={fullMarkdown} body={body} onToast={onToast} />
             <button

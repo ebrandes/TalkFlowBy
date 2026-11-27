@@ -150,3 +150,17 @@ export interface OpenTask {
   line: number
   text: string
 }
+
+/** Resposta da pesquisa inteligente (pergunta em linguagem natural respondida pelo Haiku). */
+export interface AskResult {
+  /** Resposta em Markdown, com citações como [1] apontando para `notes`. */
+  answer: string
+  /** Notas enviadas ao modelo, na ordem dos números citados (a primeira é [1]). */
+  notes: string[]
+  /** Notas que a resposta citou, sem repetir. */
+  sources: string[]
+  /** Notas deixadas de fora por não caberem. */
+  omitted: number
+  /** Notas enviadas só com o resumo, sem a transcrição. */
+  trimmed: number
+}

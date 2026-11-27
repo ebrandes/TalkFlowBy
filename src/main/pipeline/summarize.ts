@@ -58,15 +58,19 @@ export async function summarizeWithCli(transcript: string, claudePath: string, i
 
 /** Sem ferramentas, sem configurações nem histórico do usuário: só o resumo. */
 function commonCliArgs(): string[] {
+  return [...isolatedCliArgs(SYSTEM_PROMPT), '--json-schema', JSON.stringify(SUMMARY_SCHEMA)]
+}
+
+/** Claude Code isolado: sem ferramentas, hooks, MCP nem histórico, só com o prompt de sistema dado. */
+export function isolatedCliArgs(systemPrompt: string): string[] {
   return [
     '--tools', '',
-    '--system-prompt', SYSTEM_PROMPT,
+    '--system-prompt', systemPrompt,
     '--no-session-persistence',
     '--setting-sources', '',
     '--settings', JSON.stringify({ disableAllHooks: true }),
     '--strict-mcp-config',
-    '--disable-slash-commands',
-    '--json-schema', JSON.stringify(SUMMARY_SCHEMA)
+    '--disable-slash-commands'
   ]
 }
 
@@ -135,14 +139,14 @@ async function withoutImagesOnFailure(images: SummaryImage[], call: (imgs: Summa
   }
 }
 
-function run(cmd: string, args: string[], input: string, timeoutMs: number): Promise<string> {
+export function run(cmd: string, args: string[], input: string, timeoutMs: number, timeoutMessage = 'The summary took too long and was cancelled.'): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { cwd: tmpdir(), env: process.env, windowsHide: true })
     let out = ''
     let err = ''
     const timer = setTimeout(() => {
       child.kill()
-      reject(new Error('The summary took too long and was cancelled.'))
+      reject(new Error(timeoutMessage))
     }, timeoutMs)
     child.stdout.on('data', (d) => (out += d))
     child.stderr.on('data', (d) => (err += d))

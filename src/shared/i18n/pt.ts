@@ -101,6 +101,33 @@ export const pt: Dict = {
     trash: 'Mover para a Lixeira'
   },
 
+  ask: {
+    open: 'Perguntar ao Claude sobre as notas',
+    openNote: 'Perguntar ao Claude sobre esta nota',
+    title: 'Pergunte às suas notas',
+    shortcut: (key) => `${key}+J`,
+    scopeNote: 'Esta nota',
+    scopeAll: 'Todas as notas',
+    placeholder: 'Por exemplo: liste os repositórios conversados nesta conversa',
+    submit: 'Perguntar',
+    thinking: 'Lendo as notas…',
+    copy: 'Copiar resposta (Markdown)',
+    copied: 'Resposta copiada',
+    sources: 'Fontes',
+    noSources: 'A resposta não citou nenhuma nota.',
+    partial: (omitted, trimmed) =>
+      [omitted ? `${omitted} ${omitted === 1 ? 'nota mais antiga ficou' : 'notas mais antigas ficaram'} de fora` : '', trimmed ? `${trimmed} ${trimmed === 1 ? 'foi' : 'foram'} sem a transcrição` : '']
+        .filter(Boolean)
+        .join(', ') + ' para caber.',
+    failed: 'Não foi possível obter uma resposta.',
+    setupHint: 'A pesquisa inteligente usa o mesmo Claude dos resumos: o Claude Code conectado ou uma chave de API nas Configurações.',
+    close: 'Fechar',
+    examples: {
+      note: ['Liste os repositórios conversados nesta conversa', 'Quais tarefas ficaram comigo?', 'Quais decisões foram tomadas, e por quê?'],
+      all: ['Quais repositórios apareceram nas minhas reuniões deste mês?', 'Quais são minhas tarefas abertas em todas as reuniões?', 'Quando falamos do orçamento pela última vez?']
+    }
+  },
+
   welcome: {
     recordingTitle: 'Gravando a reunião',
     recordingLead: 'Pode seguir na chamada. Quando parar, a transcrição e o resumo aparecem na lista em alguns minutos.',

@@ -100,6 +100,33 @@ export const en = {
     trash: 'Move to Trash'
   },
 
+  ask: {
+    open: 'Ask Claude about your notes',
+    openNote: 'Ask Claude about this note',
+    title: 'Ask your notes',
+    shortcut: (key: string) => `${key}+J`,
+    scopeNote: 'This note',
+    scopeAll: 'All notes',
+    placeholder: 'For example: list the repositories mentioned in this conversation',
+    submit: 'Ask',
+    thinking: 'Reading the notes…',
+    copy: 'Copy answer (Markdown)',
+    copied: 'Answer copied',
+    sources: 'Sources',
+    noSources: 'The answer did not cite any note.',
+    partial: (omitted: number, trimmed: number) =>
+      [omitted ? `${omitted} older ${omitted === 1 ? 'note was' : 'notes were'} left out` : '', trimmed ? `${trimmed} sent without the transcript` : '']
+        .filter(Boolean)
+        .join(', ') + ' to fit.',
+    failed: 'Could not get an answer.',
+    setupHint: 'Smart search uses the same Claude as the summaries: Claude Code signed in, or an API key in Settings.',
+    close: 'Close',
+    examples: {
+      note: ['List the repositories mentioned in this conversation', 'What tasks were assigned to me?', 'Which decisions were made, and why?'],
+      all: ['Which repositories came up in my meetings this month?', 'What are my open tasks across all meetings?', 'When did we last talk about the budget?']
+    }
+  },
+
   welcome: {
     recordingTitle: 'Recording the meeting',
     recordingLead: 'Carry on with your call. When you stop, the transcript and summary show up in the list within a few minutes.',
