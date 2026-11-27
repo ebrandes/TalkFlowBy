@@ -25,7 +25,8 @@ const write = (root: string, rel: string, text: string): void => {
 }
 const read = (root: string, rel: string): string => readFileSync(join(root, rel), 'utf8')
 
-describe('sincronização por Git', () => {
+// Cada rodada chama o Git umas vinte vezes; no Windows cada chamada custa bem mais.
+describe('sincronização por Git', { timeout: 60_000 }, () => {
   it('faz backup antes da primeira vez e leva as notas de um computador para o outro', async () => {
     const { remote, a, b, backups } = setup()
     write(a, 'Reuniões/2026-11-27 Daily.md', '# Daily\n\nconversa importante\n')
