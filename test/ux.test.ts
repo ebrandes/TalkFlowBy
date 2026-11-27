@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('electron', () => ({ shell: { trashItem: vi.fn(async (p: string) => (await import('node:fs/promises')).rm(p)), showItemInFolder: vi.fn() } }))
 
-const { hasOthers, renameOthers } = await import('../src/renderer/src/lib/speakers')
+const { hasOthers, renameOthers } = await import('../src/shared/speakers')
 const { listOpenTasks, openTasksIn, setTaskDone } = await import('../src/main/tasks')
 const { trashNotes, undoTrash } = await import('../src/main/library')
 const { shortcutLabel, SHORTCUTS } = await import('../src/shared/shortcuts')

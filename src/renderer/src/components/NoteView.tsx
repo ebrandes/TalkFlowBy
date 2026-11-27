@@ -5,7 +5,7 @@ import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } f
 import { dropPending, flush, scheduleSave } from '../lib/saver'
 import { ConfirmDialog } from './ConfirmDialog'
 import { NameDialog } from './NameDialog'
-import { hasOthers, renameOthers } from '../lib/speakers'
+import { hasOthers, renameOthers } from '../../../shared/speakers'
 import type { Settings } from '../../../shared/types'
 import { Editor } from './Editor'
 import { ShareMenu } from './ShareMenu'
