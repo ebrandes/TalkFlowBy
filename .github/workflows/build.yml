@@ -46,7 +46,10 @@ jobs:
           Add-Content $env:GITHUB_ENV "VULKAN_SDK=$sdk"
           Add-Content $env:GITHUB_PATH "$sdk\Bin"
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
+      # Abre o app compilado e confere o básico (janela, sandbox, criar e salvar nota).
+      - run: npm run test:app
       - name: Build installer
         shell: bash
         # Sem os segredos de assinatura o instalador sai sem assinar (com aviso do sistema).

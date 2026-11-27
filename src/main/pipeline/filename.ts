@@ -4,7 +4,9 @@ const RESERVED_WIN = /^(con|prn|aux|nul|com\d|lpt\d)$/i
 
 /** Nome seguro no Mac e no Windows: sem caracteres proibidos, sem ponto ou espaço no fim. */
 export function safeName(raw: string, max = 80): string {
+  // Caracteres de controle não podem estar em nome de arquivo.
   let name = raw
+    // eslint-disable-next-line no-control-regex
     .replace(/[<>:"/\\|?*\u0000-\u001f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()

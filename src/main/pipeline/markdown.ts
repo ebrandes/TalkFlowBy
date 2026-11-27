@@ -26,13 +26,6 @@ export function escapeInline(text: string): string {
     .replace(/(^|\s)_|_(?=\s|$)/g, (m) => m.replace('_', '\\_'))
 }
 
-/** Evita que o começo da linha vire título, lista ou citação sem querer. */
-function escapeLineStart(text: string): string {
-  return text.replace(/^(#{1,6}\s|>|[-+=]\s|\d+[.)]\s)/, '\\$1')
-}
-
-const line = (text: string): string => escapeLineStart(escapeInline(text))
-
 function yamlValue(value: string): string {
   return /^[\w .,()-]+$/u.test(value) ? value : JSON.stringify(value)
 }

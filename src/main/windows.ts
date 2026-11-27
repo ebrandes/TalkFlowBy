@@ -27,7 +27,7 @@ export function createMainWindow(): BrowserWindow {
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#15181A' : '#F6F8F5',
     autoHideMenuBar: true,
     // A gravação roda nesta janela mesmo escondida; sem freio de segundo plano.
-    webPreferences: { preload: preload(), sandbox: false, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
+    webPreferences: { preload: preload(), sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
   })
   // Aberto junto com o sistema: começa escondido na bandeja.
   const atLogin = process.argv.includes('--hidden') || (process.platform === 'darwin' && app.getLoginItemSettings().wasOpenedAtLogin)
@@ -77,7 +77,7 @@ export function createPromptWindow(appId: string, appName: string, lang: string)
     show: false,
     transparent: process.platform === 'darwin',
     backgroundColor: process.platform === 'darwin' ? '#00000000' : nativeTheme.shouldUseDarkColors ? '#202528' : '#FBFCFA',
-    webPreferences: { preload: preload(), sandbox: false, contextIsolation: true }
+    webPreferences: { preload: preload(), sandbox: true, contextIsolation: true }
   })
   if (process.platform !== 'darwin') win.removeMenu()
   win.setAlwaysOnTop(true, 'floating')
@@ -124,7 +124,7 @@ export function createWidgetWindow(lang: string): BrowserWindow {
     show: false,
     backgroundColor: '#00000000',
     title: 'TalkFlowBy',
-    webPreferences: { preload: preload(), sandbox: false, contextIsolation: true }
+    webPreferences: { preload: preload(), sandbox: true, contextIsolation: true }
   })
   if (process.platform !== 'darwin') win.removeMenu()
   win.setAlwaysOnTop(true, 'floating')

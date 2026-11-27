@@ -34,7 +34,8 @@ function migrateLanguage(stored: Partial<Stored>): Partial<Stored> {
 function defaults(): Stored {
   const uiLanguage = langFromLocale(app.getPreferredSystemLanguages()[0] ?? app.getLocale())
   return {
-    rootDir: join(app.getPath('documents'), 'TalkFlowBy'),
+    // TALKFLOWBY_ROOT: pasta de notas separada, usada pelos testes do app.
+    rootDir: process.env.TALKFLOWBY_ROOT || join(app.getPath('documents'), 'TalkFlowBy'),
     uiLanguage,
     folders: { ...dict(uiLanguage).folders },
     language: defaultLanguage(),

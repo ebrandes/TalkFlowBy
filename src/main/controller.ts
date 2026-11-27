@@ -256,7 +256,7 @@ export class Controller {
     } catch (err) {
       const message = friendlyError(err, tr().errors)
       await markFailed(sessionDir, message).catch(() => undefined)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       this.queued.delete(sessionDir)
       this.send('recordings:changed', {})
