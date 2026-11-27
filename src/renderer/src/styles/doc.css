@@ -12,10 +12,12 @@
   margin: 0 auto;
 }
 
+/* Com muitos botões (reunião), as ferramentas descem para a linha de baixo em vez de sair da tela. */
 .doc-head {
   position: relative;
   z-index: 5;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
@@ -25,6 +27,7 @@
 .doc-tools {
   display: flex;
   gap: 2px;
+  margin-left: auto;
 }
 
 .doc-error {

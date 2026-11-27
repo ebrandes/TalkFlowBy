@@ -72,6 +72,34 @@ function winGpu() {
   console.log('whisper-cli-gpu.exe pronto (Vulkan).')
 }
 
+/**
+ * Modelos da separação de vozes (sherpa-onnx): pyannote segmentation 3.0 (MIT) e
+ * 3D-Speaker CAM++ zh/en (Apache-2.0). Vão junto com o app, para funcionar sem internet.
+ */
+async function voices() {
+  const dir = join(BIN, 'voices')
+  const R = 'https://github.com/k2-fsa/sherpa-onnx/releases/download'
+  mkdirSync(dir, { recursive: true })
+  const embedding = join(dir, 'embedding.onnx')
+  if (!existsSync(embedding)) {
+    const res = await fetch(`${R}/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx`)
+    if (!res.ok) throw new Error(`Modelo de vozes não baixou (${res.status}).`)
+    writeFileSync(embedding, Buffer.from(await res.arrayBuffer()))
+  }
+  const segmentation = join(dir, 'segmentation.onnx')
+  if (!existsSync(segmentation)) {
+    const res = await fetch(`${R}/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2`)
+    if (!res.ok) throw new Error(`Modelo de segmentação não baixou (${res.status}).`)
+    const tarball = join('.cache', 'segmentation.tar.bz2')
+    mkdirSync('.cache', { recursive: true })
+    writeFileSync(tarball, Buffer.from(await res.arrayBuffer()))
+    run('tar', ['-xjf', tarball, '-C', '.cache'])
+    cpSync(join('.cache', 'sherpa-onnx-pyannote-segmentation-3-0', 'model.onnx'), segmentation)
+  }
+  console.log('Modelos de separação de vozes prontos.')
+}
+
+await voices()
 if (process.platform === 'darwin') await mac()
 else if (process.platform === 'win32') await win()
 else console.log('Sistema sem preparo automático; instale o whisper-cli no PATH.')

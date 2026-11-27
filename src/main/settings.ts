@@ -47,6 +47,7 @@ function defaults(): Stored {
     detectMeetings: true,
     silenceStopMinutes: 5,
     drawFlows: true,
+    separateVoices: true,
     transcriptionQuality: defaultQuality(process.platform, process.arch),
     mutedApps: [],
     checkUpdates: true,

@@ -6,6 +6,7 @@ import { findFailed, findPending, markFailed, resetAttempts, type FailedSession 
 import { Updater, type UpdateInfo } from './updater'
 import { MeetingDetector } from './detector/index'
 import { processRecording } from './pipeline/run'
+import { detectVoices } from './voices'
 import { ProcessingQueue, RecordingStore } from './recording'
 import { getApiKey, getSettings, tr, updateSettings } from './settings'
 import { WHISPER_MODELS, type WhisperModel } from '../shared/models'
@@ -252,6 +253,7 @@ export class Controller {
           language: settings.language,
           keepAudio: settings.keepAudio,
           drawFlows: settings.drawFlows,
+          voices: settings.separateVoices ? detectVoices : undefined,
           summary: { provider: settings.summaryProvider, apiKey: getApiKey() },
           onStatus: (s) => this.setStatus(s)
         }
