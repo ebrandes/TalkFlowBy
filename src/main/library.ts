@@ -88,25 +88,50 @@ async function attachments(full: string): Promise<string[]> {
   }
 }
 
-/** Vai para a Lixeira do sistema, nunca apaga de vez. */
-export async function trashNote(root: string, rel: string): Promise<void> {
+/** Arquivos que acabaram de ir para a Lixeira, guardados por alguns minutos para o "Desfazer". */
+const undoable = new Map<string, { files: { full: string; data: Buffer }[]; rels: string[] }>()
+const UNDO_KEEP = 5
+
+/** Vai para a Lixeira do sistema, nunca apaga de vez. Devolve o que foi, para poder desfazer. */
+export async function trashNote(root: string, rel: string): Promise<{ full: string; data: Buffer }[]> {
   const full = resolveInside(root, rel)
-  for (const a of await attachments(full)) await shell.trashItem(a).catch(() => undefined)
+  const files = [full, ...(await attachments(full))]
+  const saved = await Promise.all(files.map(async (f) => ({ full: f, data: await readFile(f) })))
+  for (const a of files.slice(1)) await shell.trashItem(a).catch(() => undefined)
   await shell.trashItem(full)
+  forgetOwnWrite(rel)
+  return saved
 }
 
-/** Várias de uma vez; devolve quantas foram para a Lixeira. */
-export async function trashNotes(root: string, rels: string[]): Promise<number> {
-  let done = 0
+/** Várias de uma vez; devolve quantas foram para a Lixeira e a chave para desfazer. */
+export async function trashNotes(root: string, rels: string[]): Promise<{ count: number; undoId: string | null }> {
+  const files: { full: string; data: Buffer }[] = []
+  const done: string[] = []
   for (const rel of rels) {
     try {
-      await trashNote(root, rel)
-      done++
+      files.push(...(await trashNote(root, rel)))
+      done.push(rel)
     } catch {
       // Arquivo já sumiu ou está em uso: segue com os outros.
     }
   }
-  return done
+  if (done.length === 0) return { count: 0, undoId: null }
+  const undoId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  undoable.set(undoId, { files, rels: done })
+  while (undoable.size > UNDO_KEEP) undoable.delete(undoable.keys().next().value!)
+  return { count: done.length, undoId }
+}
+
+/** Põe de volta o que foi para a Lixeira (a cópia na Lixeira do sistema continua lá). */
+export async function undoTrash(undoId: string): Promise<string[]> {
+  const entry = undoable.get(undoId)
+  if (!entry) return []
+  undoable.delete(undoId)
+  for (const f of entry.files) {
+    await mkdir(dirname(f.full), { recursive: true })
+    if (!existsSync(f.full)) await writeFile(f.full, f.data)
+  }
+  return entry.rels
 }
 
 export function revealNote(root: string, rel: string): void {

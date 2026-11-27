@@ -1,9 +1,10 @@
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
-import type { Settings, Track } from '../shared/types'
+import type { OpenTask, Settings, Track } from '../shared/types'
 import { askMicrophone, readPermissions } from './capture'
 import type { Controller } from './controller'
 import * as lib from './library'
 import { searchNotes } from './search'
+import { listOpenTasks, setTaskDone } from './tasks'
 import { getSettings, setApiKey, tr, updateSettings } from './settings'
 
 const root = (): string => getSettings().rootDir
@@ -32,9 +33,29 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('library:read', (_e, rel: string) => lib.readNote(root(), rel))
   ipcMain.handle('library:write', (_e, rel: string, content: string) => lib.writeNote(root(), rel, content))
   ipcMain.handle('library:create', (_e, title?: string) => lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote))
-  ipcMain.handle('library:rename', (_e, rel: string, title: string) => lib.renameNote(root(), rel, title))
-  ipcMain.handle('library:trash', (_e, rel: string) => lib.trashNote(root(), rel))
+  ipcMain.handle('library:rename', async (_e, rel: string, title: string) => {
+    const next = await lib.renameNote(root(), rel, title)
+    // Nota fixada continua fixada com o nome novo.
+    const pinned = getSettings().pinned
+    if (next !== rel && pinned.includes(rel)) await updateSettings({ pinned: pinned.map((p) => (p === rel ? next : p)) })
+    return next
+  })
+  ipcMain.handle('library:trash', async (_e, rel: string) => (await lib.trashNotes(root(), [rel])).undoId)
   ipcMain.handle('library:trashMany', (_e, rels: string[]) => lib.trashNotes(root(), rels))
+  ipcMain.handle('library:undoTrash', (_e, id: string) => lib.undoTrash(id))
+  ipcMain.handle('library:tasks', () => listOpenTasks(root()))
+  ipcMain.handle('library:setTask', async (_e, task: OpenTask, done: boolean) => {
+    const ok = await setTaskDone(root(), task, done)
+    // A nota pode estar aberta no editor: recarrega sem aviso, para a marcação não se perder.
+    if (ok) c.send('note:changedOutside', { path: task.path, quiet: true })
+    return ok
+  })
+  ipcMain.handle('library:setPinned', async (_e, rel: string, pinned: boolean) => {
+    const set = new Set(getSettings().pinned)
+    if (pinned) set.add(rel)
+    else set.delete(rel)
+    return updateSettings({ pinned: [...set] })
+  })
   ipcMain.handle('note:resummarize', (_e, rel: string) => c.resummarize(rel))
   ipcMain.handle('library:reveal', (_e, rel: string) => lib.revealNote(root(), rel))
   ipcMain.handle('library:openRoot', () => shell.openPath(root()))

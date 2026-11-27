@@ -1,4 +1,4 @@
-import { BrowserWindow, Notification, app, shell } from 'electron'
+import { BrowserWindow, Notification, app, globalShortcut, shell } from 'electron'
 import { readFile, statfs } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DetectedMeeting, MeetingMeta, ModelStatus, PipelineStatus } from '../shared/types'
@@ -16,6 +16,7 @@ import { AppTray } from './tray'
 import { createMainWindow, createPromptWindow, createWidgetWindow } from './windows'
 import { elapsedSec, IDLE, type RecordingState } from '../shared/recording'
 import { captureScreen } from './screenshot'
+import { SHORTCUTS } from '../shared/shortcuts'
 import { readNote, writeNote } from './library'
 import { NotesWatcher } from './watcher'
 import { friendlyError } from './errors'
@@ -57,6 +58,7 @@ export class Controller {
       toggleRecording: () => this.send(this.store.current ? 'command:stop' : 'command:start', {}),
       quit: () => app.quit()
     })
+    this.registerShortcuts()
     this.detector.on('start', (m) => this.onMeetingStart(m))
     this.detector.on('end', (m) => this.onMeetingEnd(m))
     if (getSettings().detectMeetings) await this.detector.start()
@@ -64,6 +66,12 @@ export class Controller {
     await this.refreshModel()
     await this.recoverPending()
     if (getSettings().checkUpdates) this.updater.start()
+  }
+
+  /** Atalho global para gravar/parar, valendo com o app em segundo plano. */
+  private registerShortcuts(): void {
+    globalShortcut.register(SHORTCUTS.record, () => this.send(this.store.current ? 'command:stop' : 'command:start', {}))
+    app.on('will-quit', () => globalShortcut.unregisterAll())
   }
 
   show(): void {
@@ -78,6 +86,8 @@ export class Controller {
   }
 
   setStatus(s: PipelineStatus): void {
+    const waiting = Math.max(0, this.queue.size - 1)
+    if (waiting > 0 && s.stage !== 'idle' && s.stage !== 'recording') s = { ...s, queued: waiting }
     this.status = s
     this.send('pipeline:status', s)
     if (s.stage === 'done') this.send('library:changed', { open: s.notePath })
@@ -108,6 +118,9 @@ export class Controller {
     }
     this.widget?.webContents.send('recording:state', state)
     if (!recording) this.widget?.close()
+    // Capturar a tela só faz sentido gravando; fora disso o atalho fica livre para outros apps.
+    if (recording && !globalShortcut.isRegistered(SHORTCUTS.capture)) globalShortcut.register(SHORTCUTS.capture, () => void this.captureShot())
+    if (!recording && globalShortcut.isRegistered(SHORTCUTS.capture)) globalShortcut.unregister(SHORTCUTS.capture)
   }
 
   setPaused(paused: boolean): void {

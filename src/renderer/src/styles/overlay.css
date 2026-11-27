@@ -102,6 +102,21 @@
   box-shadow: var(--shadow);
   transform: translateX(-50%);
   animation: toast-in var(--fast) var(--ease);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.toast-action {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--violet-tint);
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 @keyframes toast-in {

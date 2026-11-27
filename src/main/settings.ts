@@ -42,6 +42,7 @@ function defaults(): Stored {
     summaryProvider: 'auto',
     keepAudio: false,
     liveTranscription: true,
+    pinned: [],
     detectMeetings: true,
     silenceStopMinutes: 5,
     drawFlows: true,

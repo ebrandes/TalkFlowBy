@@ -8,6 +8,9 @@ export const pt: Dict = {
   folders: { meetings: 'Reuniões', notes: 'Notas' },
 
   rail: {
+    tasks: 'Pendências',
+    pinned: 'Fixadas',
+    emptyTasks: 'As pendências abertas das reuniões e notas aparecem aqui.',
     newNote: 'Nova nota',
     settings: 'Configurações',
     search: 'Buscar nas notas',
@@ -21,6 +24,8 @@ export const pt: Dict = {
   },
 
   bar: {
+    eta: (min) => (min <= 1 ? 'falta ~1 min' : `faltam ~${min} min`),
+    queued: (n) => (n === 1 ? 'mais 1 na fila' : `mais ${n} na fila`),
     record: 'Gravar',
     starting: 'Iniciando…',
     stop: 'Parar',
@@ -38,6 +43,16 @@ export const pt: Dict = {
   },
 
   note: {
+    pin: 'Fixar no topo da lista',
+    unpin: 'Desafixar',
+    renameSpeaker: 'Dar nome a “Outros”',
+    renameSpeakerTitle: 'Quem é “Outros” nesta reunião?',
+    renameSpeakerHint: 'Troca “Outros” por este nome em toda a transcrição.',
+    renameSpeakerPlaceholder: 'Nome',
+    renameSpeakerApply: 'Trocar',
+    trashed: (n) => (n === 1 ? 'Nota mandada para a Lixeira' : `${n} notas mandadas para a Lixeira`),
+    undo: 'Desfazer',
+    restored: 'Restaurada',
     resummarize: 'Gerar resumo de novo',
     resummarizing: 'Resumindo…',
     resummarized: 'Resumo atualizado',
@@ -105,6 +120,21 @@ export const pt: Dict = {
   },
 
   settings: {
+    shortcuts: 'Atalhos de teclado',
+    shortcutRecord: 'Começar ou parar a gravação (funciona com o app em segundo plano)',
+    shortcutCapture: 'Capturar a tela durante a gravação (funciona com o app em segundo plano)',
+    shortcutNewNote: 'Nova nota',
+    shortcutSettings: 'Configurações',
+    shortcutFind: 'Buscar nas notas',
+    audioTest: 'Testar áudio',
+    audioTestHint: 'Escuta por 5 segundos para conferir se o microfone e o áudio do computador estão chegando. Toque algo e fale umas palavras.',
+    audioTestRun: 'Testar',
+    audioTestRunning: 'Escutando…',
+    audioMic: 'Microfone',
+    audioSystem: 'Áudio do computador',
+    audioOk: 'Som chegando',
+    audioSilent: 'Sem som',
+    audioBlocked: 'Não liberado',
     title: 'Configurações',
     close: 'Fechar configurações',
     general: 'Geral',

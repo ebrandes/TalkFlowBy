@@ -1,5 +1,5 @@
 import { AudioLines, FilePlus2, ListChecks, Mic } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { dict } from '../../shared/i18n'
 import type { TranscriptionQuality } from '../../shared/models'
 import type { Folders, ModelStatus } from '../../shared/types'
@@ -31,15 +31,50 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
   const [tab, setTab] = useState<Tab>('meetings')
   const [showSettings, setShowSettings] = useState(false)
   const [preview, setPreview] = useState('')
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<Toast | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [pendingTrash, setPendingTrash] = useState<{ paths: string[]; done: (ok: boolean) => void } | null>(null)
 
-  const showToast = (message: string): void => {
-    setToast(message)
+  const showToast = (message: string, action?: Toast['action']): void => {
+    setToast({ message, action })
     if (toastTimer.current) clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setToast(null), 4000)
+    toastTimer.current = setTimeout(() => setToast(null), action ? 8000 : 4000)
   }
+
+  /** Aviso de Lixeira com "Desfazer": põe os arquivos de volta e reabre a nota, se era uma só. */
+  const toastTrashed = (count: number, undoId: string | null, reopen?: string): void => {
+    if (!undoId) return
+    showToast(t.note.trashed(count), {
+      label: t.note.undo,
+      run: async () => {
+        const back = await window.talkflow.library.undoTrash(undoId)
+        await app.refresh()
+        if (reopen && back.includes(reopen)) open(reopen)
+        showToast(t.note.restored)
+      }
+    })
+  }
+
+  // Atalhos dentro da janela. Os de gravar e capturar valem também com o app em segundo plano.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      const mod = window.talkflow.platform === 'darwin' ? e.metaKey : e.ctrlKey
+      if (!mod || e.altKey) return
+      const k = e.key.toLowerCase()
+      if (k === 'n' && !e.shiftKey) {
+        e.preventDefault()
+        void newNote()
+      } else if (k === ',') {
+        e.preventDefault()
+        setShowSettings(true)
+      } else if (k === 'k' || (k === 'f' && e.shiftKey)) {
+        e.preventDefault()
+        document.querySelector<HTMLInputElement>('.search-input')?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   const askTrashMany = (paths: string[]): Promise<boolean> => new Promise((done) => setPendingTrash({ paths, done }))
 
@@ -47,16 +82,17 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
     if (!pendingTrash) return
     const { paths, done } = pendingTrash
     setPendingTrash(null)
-    await window.talkflow.library.trashMany(paths)
+    const res = await window.talkflow.library.trashMany(paths)
     if (app.selected && paths.includes(app.selected)) open(null)
     await app.refresh()
     done(true)
+    toastTrashed(res.count, res.undoId)
   }
 
   const open = (rel: string | null): void => {
     setShowSettings(false)
     setPreview('')
-    if (rel) setTab(rel.startsWith(folders.notes) ? 'notes' : 'meetings')
+    if (rel) setTab((cur) => (cur === 'tasks' ? cur : rel.startsWith(folders.notes) ? 'notes' : 'meetings'))
     app.select(rel)
   }
 
@@ -66,7 +102,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
     open(rel)
   }
 
-  const fallback = showSettings ? t.settings.title : tab === 'meetings' ? t.rail.meetings : t.rail.notes
+  const fallback = showSettings ? t.settings.title : tab === 'meetings' ? t.rail.meetings : tab === 'tasks' ? t.rail.tasks : t.rail.notes
 
   return (
     <div className={`shell platform-${window.talkflow.platform}`}>
@@ -81,6 +117,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
         onNewNote={() => void newNote()}
         onSettings={() => setShowSettings(true)}
         onTrashMany={askTrashMany}
+        pinned={app.settings?.pinned ?? []}
       />
       <main className="main">
         <TopBar
@@ -106,9 +143,13 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
             path={app.selected}
             onPreview={setPreview}
             onToast={showToast}
-            onDeleted={async () => {
+            pinned={app.settings?.pinned.includes(app.selected) ?? false}
+            onPinned={app.setSettings}
+            onDeleted={async (undoId) => {
+              const was = app.selected
               await app.refresh()
               open(null)
+              toastTrashed(1, undoId, was ?? undefined)
             }}
           />
         ) : (
@@ -126,11 +167,28 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
       />
       {toast && (
         <div className="toast" role="status">
-          {toast}
+          <span>{toast.message}</span>
+          {toast.action && (
+            <button
+              className="toast-action"
+              onClick={() => {
+                const run = toast.action!.run
+                setToast(null)
+                void run()
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
     </div>
   )
+}
+
+interface Toast {
+  message: string
+  action?: { label: string; run: () => Promise<void> | void }
 }
 
 interface WelcomeProps {

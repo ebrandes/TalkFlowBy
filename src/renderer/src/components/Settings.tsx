@@ -5,6 +5,8 @@ import type { ModelStatus, Settings as S, SummaryProvider } from '../../../share
 import { useT } from '../i18n'
 import { KNOWN_APP_NAMES } from '../lib/apps'
 import { ModelLine, PermissionLines } from './Setup'
+import { AudioTest } from './AudioTest'
+import { SHORTCUTS, shortcutLabel } from '../../../shared/shortcuts'
 
 interface Props {
   settings: S
@@ -184,12 +186,23 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
           </div>
         </section>
 
-        {window.talkflow.platform === 'darwin' && (
-          <section className="set-group">
-            <h2>{t.permissions}</h2>
-            <PermissionLines />
-          </section>
-        )}
+        <section className="set-group">
+          <h2>{window.talkflow.platform === 'darwin' ? t.permissions : t.audioTest}</h2>
+          {window.talkflow.platform === 'darwin' && <PermissionLines />}
+          <AudioTest />
+        </section>
+
+        <section className="set-group">
+          <h2>{t.shortcuts}</h2>
+          {shortcutRows(t, window.talkflow.platform).map(([label, keys]) => (
+            <div className="set-row" key={label}>
+              <span className="set-label">
+                <span>{label}</span>
+              </span>
+              <kbd className="kbd">{keys}</kbd>
+            </div>
+          ))}
+        </section>
       </div>
     </div>
   )
@@ -205,4 +218,15 @@ function Toggle({ label, hint, checked, onChange }: { label: string; hint?: stri
       <input type="checkbox" role="switch" className="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} />
     </label>
   )
+}
+
+function shortcutRows(t: ReturnType<typeof useT>['settings'], platform: string): [string, string][] {
+  const mod = platform === 'darwin' ? '⌘' : 'Ctrl+'
+  return [
+    [t.shortcutRecord, shortcutLabel(SHORTCUTS.record, platform)],
+    [t.shortcutCapture, shortcutLabel(SHORTCUTS.capture, platform)],
+    [t.shortcutNewNote, `${mod}N`],
+    [t.shortcutFind, `${mod}K`],
+    [t.shortcutSettings, `${mod},`]
+  ]
 }

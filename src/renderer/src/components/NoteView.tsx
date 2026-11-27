@@ -1,22 +1,28 @@
-import { FolderOpen, RefreshCw, Trash2 } from 'lucide-react'
+import { FolderOpen, Pin, PinOff, RefreshCw, Trash2, UserPen } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useT } from '../i18n'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
 import { dropPending, flush, scheduleSave } from '../lib/saver'
 import { ConfirmDialog } from './ConfirmDialog'
+import { NameDialog } from './NameDialog'
+import { hasOthers, renameOthers } from '../lib/speakers'
+import type { Settings } from '../../../shared/types'
 import { Editor } from './Editor'
 import { ShareMenu } from './ShareMenu'
 import { Stamp } from './Stamp'
 
 interface Props {
   path: string
-  onDeleted: () => void
+  /** Recebe a chave para desfazer a ida para a Lixeira. */
+  onDeleted: (undoId: string | null) => void
+  pinned: boolean
+  onPinned: (s: Settings) => void
   onPreview: (text: string) => void
-  onToast: (message: string) => void
+  onToast: (message: string, action?: { label: string; run: () => void }) => void
 }
 
 /** Abre uma nota: carimbo (se for reunião) e o editor com salvamento automático. */
-export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.JSX.Element {
+export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned }: Props): React.JSX.Element {
   const t = useT()
   const [loaded, setLoaded] = useState<{ path: string; front: string; body: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +31,7 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
   /** Muda quando o conteúdo vem de fora do editor (resumo novo, edição em outro app); recria o editor. */
   const [revision, setRevision] = useState(0)
   const [summarizing, setSummarizing] = useState(false)
+  const [naming, setNaming] = useState(false)
 
   const name = path.split('/').pop()!.replace(/\.md$/i, '')
   const meeting = parseMeetingName(name)
@@ -65,12 +72,22 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
         dropPending(path)
         void window.talkflow.library.read(path).then((md) => {
           replaceContent(md)
-          onToast(t.note.changedOutside)
+          if (!p.quiet) onToast(t.note.changedOutside)
         })
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [path]
   )
+
+  const renameSpeaker = (name: string): void => {
+    setNaming(false)
+    if (!loaded) return
+    const next = renameOthers(body, name)
+    if (next === body) return
+    const md = joinFrontmatter(loaded.front, next)
+    scheduleSave(path, md)
+    replaceContent(md)
+  }
 
   const resummarize = async (): Promise<void> => {
     setSummarizing(true)
@@ -124,6 +141,20 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
                 <RefreshCw size={17} strokeWidth={1.75} className={summarizing ? 'spin' : undefined} />
               </button>
             )}
+            {meeting && hasOthers(body) && (
+              <button className="icon-btn" title={t.note.renameSpeaker} aria-label={t.note.renameSpeaker} onClick={() => setNaming(true)}>
+                <UserPen size={17} strokeWidth={1.75} />
+              </button>
+            )}
+            <button
+              className={`icon-btn${pinned ? ' active' : ''}`}
+              title={pinned ? t.note.unpin : t.note.pin}
+              aria-label={pinned ? t.note.unpin : t.note.pin}
+              aria-pressed={pinned}
+              onClick={() => void window.talkflow.library.setPinned(path, !pinned).then(onPinned)}
+            >
+              {pinned ? <PinOff size={17} strokeWidth={1.75} /> : <Pin size={17} strokeWidth={1.75} />}
+            </button>
             <ShareMenu markdown={joinFrontmatter(loaded.front, body)} body={body} onToast={onToast} />
             <button
               className="icon-btn"
@@ -152,9 +183,17 @@ export function NoteView({ path, onDeleted, onPreview, onToast }: Props): React.
           onConfirm={async () => {
             setConfirming(false)
             await flush()
-            await window.talkflow.library.trash(path)
-            onDeleted()
+            onDeleted(await window.talkflow.library.trash(path))
           }}
+        />
+        <NameDialog
+          open={naming}
+          title={t.note.renameSpeakerTitle}
+          hint={t.note.renameSpeakerHint}
+          placeholder={t.note.renameSpeakerPlaceholder}
+          apply={t.note.renameSpeakerApply}
+          onApply={renameSpeaker}
+          onCancel={() => setNaming(false)}
         />
       </div>
     </div>

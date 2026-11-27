@@ -1,5 +1,5 @@
 import { AlertTriangle, Circle, Pause, Play, Square } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PipelineStatus } from '../../../shared/types'
 import type { Dict } from '../../../shared/i18n'
 import type { RecordingView } from '../hooks/useRecording'
@@ -74,6 +74,7 @@ export function TopBar({ crumbs, rec, status, blockedReason }: Props): React.JSX
 function PipelineChip({ status }: { status: PipelineStatus }): React.JSX.Element | null {
   const t = useT().bar
   const [hideDone, setHideDone] = useState(false)
+  const eta = useEta(status)
   useEffect(() => {
     setHideDone(false)
     if (status.stage !== 'done') return
@@ -100,5 +101,26 @@ function PipelineChip({ status }: { status: PipelineStatus }): React.JSX.Element
   const label = stageLabel(status.stage, t)
   if (!label || (status.stage === 'done' && hideDone)) return null
   const pct = status.stage === 'transcribing' && status.progress !== undefined ? `${Math.round(status.progress * 100)}%` : undefined
-  return <Stamp parts={[status.meeting ? t.recordingOf(status.meeting) : undefined, pct]} state={label} />
+  const left = eta !== null ? t.eta(eta) : undefined
+  const queued = status.queued ? t.queued(status.queued) : undefined
+  return <Stamp parts={[status.meeting ? t.recordingOf(status.meeting) : undefined, pct, left, queued]} state={label} />
+}
+
+/**
+ * Minutos que faltam para a transcrição, pela velocidade até agora. Só aparece depois de 5%
+ * (antes disso a estimativa pula demais).
+ */
+function useEta(status: PipelineStatus): number | null {
+  const start = useRef<{ meeting?: string; at: number; from: number } | null>(null)
+  if (status.stage !== 'transcribing' || status.progress === undefined) {
+    start.current = null
+    return null
+  }
+  const now = Date.now()
+  if (!start.current || start.current.meeting !== status.meeting) start.current = { meeting: status.meeting, at: now, from: status.progress }
+  const done = status.progress - start.current.from
+  const elapsed = (now - start.current.at) / 1000
+  if (done < 0.05 || elapsed < 5) return null
+  const rest = ((1 - status.progress) * elapsed) / done
+  return Math.max(1, Math.round(rest / 60))
 }

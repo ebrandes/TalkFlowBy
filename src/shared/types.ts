@@ -92,6 +92,8 @@ export interface Settings {
   /** Procurar versão nova no GitHub. */
   checkUpdates: boolean
   openAtLogin: boolean
+  /** Notas fixadas no topo da lista (caminhos relativos). */
+  pinned: string[]
 }
 
 export type PipelineStage =
@@ -113,6 +115,8 @@ export interface PipelineStatus {
   notePath?: string
   /** Qual gravação está sendo processada, por exemplo "17 nov 14:30". */
   meeting?: string
+  /** Quantas gravações esperam na fila depois desta. */
+  queued?: number
 }
 
 export interface DetectedMeeting {
@@ -137,4 +141,12 @@ export interface FailedRecording {
   durationSec: number
   error: string
   attempts: number
+}
+
+/** Item "- [ ]" de uma nota, para a lista de pendências. */
+export interface OpenTask {
+  path: string
+  /** Linha da nota onde o item está (começando em 0). */
+  line: number
+  text: string
 }

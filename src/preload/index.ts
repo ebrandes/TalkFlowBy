@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { FailedRecording, LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
+import type { FailedRecording, OpenTask, LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
 import type { RecordingState } from '../shared/recording'
 
 type Unsubscribe = () => void
@@ -31,14 +31,19 @@ const api = {
     write: (rel: string, content: string): Promise<void> => ipcRenderer.invoke('library:write', rel, content),
     create: (title?: string): Promise<string> => ipcRenderer.invoke('library:create', title),
     rename: (rel: string, title: string): Promise<string> => ipcRenderer.invoke('library:rename', rel, title),
-    trash: (rel: string): Promise<void> => ipcRenderer.invoke('library:trash', rel),
-    trashMany: (rels: string[]): Promise<number> => ipcRenderer.invoke('library:trashMany', rels),
+    /** Devolve a chave para desfazer (ou null se nada foi para a Lixeira). */
+    trash: (rel: string): Promise<string | null> => ipcRenderer.invoke('library:trash', rel),
+    trashMany: (rels: string[]): Promise<{ count: number; undoId: string | null }> => ipcRenderer.invoke('library:trashMany', rels),
+    undoTrash: (id: string): Promise<string[]> => ipcRenderer.invoke('library:undoTrash', id),
+    tasks: (): Promise<OpenTask[]> => ipcRenderer.invoke('library:tasks'),
+    setTask: (task: OpenTask, done: boolean): Promise<boolean> => ipcRenderer.invoke('library:setTask', task, done),
+    setPinned: (rel: string, pinned: boolean): Promise<Settings> => ipcRenderer.invoke('library:setPinned', rel, pinned),
     reveal: (rel: string): Promise<void> => ipcRenderer.invoke('library:reveal', rel),
     resummarize: (rel: string): Promise<{ ok: true; markdown: string } | { ok: false; error: string }> => ipcRenderer.invoke('note:resummarize', rel),
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
     chooseRoot: (): Promise<Settings> => ipcRenderer.invoke('library:chooseRoot'),
     onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb),
-    onNoteChangedOutside: (cb: (p: { path: string }) => void): Unsubscribe => on('note:changedOutside', cb)
+    onNoteChangedOutside: (cb: (p: { path: string; quiet?: boolean }) => void): Unsubscribe => on('note:changedOutside', cb)
   },
   recording: {
     begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),

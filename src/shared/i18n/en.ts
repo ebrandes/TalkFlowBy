@@ -7,6 +7,9 @@ export const en = {
   folders: { meetings: 'Meetings', notes: 'Notes' },
 
   rail: {
+    tasks: 'To-dos',
+    pinned: 'Pinned',
+    emptyTasks: 'Open to-dos from your meetings and notes show up here.',
     newNote: 'New note',
     settings: 'Settings',
     search: 'Search notes',
@@ -20,6 +23,8 @@ export const en = {
   },
 
   bar: {
+    eta: (min: number) => (min <= 1 ? 'about 1 min left' : `about ${min} min left`),
+    queued: (n: number) => (n === 1 ? '1 more waiting' : `${n} more waiting`),
     record: 'Record',
     starting: 'Starting…',
     stop: 'Stop',
@@ -37,6 +42,16 @@ export const en = {
   },
 
   note: {
+    pin: 'Pin to the top of the list',
+    unpin: 'Unpin',
+    renameSpeaker: 'Name “Others”',
+    renameSpeakerTitle: 'Who is “Others” in this meeting?',
+    renameSpeakerHint: 'Replaces “Others” with this name in the whole transcript.',
+    renameSpeakerPlaceholder: 'Name',
+    renameSpeakerApply: 'Replace',
+    trashed: (n: number) => (n === 1 ? 'Note moved to the Trash' : `${n} notes moved to the Trash`),
+    undo: 'Undo',
+    restored: 'Restored',
     resummarize: 'Summarize again',
     resummarizing: 'Summarizing…',
     resummarized: 'Summary updated',
@@ -104,6 +119,21 @@ export const en = {
   },
 
   settings: {
+    shortcuts: 'Keyboard shortcuts',
+    shortcutRecord: 'Start or stop recording (works with the app in the background)',
+    shortcutCapture: 'Capture the screen while recording (works with the app in the background)',
+    shortcutNewNote: 'New note',
+    shortcutSettings: 'Settings',
+    shortcutFind: 'Search notes',
+    audioTest: 'Test audio',
+    audioTestHint: 'Listens for 5 seconds to check that the microphone and the computer audio arrive. Play something and say a few words.',
+    audioTestRun: 'Test',
+    audioTestRunning: 'Listening…',
+    audioMic: 'Microphone',
+    audioSystem: 'Computer audio',
+    audioOk: 'Sound arriving',
+    audioSilent: 'No sound',
+    audioBlocked: 'Not allowed',
     title: 'Settings',
     close: 'Close settings',
     general: 'General',

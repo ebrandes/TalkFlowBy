@@ -41,7 +41,7 @@ export function snippetAround(text: string, query: string): string | null {
   return snippetIn(prepare(text), fold(query))
 }
 
-async function mdFiles(dir: string): Promise<string[]> {
+export async function mdFiles(dir: string): Promise<string[]> {
   const out: string[] = []
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
   const nested = await Promise.all(

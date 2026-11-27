@@ -1,12 +1,13 @@
-import { FilePlus2, FileText, ListChecks, Search, Settings, Square, SquareCheck } from 'lucide-react'
+import { FilePlus2, FileText, ListChecks, Pin, Search, Settings, Square, SquareCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Folders, LibraryNode } from '../../../shared/types'
 import { useT } from '../i18n'
 import { guideSpan, meetingGroups, noteItems, type ListItem } from '../lib/notes'
 import { DateBlock } from './Stamp'
+import { TaskList } from './TaskList'
 import { UpdateBanner } from './UpdateBanner'
 
-export type Tab = 'meetings' | 'notes'
+export type Tab = 'meetings' | 'notes' | 'tasks'
 
 interface Props {
   tree: LibraryNode[]
@@ -20,6 +21,8 @@ interface Props {
   onSettings: () => void
   /** Pede confirmação e manda as notas marcadas para a Lixeira; devolve quando terminar. */
   onTrashMany: (paths: string[]) => Promise<boolean>
+  /** Notas fixadas no topo da lista. */
+  pinned: string[]
 }
 
 export function Sidebar(p: Props): React.JSX.Element {
@@ -44,10 +47,20 @@ export function Sidebar(p: Props): React.JSX.Element {
   const inContent = useMemo(() => new Set(hits.keys()), [hits])
   const snippetFor = (item: ListItem): string | undefined =>
     query && !item.title.toLowerCase().includes(query.trim().toLowerCase()) ? hits.get(item.path) : undefined
-  const groups = useMemo(() => meetingGroups(p.tree, query, p.folders, t, inContent), [p.tree, query, p.folders, t, inContent])
-  const notes = useMemo(() => noteItems(p.tree, query, p.folders, inContent), [p.tree, query, p.folders, inContent])
+  const pinnedSet = useMemo(() => new Set(p.pinned), [p.pinned])
+  // Fixadas vão para um grupo no topo; as outras seguem por mês.
+  const groups = useMemo(() => {
+    const all = meetingGroups(p.tree, query, p.folders, t, inContent)
+    const top = all.flatMap((g) => g.items).filter((i) => pinnedSet.has(i.path))
+    const rest = all.map((g) => ({ ...g, items: g.items.filter((i) => !pinnedSet.has(i.path)) })).filter((g) => g.items.length)
+    return top.length ? [{ label: t.rail.pinned, items: top }, ...rest] : rest
+  }, [p.tree, query, p.folders, t, inContent, pinnedSet])
+  const notes = useMemo(() => {
+    const all = noteItems(p.tree, query, p.folders, inContent)
+    return [...all.filter((i) => pinnedSet.has(i.path)), ...all.filter((i) => !pinnedSet.has(i.path))]
+  }, [p.tree, query, p.folders, inContent, pinnedSet])
   const span = guideSpan(groups, t.months)
-  const visible = p.tab === 'meetings' ? groups.flatMap((g) => g.items) : notes
+  const visible = p.tab === 'meetings' ? groups.flatMap((g) => g.items) : p.tab === 'notes' ? notes : []
 
   // Trocar de aba ou de busca limpa o que não está mais à vista.
   useEffect(() => {
@@ -105,6 +118,9 @@ export function Sidebar(p: Props): React.JSX.Element {
         <button role="tab" aria-selected={p.tab === 'notes'} onClick={() => p.onTab('notes')}>
           {t.rail.notes}
         </button>
+        <button role="tab" aria-selected={p.tab === 'tasks'} onClick={() => p.onTab('tasks')}>
+          {t.rail.tasks}
+        </button>
       </div>
 
       {p.tab === 'meetings' && span && (
@@ -114,7 +130,8 @@ export function Sidebar(p: Props): React.JSX.Element {
         </div>
       )}
 
-      <nav className="list" aria-label={p.tab === 'meetings' ? t.rail.meetings : t.rail.notes}>
+      <nav className="list" aria-label={p.tab === 'meetings' ? t.rail.meetings : p.tab === 'tasks' ? t.rail.tasks : t.rail.notes}>
+        {p.tab === 'tasks' && <TaskList tree={p.tree} query={query} selected={p.selected} onOpen={p.onSelect} />}
         {p.tab === 'meetings' &&
           groups.map((g) => (
             <section key={g.label}>
@@ -141,14 +158,14 @@ export function Sidebar(p: Props): React.JSX.Element {
               onClick={() => choose(item.path)}
               aria-pressed={picking ? picked.has(item.path) : undefined}
             >
-              {picking ? <PickBox on={picked.has(item.path)} /> : <FileText size={16} strokeWidth={1.75} aria-hidden />}
+              {picking ? <PickBox on={picked.has(item.path)} /> : pinnedSet.has(item.path) ? <Pin size={16} strokeWidth={1.75} aria-hidden /> : <FileText size={16} strokeWidth={1.75} aria-hidden />}
               <span className="row-body">
                 <span className="row-title">{item.title}</span>
                 {snippetFor(item) && <span className="row-preview">{snippetFor(item)}</span>}
               </span>
             </button>
           ))}
-        <EmptyList tab={p.tab} query={query} empty={visible.length === 0} onNewNote={p.onNewNote} />
+        {p.tab !== 'tasks' && <EmptyList tab={p.tab} query={query} empty={visible.length === 0} onNewNote={p.onNewNote} />}
       </nav>
 
       {!picking && <UpdateBanner />}

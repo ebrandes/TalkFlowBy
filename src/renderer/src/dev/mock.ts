@@ -122,6 +122,7 @@ let settings: Settings = {
   hasApiKey: false,
   keepAudio: false,
   liveTranscription: true,
+  pinned: [],
   detectMeetings: true,
   silenceStopMinutes: 5,
   drawFlows: true,
@@ -159,8 +160,15 @@ window.talkflow = {
       files.delete(rel)
       return next
     },
-    trash: async (rel) => void files.delete(rel),
-    trashMany: async (rels) => rels.filter((r) => files.delete(r)).length,
+    trash: async (rel) => (files.delete(rel) ? 'undo' : null),
+    trashMany: async (rels) => ({ count: rels.filter((r) => files.delete(r)).length, undoId: 'undo' }),
+    undoTrash: async () => [],
+    tasks: async () =>
+      [...files.entries()].flatMap(([path, c]) =>
+        c.split('\n').flatMap((l, line) => (l.startsWith('- [ ] ') ? [{ path, line, text: l.slice(6) }] : []))
+      ),
+    setTask: async () => true,
+    setPinned: async (rel, on) => (settings = { ...settings, pinned: on ? [...settings.pinned, rel] : settings.pinned.filter((p) => p !== rel) }),
     reveal: async () => undefined,
     resummarize: async (rel) => ({ ok: true as const, markdown: files.get(rel) ?? '' }),
     openRoot: async () => '',
