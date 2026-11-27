@@ -12,7 +12,13 @@ import {
 } from './summary-schema'
 
 export const API_MODEL = 'claude-haiku-5-5'
-const CLI_TIMEOUT_MS = 4 * 60_000
+/**
+ * Quanto esperar o Claude Code: 4 minutos mais 1 por 25 mil caracteres de transcrição e
+ * 10 segundos por imagem, até 15. Reuniões longas passavam dos 4 minutos fixos e perdiam o resumo.
+ */
+export function cliTimeoutMs(transcriptChars: number, images = 0): number {
+  return Math.min(15 * 60_000, 4 * 60_000 + Math.ceil(transcriptChars / 25_000) * 60_000 + images * 10_000)
+}
 
 export interface SummarizeOptions {
   provider: SummaryProvider
@@ -44,7 +50,7 @@ export async function summarizeWithCli(transcript: string, claudePath: string, i
     '--output-format', 'json',
     ...commonCliArgs()
   ]
-  const stdout = await run(claudePath, args, transcript, CLI_TIMEOUT_MS)
+  const stdout = await run(claudePath, args, transcript, cliTimeoutMs(transcript.length))
   const out = JSON.parse(stdout) as { is_error?: boolean; result?: string; structured_output?: unknown }
   if (out.is_error) throw new Error(`Claude Code returned an error: ${out.result ?? 'no detail'}`)
   return normalizeSummary(out.structured_output ?? extractJson(out.result ?? ''))
@@ -71,7 +77,7 @@ function commonCliArgs(): string[] {
 async function summarizeWithCliImages(transcript: string, claudePath: string, images: SummaryImage[]): Promise<Summary> {
   const args = ['-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose', '--model', 'haiku', ...commonCliArgs()]
   const message = { type: 'user', message: { role: 'user', content: contentBlocks(buildUserPrompt(transcript, images.length), images) } }
-  const stdout = await run(claudePath, args, `${JSON.stringify(message)}\n`, CLI_TIMEOUT_MS)
+  const stdout = await run(claudePath, args, `${JSON.stringify(message)}\n`, cliTimeoutMs(transcript.length, images.length))
   return parseStreamResult(stdout)
 }
 

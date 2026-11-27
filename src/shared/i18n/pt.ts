@@ -115,6 +115,8 @@ export const pt: Dict = {
     askHint: 'Teams e Google Meet no navegador',
     muted: 'Não pergunta mais para',
     askAgain: 'Voltar a perguntar',
+    liveTranscription: 'Transcrever durante a reunião',
+    liveTranscriptionHint: 'A nota fica pronta logo depois do fim. Usa metade do processador enquanto você está na chamada',
     keepAudio: 'Guardar o áudio depois de transcrever',
     keepAudioHint: 'Desligado, o áudio é apagado quando a nota fica pronta',
     drawFlows: 'Desenhar o fluxo',

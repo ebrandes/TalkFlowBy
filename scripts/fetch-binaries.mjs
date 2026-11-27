@@ -1,6 +1,8 @@
 // Prepara o whisper-cli que vai dentro do instalador.
 // Mac: compila o whisper.cpp com Metal (precisa de cmake e Xcode Command Line Tools).
-// Windows: baixa o binário oficial x64 da página de versões do whisper.cpp.
+// Windows: baixa o binário oficial x64 (só CPU) e, com o Vulkan SDK instalado (VULKAN_SDK),
+// compila também o whisper-cli-gpu.exe, que usa a placa de vídeo. O app tenta o de GPU e volta
+// para o de CPU se ele falhar.
 import { execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -50,6 +52,24 @@ async function win() {
     cpSync(src, join(BIN, dll))
   }
   console.log('whisper-cli.exe pronto, com o runtime do Visual C++.')
+  winGpu()
+}
+
+/** whisper-cli com Vulkan, num .exe só (sem DLLs, para não trocar as do pacote de CPU). */
+function winGpu() {
+  const target = join(BIN, 'whisper-cli-gpu.exe')
+  if (existsSync(target)) return console.log('whisper-cli-gpu.exe já existe.')
+  if (!process.env.VULKAN_SDK) return console.log('Sem VULKAN_SDK: o pacote sai só com o Whisper de CPU.')
+  if (!existsSync(join(WORK, 'src'))) {
+    run('git', ['clone', '--depth', '1', '--branch', VERSION, 'https://github.com/ggml-org/whisper.cpp', join(WORK, 'src')])
+  }
+  const build = join(WORK, 'build-vulkan')
+  run('cmake', ['-S', join(WORK, 'src'), '-B', build, '-DCMAKE_BUILD_TYPE=Release', '-DBUILD_SHARED_LIBS=OFF', '-DGGML_VULKAN=ON', '-DGGML_NATIVE=OFF', '-DWHISPER_BUILD_TESTS=OFF', '-DWHISPER_BUILD_EXAMPLES=ON'])
+  run('cmake', ['--build', build, '--config', 'Release', '-j', '--target', 'whisper-cli'])
+  const built = [join(build, 'bin', 'Release', 'whisper-cli.exe'), join(build, 'bin', 'whisper-cli.exe')].find((p) => existsSync(p))
+  if (!built) throw new Error('A compilação com Vulkan não gerou o whisper-cli.exe.')
+  cpSync(built, target)
+  console.log('whisper-cli-gpu.exe pronto (Vulkan).')
 }
 
 if (process.platform === 'darwin') await mac()

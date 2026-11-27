@@ -47,6 +47,7 @@ export function registerIpc(c: Controller): void {
 
   ipcMain.handle('rec:begin', async (_e, origin?: string) => {
     const s = await c.store.begin(origin)
+    void c.startLive(s.dir)
     c.setRecording(true)
     c.setStatus({ stage: 'recording' })
     return { id: s.id, startedAt: s.startedAt.toISOString() }

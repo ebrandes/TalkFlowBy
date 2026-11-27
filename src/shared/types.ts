@@ -79,6 +79,8 @@ export interface Settings {
   summaryProvider: SummaryProvider
   hasApiKey: boolean
   keepAudio: boolean
+  /** Transcrever durante a reunião, para a nota ficar pronta logo depois do fim. */
+  liveTranscription: boolean
   detectMeetings: boolean
   /** Modelo do Whisper: melhor, equilibrado ou mais rápido. */
   transcriptionQuality: import('./models').TranscriptionQuality

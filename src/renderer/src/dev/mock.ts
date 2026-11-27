@@ -121,6 +121,7 @@ let settings: Settings = {
   summaryProvider: 'auto',
   hasApiKey: false,
   keepAudio: false,
+  liveTranscription: true,
   detectMeetings: true,
   silenceStopMinutes: 5,
   drawFlows: true,

@@ -34,6 +34,17 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Vulkan SDK para compilar o Whisper que usa a placa de vídeo no Windows.
+      - name: Install Vulkan SDK
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VULKAN_VERSION: 1.4.309.0
+        run: |
+          curl.exe -o "$env:RUNNER_TEMP\VulkanSDK-Installer.exe" -L "https://sdk.lunarg.com/sdk/download/$env:VULKAN_VERSION/windows/vulkansdk-windows-X64-$env:VULKAN_VERSION.exe"
+          & "$env:RUNNER_TEMP\VulkanSDK-Installer.exe" --accept-licenses --default-answer --confirm-command install
+          Add-Content $env:GITHUB_ENV "VULKAN_SDK=C:\VulkanSDK\$env:VULKAN_VERSION"
+          Add-Content $env:GITHUB_PATH "C:\VulkanSDK\$env:VULKAN_VERSION\bin"
       - run: npm run typecheck
       - run: npm test
       - name: Build installer

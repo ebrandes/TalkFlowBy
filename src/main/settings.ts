@@ -41,6 +41,7 @@ function defaults(): Stored {
     languageMigrated: true,
     summaryProvider: 'auto',
     keepAudio: false,
+    liveTranscription: true,
     detectMeetings: true,
     silenceStopMinutes: 5,
     drawFlows: true,

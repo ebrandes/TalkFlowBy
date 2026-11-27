@@ -65,6 +65,17 @@ export async function claudePath(): Promise<string | null> {
   return null
 }
 
+/**
+ * O Whisper a usar e, quando ele é o de GPU, o de CPU como reserva. No Windows o pacote leva os
+ * dois: `whisper-cli-gpu.exe` (Vulkan, usa a placa de vídeo) e `whisper-cli.exe` (só processador).
+ */
+export async function whisperBinaries(): Promise<{ binary: string; fallback?: string } | null> {
+  const cpu = await whisperPath()
+  const gpu = isWin ? join(bundledBinDir(), 'whisper-cli-gpu.exe') : null
+  if (gpu && (await isExecutable(gpu))) return cpu ? { binary: gpu, fallback: cpu } : { binary: gpu }
+  return cpu ? { binary: cpu } : null
+}
+
 export async function whisperPath(): Promise<string | null> {
   const bundled = join(bundledBinDir(), isWin ? 'whisper-cli.exe' : 'whisper-cli')
   if (await isExecutable(bundled)) return bundled

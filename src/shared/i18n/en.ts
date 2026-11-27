@@ -114,6 +114,8 @@ export const en = {
     askHint: 'Teams and Google Meet in the browser',
     muted: 'No longer asks for',
     askAgain: 'Ask again',
+    liveTranscription: 'Transcribe during the meeting',
+    liveTranscriptionHint: 'The note is ready right after the call ends. Uses half the processor while you are in the call',
     keepAudio: 'Keep the audio after transcribing',
     keepAudioHint: 'When off, the audio is deleted once the note is ready',
     drawFlows: 'Draw the workflow',

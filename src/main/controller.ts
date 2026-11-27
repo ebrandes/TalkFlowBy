@@ -10,7 +10,8 @@ import { ProcessingQueue, RecordingStore } from './recording'
 import { getApiKey, getSettings, tr, updateSettings } from './settings'
 import { WHISPER_MODELS, type WhisperModel } from '../shared/models'
 import { downloadModel, findModel } from './setup/models'
-import { whisperPath } from './setup/binaries'
+import { whisperBinaries } from './setup/binaries'
+import { LiveTranscriber } from './pipeline/live'
 import { AppTray } from './tray'
 import { createMainWindow, createPromptWindow, createWidgetWindow } from './windows'
 import { elapsedSec, IDLE, type RecordingState } from '../shared/recording'
@@ -30,6 +31,8 @@ export class Controller {
   readonly queue = new ProcessingQueue((s) => this.setStatus(s))
   readonly detector = new MeetingDetector((id) => getSettings().mutedApps.includes(id))
   update: UpdateInfo | null = null
+  /** Transcrição durante a reunião, enquanto grava. */
+  private live: LiveTranscriber | null = null
   readonly updater = new Updater((info) => {
     this.update = info
     this.send('update:info', info)
@@ -133,9 +136,33 @@ export class Controller {
     }
   }
 
+  /** Gravação começou: transcreve em segundo plano para a nota sair logo depois do fim. */
+  async startLive(sessionDir: string): Promise<void> {
+    const settings = getSettings()
+    if (!settings.liveTranscription) return
+    const bins = await whisperBinaries()
+    const chosen = this.selectedModel()
+    const model = await findModel(app.getPath('userData'), chosen)
+    if (!bins || !model || this.store.current?.dir !== sessionDir) return
+    this.live = new LiveTranscriber({
+      sessionDir,
+      whisper: bins.binary,
+      whisperFallback: bins.fallback,
+      model,
+      language: settings.language,
+      greedy: chosen.greedy,
+      busy: () => this.queue.size > 0
+    })
+    this.live.start()
+  }
+
   /** Fecha a gravação e põe na fila: wav → Whisper → Haiku → .md. */
   async finishRecording(): Promise<void> {
+    const live = this.live
+    this.live = null
     const done = await this.store.finish()
+    // Espera a rodada em curso gravar o progresso; o processamento final continua dali.
+    await live?.stop()
     this.setRecording(false)
     if (!done) return
     const meta = JSON.parse(await readFile(join(done.session.dir, 'meta.json'), 'utf8'))
@@ -151,10 +178,10 @@ export class Controller {
 
   private async enqueue(sessionDir: string, meta: MeetingMeta): Promise<void> {
     const settings = getSettings()
-    const whisper = await whisperPath()
+    const bins = await whisperBinaries()
     const chosen = this.selectedModel()
     const model = await findModel(app.getPath('userData'), chosen)
-    if (!whisper || !model) {
+    if (!bins || !model) {
       this.setStatus({ stage: 'error', message: tr().main.missingWhisper })
       return
     }
@@ -165,7 +192,8 @@ export class Controller {
           rootDir: settings.rootDir,
           lang: settings.uiLanguage,
           meetingsFolder: settings.folders.meetings,
-          whisper,
+          whisper: bins.binary,
+          whisperFallback: bins.fallback,
           model,
           greedy: chosen.greedy,
           language: settings.language,

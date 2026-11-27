@@ -1,10 +1,14 @@
 import { spawn } from 'node:child_process'
 import { ffmpegPath } from '../setup/binaries'
 
-/** Converte a trilha gravada (webm/opus) em wav 16 kHz mono, o formato do Whisper. */
-export function toWav16k(input: string, output: string): Promise<void> {
+/**
+ * Converte a trilha gravada (webm/opus) em wav 16 kHz mono, o formato do Whisper.
+ * Com `fromSec`, converte só a partir desse segundo (o resto já foi transcrito durante a reunião).
+ */
+export function toWav16k(input: string, output: string, fromSec = 0): Promise<void> {
   return new Promise((resolve, reject) => {
-    const args = ['-y', '-hide_banner', '-loglevel', 'error', '-i', input, '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', output]
+    const seek = fromSec > 0 ? ['-ss', fromSec.toFixed(3)] : []
+    const args = ['-y', '-hide_banner', '-loglevel', 'error', ...seek, '-i', input, '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', output]
     const child = spawn(ffmpegPath(), args, { windowsHide: true })
     let err = ''
     child.stderr.on('data', (d) => (err += d))
@@ -21,9 +25,12 @@ export function peakVolumeDb(input: string): Promise<number> {
     let err = ''
     child.stderr.on('data', (d) => (err += d))
     child.on('error', () => resolve(0))
-    child.on('close', () => {
-      const m = err.match(/max_volume:\s*(-?[\d.]+) dB/)
-      resolve(m ? Number(m[1]) : 0)
-    })
+    child.on('close', () => resolve(parsePeakDb(err)))
   })
+}
+
+/** "max_volume: -12.3 dB" da saída do ffmpeg; sem a linha, conta como áudio presente. */
+export function parsePeakDb(ffmpegStderr: string): number {
+  const m = ffmpegStderr.match(/max_volume:\s*(-?[\d.]+) dB/)
+  return m ? Number(m[1]) : 0
 }

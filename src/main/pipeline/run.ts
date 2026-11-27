@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { dict, type Lang } from '../../shared/i18n'
-import type { MeetingMeta, PipelineStatus, Segment, Speaker, Summary, Track } from '../../shared/types'
+import type { MeetingMeta, PipelineStatus, Segment, Speaker, Summary } from '../../shared/types'
 import type { SummarizeOptions } from './summarize'
 import { summarize } from './summarize'
 import { meetingRelPath, uniqueName } from './filename'
@@ -11,13 +11,9 @@ import { mermaid, renderWithFireworks, usableFlow } from './flow'
 import { buildMeetingMarkdown, type FlowBlock } from './markdown'
 import { mergeTracks } from './merge'
 import { pickForSummary, placeShots, plainTextWithShots, readShots, shotLabel } from './shots'
-import { cutChunks, detectSpeech } from './chunks'
-import { peakVolumeDb, toWav16k } from './transcode'
+import { prepareRange, readProgress, removeChunks, TRACKS } from './track'
 import { transcribe } from './whisper'
 import { markDone, markProcessing } from '../recovery'
-
-/** Abaixo disso a trilha é silêncio (ninguém falou daquele lado). */
-const SILENCE_DB = -50
 
 export interface RunInput {
   sessionDir: string
@@ -30,6 +26,8 @@ export interface RunDeps {
   lang: Lang
   meetingsFolder: string
   whisper: string
+  /** Whisper só com CPU, se `whisper` for o de GPU. */
+  whisperFallback?: string
   model: string
   greedy?: boolean
   language: string
@@ -38,17 +36,6 @@ export interface RunDeps {
   drawFlows?: boolean
   summary: SummarizeOptions
   onStatus: (s: PipelineStatus) => void
-}
-
-const TRACKS: { track: Track; speaker: Speaker }[] = [
-  { track: 'mic', speaker: 'Você' },
-  { track: 'system', speaker: 'Outros' }
-]
-
-async function hasAudio(file: string): Promise<boolean> {
-  if (!existsSync(file)) return false
-  if ((await stat(file)).size < 2048) return false
-  return (await peakVolumeDb(file)) > SILENCE_DB
 }
 
 /** Gravação → wav → Whisper → junção → Haiku → .md. Devolve o caminho relativo da nota. */
@@ -60,29 +47,23 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
   const onStatus = (s: PipelineStatus): void => deps.onStatus({ ...s, meeting })
   await markProcessing(input.sessionDir)
   onStatus({ stage: 'converting' })
-  const ready: { wav: string; speaker: Speaker }[] = []
-  for (const { track, speaker } of TRACKS) {
-    const src = join(input.sessionDir, `${track}.webm`)
-    if (!(await hasAudio(src))) continue
-    const wav = join(input.sessionDir, `${track}.wav`)
-    await toWav16k(src, wav)
-    ready.push({ wav, speaker })
-  }
-
-  const prepared: { speaker: Speaker; chunks: { file: string; offset: number }[] }[] = []
-  for (const item of ready) {
-    const intervals = await detectSpeech(item.wav)
-    const files = await cutChunks(item.wav, intervals, input.sessionDir, item.speaker === 'Você' ? 'mic' : 'system')
-    prepared.push({ speaker: item.speaker, chunks: files.map((file, i) => ({ file, offset: intervals[i].start })) })
-  }
+  // As duas trilhas são preparadas ao mesmo tempo; o que já foi transcrito durante a reunião é pulado.
+  const prepared = await Promise.all(
+    TRACKS.map(async ({ track, speaker }) => {
+      const live = await readProgress(input.sessionDir, track)
+      const range = await prepareRange(input.sessionDir, track, live?.doneSec ?? 0, true)
+      return { speaker, chunks: range.chunks, earlier: live?.segments ?? [] }
+    })
+  )
 
   const total = prepared.reduce((n, p) => n + p.chunks.length, 0) || 1
   let before = 0
   const segments: Record<Speaker, Segment[]> = { Você: [], Outros: [] }
   for (const item of prepared) {
     onStatus({ stage: 'transcribing', progress: before / total })
-    segments[item.speaker] = await transcribe({
+    const fresh = await transcribe({
       binary: deps.whisper,
+      fallbackBinary: deps.whisperFallback,
       model: deps.model,
       chunks: item.chunks,
       speaker: item.speaker,
@@ -90,6 +71,8 @@ export async function processRecording(input: RunInput, deps: RunDeps): Promise<
       greedy: deps.greedy,
       onProgress: (f) => onStatus({ stage: 'transcribing', progress: (before + f * item.chunks.length) / total })
     })
+    segments[item.speaker] = [...item.earlier, ...fresh]
+    await removeChunks(item.chunks)
     before += item.chunks.length
   }
   const turns = mergeTracks(segments['Você'], segments['Outros'])

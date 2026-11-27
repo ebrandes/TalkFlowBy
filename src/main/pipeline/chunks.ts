@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
 import { ffmpegPath } from '../setup/binaries'
+import { parsePeakDb } from './transcode'
 
 export interface Interval {
   start: number
@@ -64,20 +65,42 @@ function runFfmpeg(args: string[]): Promise<string> {
   })
 }
 
-export async function detectSpeech(wav: string): Promise<Interval[]> {
-  const stderr = await runFfmpeg(['-hide_banner', '-i', wav, '-af', `silencedetect=noise=-38dB:d=${MIN_SILENCE_SEC}`, '-f', 'null', '-'])
+export interface SpeechAnalysis {
+  intervals: Interval[]
+  /** Volume de pico da trilha, em dB. */
+  peakDb: number
+  /** Duração do wav, em segundos. */
+  duration: number
+}
+
+/** Lê o wav uma vez só e devolve os trechos com voz e o volume de pico. */
+export async function analyzeSpeech(wav: string): Promise<SpeechAnalysis> {
+  const stderr = await runFfmpeg(['-hide_banner', '-i', wav, '-af', `volumedetect,silencedetect=noise=-38dB:d=${MIN_SILENCE_SEC}`, '-f', 'null', '-'])
   const d = stderr.match(/Duration:\s*(\d+):(\d+):([\d.]+)/)
   const duration = d ? Number(d[1]) * 3600 + Number(d[2]) * 60 + Number(d[3]) : 0
-  return speechIntervals(stderr, duration)
+  return { intervals: speechIntervals(stderr, duration), peakDb: parsePeakDb(stderr), duration }
+}
+
+export async function detectSpeech(wav: string): Promise<Interval[]> {
+  return (await analyzeSpeech(wav)).intervals
+}
+
+/**
+ * Quantos trechos cada ffmpeg corta de uma vez. Um processo por trecho custava caro em
+ * reuniões longas (centenas de trechos); o limite mantém a linha de comando curta no Windows.
+ */
+const CUT_BATCH = 80
+
+/** Argumentos de um ffmpeg que lê o wav uma vez e grava vários trechos. */
+export function cutArgs(wav: string, items: { iv: Interval; out: string }[]): string[] {
+  const args = ['-y', '-v', 'error', '-i', wav]
+  for (const { iv, out } of items) args.push('-ss', iv.start.toFixed(3), '-to', iv.end.toFixed(3), '-c', 'copy', out)
+  return args
 }
 
 /** Corta cada trecho com voz num wav próprio. Devolve os caminhos na mesma ordem. */
 export async function cutChunks(wav: string, intervals: Interval[], dir: string, prefix: string): Promise<string[]> {
-  const files: string[] = []
-  for (const [i, iv] of intervals.entries()) {
-    const out = join(dir, `${prefix}-${String(i).padStart(4, '0')}.wav`)
-    await runFfmpeg(['-y', '-v', 'error', '-ss', iv.start.toFixed(3), '-to', iv.end.toFixed(3), '-i', wav, '-c', 'copy', out])
-    files.push(out)
-  }
-  return files
+  const items = intervals.map((iv, i) => ({ iv, out: join(dir, `${prefix}-${String(i).padStart(4, '0')}.wav`) }))
+  for (let i = 0; i < items.length; i += CUT_BATCH) await runFfmpeg(cutArgs(wav, items.slice(i, i + CUT_BATCH)))
+  return items.map((it) => it.out)
 }
