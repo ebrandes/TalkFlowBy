@@ -22,6 +22,7 @@ import { NotesWatcher } from './watcher'
 import { friendlyError } from './errors'
 import { summarize } from './pipeline/summarize'
 import { rebuildWithSummary, splitMeetingNote, transcriptForSummary } from './pipeline/resummarize'
+import { SyncService } from './sync-service'
 
 /** Estado do app inteiro: janelas, bandeja, detector, gravação e fila de processamento. */
 export class Controller {
@@ -46,6 +47,11 @@ export class Controller {
   private live: LiveTranscriber | null = null
   /** Pastas de gravação na fila ou sendo processadas. */
   private readonly queued = new Set<string>()
+  /** Sincronização das notas com o repositório Git, quando configurada. */
+  readonly sync = new SyncService(
+    (s) => this.send('sync:status', s),
+    (r) => this.send('library:changed', { synced: r.pulled })
+  )
   readonly updater = new Updater((info) => {
     this.update = info
     this.send('update:info', info)
@@ -66,6 +72,7 @@ export class Controller {
     await this.refreshModel()
     await this.recoverPending()
     if (getSettings().checkUpdates) this.updater.start()
+    this.sync.restart()
   }
 
   /** Atalho global para gravar/parar, valendo com o app em segundo plano. */
@@ -90,7 +97,10 @@ export class Controller {
     if (waiting > 0 && s.stage !== 'idle' && s.stage !== 'recording') s = { ...s, queued: waiting }
     this.status = s
     this.send('pipeline:status', s)
-    if (s.stage === 'done') this.send('library:changed', { open: s.notePath })
+    if (s.stage === 'done') {
+      this.send('library:changed', { open: s.notePath })
+      void this.sync.now()
+    }
   }
 
   recordingState(): RecordingState {

@@ -1,7 +1,7 @@
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LANGS, type Lang } from '../../../shared/i18n'
-import type { ModelStatus, Settings as S, SummaryProvider } from '../../../shared/types'
+import type { ModelStatus, Settings as S, SummaryProvider, SyncStatus } from '../../../shared/types'
 import { useT } from '../i18n'
 import { KNOWN_APP_NAMES } from '../lib/apps'
 import { ModelLine, PermissionLines } from './Setup'
@@ -66,6 +66,8 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
             </div>
           </div>
         </section>
+
+        <SyncSection settings={settings} onChange={onChange} />
 
         <section className="set-group">
           <h2>{t.meetings}</h2>
@@ -205,6 +207,79 @@ export function SettingsView({ settings, model, onChange, onClose }: Props): Rea
         </section>
       </div>
     </div>
+  )
+}
+
+function SyncSection({ settings, onChange }: { settings: S; onChange: (s: S) => void }): React.JSX.Element {
+  const t = useT().settings
+  const [remote, setRemote] = useState(settings.syncRemote)
+  const [status, setStatus] = useState<SyncStatus>({ state: 'off' })
+  useEffect(() => {
+    void window.talkflow.sync.status().then(setStatus)
+    return window.talkflow.sync.onStatus(setStatus)
+  }, [])
+  const connected = Boolean(settings.syncRemote)
+  const save = async (value: string): Promise<void> => onChange(await window.talkflow.settings.update({ syncRemote: value.trim() }))
+  const when = status.lastSync ? new Date(status.lastSync).toLocaleTimeString(settings.uiLanguage === 'pt' ? 'pt-BR' : 'en', { hour: '2-digit', minute: '2-digit' }) : null
+  const line =
+    !connected ? t.syncOff
+    : status.state === 'syncing' ? t.syncing
+    : status.state === 'error' ? t.syncFailed(t.syncErrors[status.error ?? ''] ?? status.error ?? '')
+    : when ? t.syncedAt(when)
+    : t.syncing
+
+  return (
+    <section className="set-group">
+      <h2>{t.sync}</h2>
+      <div className="set-row stack">
+        <label className="set-label" htmlFor="sync-remote">
+          <span>{t.syncRemote}</span>
+          <span className="hint">{t.syncHint}</span>
+        </label>
+        <div className="key-row">
+          <input
+            id="sync-remote"
+            className="field"
+            placeholder={t.syncPlaceholder}
+            value={remote}
+            onChange={(e) => setRemote(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <button className="btn" disabled={!remote.trim() || remote.trim() === settings.syncRemote} onClick={() => void save(remote)}>
+            {t.syncConnect}
+          </button>
+          {connected && (
+            <button
+              className="btn ghost"
+              onClick={async () => {
+                setRemote('')
+                await save('')
+              }}
+            >
+              {t.syncDisconnect}
+            </button>
+          )}
+        </div>
+        <span className={status.state === 'error' && connected ? 'hint error' : 'hint'} role="status">
+          {line}
+        </span>
+        {connected && status.conflicts ? <span className="hint">{t.syncConflicts(status.conflicts)}</span> : null}
+        {connected && status.backup && <span className="hint">{t.syncBackup}</span>}
+      </div>
+      {connected && (
+        <div className="btn-pair">
+          <button className="btn" disabled={status.state === 'syncing'} onClick={() => void window.talkflow.sync.now()}>
+            {t.syncNow}
+          </button>
+          {status.backup && (
+            <button className="btn ghost" onClick={() => void window.talkflow.sync.openBackup()}>
+              {t.openBackup}
+            </button>
+          )}
+        </div>
+      )}
+    </section>
   )
 }
 

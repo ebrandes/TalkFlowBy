@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { AskResult, FailedRecording, OpenTask, LibraryNode, ModelStatus, PipelineStatus, Settings, Track } from '../shared/types'
+import type { AskResult, FailedRecording, OpenTask, LibraryNode, ModelStatus, PipelineStatus, Settings, SyncStatus, Track } from '../shared/types'
 import type { RecordingState } from '../shared/recording'
 
 type Unsubscribe = () => void
@@ -42,12 +42,18 @@ const api = {
     resummarize: (rel: string): Promise<{ ok: true; markdown: string } | { ok: false; error: string }> => ipcRenderer.invoke('note:resummarize', rel),
     openRoot: (): Promise<string> => ipcRenderer.invoke('library:openRoot'),
     chooseRoot: (): Promise<Settings> => ipcRenderer.invoke('library:chooseRoot'),
-    onChanged: (cb: (p: { open?: string }) => void): Unsubscribe => on('library:changed', cb),
+    onChanged: (cb: (p: { open?: string; synced?: string[] }) => void): Unsubscribe => on('library:changed', cb),
     onNoteChangedOutside: (cb: (p: { path: string; quiet?: boolean }) => void): Unsubscribe => on('note:changedOutside', cb)
   },
   ai: {
     /** Pergunta sobre uma nota (`path`) ou sobre todas as notas (`null`). */
     ask: (question: string, path: string | null): Promise<AskResult> => ipcRenderer.invoke('ai:ask', question, path)
+  },
+  sync: {
+    status: (): Promise<SyncStatus> => ipcRenderer.invoke('sync:status'),
+    now: (): Promise<SyncStatus> => ipcRenderer.invoke('sync:now'),
+    openBackup: (): Promise<void> => ipcRenderer.invoke('sync:openBackup'),
+    onStatus: (cb: (s: SyncStatus) => void): Unsubscribe => on('sync:status', cb)
   },
   recording: {
     begin: (origin?: string): Promise<{ id: string; startedAt: string }> => ipcRenderer.invoke('rec:begin', origin),

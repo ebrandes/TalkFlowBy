@@ -94,6 +94,22 @@ export interface Settings {
   openAtLogin: boolean
   /** Notas fixadas no topo da lista (caminhos relativos). */
   pinned: string[]
+  /** Endereço do repositório Git para sincronizar as notas entre computadores; vazio desliga. */
+  syncRemote: string
+}
+
+export type SyncState = 'off' | 'idle' | 'syncing' | 'error'
+
+export interface SyncStatus {
+  state: SyncState
+  /** Última sincronização que deu certo, em ISO. */
+  lastSync?: string
+  /** Código do erro (`auth`, `offline`, `not-found`, `git-missing`) ou o texto do Git. */
+  error?: string
+  /** Conflitos da última rodada: a versão do outro computador ficou ao lado. */
+  conflicts?: number
+  /** Pasta do backup feito antes da primeira sincronização. */
+  backup?: string
 }
 
 export type PipelineStage =

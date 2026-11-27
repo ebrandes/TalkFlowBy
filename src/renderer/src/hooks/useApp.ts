@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LibraryNode, ModelStatus, PipelineStatus, Settings } from '../../../shared/types'
 
 export interface AppData {
@@ -7,6 +7,8 @@ export interface AppData {
   model: ModelStatus
   status: PipelineStatus
   selected: string | null
+  /** Muda quando a nota aberta chega atualizada de outro computador, para o editor recarregar. */
+  revision: number
   select: (rel: string | null) => void
   refresh: () => Promise<void>
   setSettings: (s: Settings) => void
@@ -19,6 +21,9 @@ export function useApp(): AppData {
   const [model, setModel] = useState<ModelStatus>({ ready: false })
   const [status, setStatus] = useState<PipelineStatus>({ stage: 'idle' })
   const [selected, setSelected] = useState<string | null>(null)
+  const [revision, setRevision] = useState(0)
+  const selectedRef = useRef<string | null>(null)
+  selectedRef.current = selected
 
   const refresh = useCallback(async () => setTree(await window.talkflow.library.tree()), [])
 
@@ -32,6 +37,7 @@ export function useApp(): AppData {
       t.library.onChanged(async (p) => {
         await refresh()
         if (p.open) setSelected(p.open)
+        if (selectedRef.current && p.synced?.includes(selectedRef.current)) setRevision((n) => n + 1)
       }),
       t.model.onStatus(setModel),
       t.pipeline.onStatus(setStatus)
@@ -44,5 +50,5 @@ export function useApp(): AppData {
     }
   }, [refresh])
 
-  return { tree, settings, model, status, selected, select: setSelected, refresh, setSettings }
+  return { tree, settings, model, status, selected, revision, select: setSelected, refresh, setSettings }
 }

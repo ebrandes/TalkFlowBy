@@ -25,6 +25,7 @@ export function registerIpc(c: Controller): void {
     if (patch.transcriptionQuality) await c.refreshModel()
     if (patch.checkUpdates === true) c.updater.start()
     if (patch.checkUpdates === false) c.updater.stop()
+    if (patch.syncRemote !== undefined || patch.rootDir) c.sync.restart()
     return next
   })
   ipcMain.handle('settings:setApiKey', (_e, key: string | null) => setApiKey(key))
@@ -36,21 +37,23 @@ export function registerIpc(c: Controller): void {
     return askNotes(root(), question, path, { provider: s.summaryProvider, apiKey: getApiKey(), lang: s.uiLanguage })
   })
   ipcMain.handle('library:read', (_e, rel: string) => lib.readNote(root(), rel))
-  ipcMain.handle('library:write', (_e, rel: string, content: string) => lib.writeNote(root(), rel, content))
-  ipcMain.handle('library:create', (_e, title?: string) => lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote))
+  // Toda mudança nas notas agenda uma sincronização (um minuto depois, para juntar as edições).
+  const edited = <T>(p: Promise<T>): Promise<T> => p.finally(() => c.sync.soon())
+  ipcMain.handle('library:write', (_e, rel: string, content: string) => edited(lib.writeNote(root(), rel, content)))
+  ipcMain.handle('library:create', (_e, title?: string) => edited(lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote)))
   ipcMain.handle('library:rename', async (_e, rel: string, title: string) => {
-    const next = await lib.renameNote(root(), rel, title)
+    const next = await edited(lib.renameNote(root(), rel, title))
     // Nota fixada continua fixada com o nome novo.
     const pinned = getSettings().pinned
     if (next !== rel && pinned.includes(rel)) await updateSettings({ pinned: pinned.map((p) => (p === rel ? next : p)) })
     return next
   })
-  ipcMain.handle('library:trash', async (_e, rel: string) => (await lib.trashNotes(root(), [rel])).undoId)
-  ipcMain.handle('library:trashMany', (_e, rels: string[]) => lib.trashNotes(root(), rels))
-  ipcMain.handle('library:undoTrash', (_e, id: string) => lib.undoTrash(id))
+  ipcMain.handle('library:trash', async (_e, rel: string) => (await edited(lib.trashNotes(root(), [rel]))).undoId)
+  ipcMain.handle('library:trashMany', (_e, rels: string[]) => edited(lib.trashNotes(root(), rels)))
+  ipcMain.handle('library:undoTrash', (_e, id: string) => edited(lib.undoTrash(id)))
   ipcMain.handle('library:tasks', () => listOpenTasks(root()))
   ipcMain.handle('library:setTask', async (_e, task: OpenTask, done: boolean) => {
-    const ok = await setTaskDone(root(), task, done)
+    const ok = await edited(setTaskDone(root(), task, done))
     // A nota pode estar aberta no editor: recarrega sem aviso, para a marcação não se perder.
     if (ok) c.send('note:changedOutside', { path: task.path, quiet: true })
     return ok
@@ -61,7 +64,7 @@ export function registerIpc(c: Controller): void {
     else set.delete(rel)
     return updateSettings({ pinned: [...set] })
   })
-  ipcMain.handle('note:resummarize', (_e, rel: string) => c.resummarize(rel))
+  ipcMain.handle('note:resummarize', (_e, rel: string) => edited(c.resummarize(rel)))
   ipcMain.handle('library:reveal', (_e, rel: string) => lib.revealNote(root(), rel))
   ipcMain.handle('library:openRoot', () => shell.openPath(root()))
   // Trocar a pasta das notas (por exemplo, para um vault do Obsidian).
@@ -73,8 +76,13 @@ export function registerIpc(c: Controller): void {
     await lib.ensureRoot(next.rootDir, next.folders)
     c.watcher.start(next.rootDir)
     c.send('library:changed', {})
+    c.sync.restart()
     return next
   })
+
+  ipcMain.handle('sync:status', () => c.sync.status)
+  ipcMain.handle('sync:now', () => c.sync.now())
+  ipcMain.handle('sync:openBackup', () => c.sync.status.backup && shell.openPath(c.sync.status.backup))
 
   ipcMain.handle('rec:begin', async (_e, origin?: string) => {
     const s = await c.store.begin(origin)

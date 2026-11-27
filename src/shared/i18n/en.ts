@@ -222,6 +222,28 @@ export const en = {
     keyOptional: 'Optional if Claude Code is installed.',
     save: 'Save',
     remove: 'Remove',
+    sync: 'Sync between computers',
+    syncRemote: 'Private Git repository',
+    syncHint: 'Create an empty private repository (on GitHub, for example) and paste its address. The app uses the Git and the sign-in already on this computer. Recording audio never leaves the computer.',
+    syncPlaceholder: 'https://github.com/you/my-notes.git',
+    syncConnect: 'Connect',
+    syncDisconnect: 'Turn off',
+    syncNow: 'Sync now',
+    syncOff: 'Off. Your notes stay only on this computer.',
+    syncing: 'Syncing…',
+    syncedAt: (when: string) => `Synced at ${when}. Syncs on open, after each note and every 10 minutes.`,
+    syncConflicts: (n: number) => (n === 1 ? 'One note was edited on two computers: the other version was saved next to it, marked "conflict".' : `${n} notes were edited on two computers: the other versions were saved next to them, marked "conflict".`),
+    syncBackup: 'Before the first sync, a full copy of the folder was saved.',
+    openBackup: 'Open backup',
+    syncErrors: {
+      auth: 'GitHub refused the sign-in. Sign in once with Git on this computer (for example, run "git clone" of the repository in the terminal) and try again.',
+      'not-found': 'Repository not found. Check the address and that this computer\'s GitHub account has access.',
+      offline: 'No connection to the repository right now. It will try again in a few minutes.',
+      'git-missing': 'Git is not installed. Install it from git-scm.com (on a Mac, "xcode-select --install" in the terminal) and try again.',
+      'other-repo': 'This folder is already a Git repository for something else, so the app leaves it alone. Choose another folder or another repository.',
+      'push-rejected': 'Another computer kept sending changes at the same time. It will try again shortly.'
+    } as Record<string, string>,
+    syncFailed: (msg: string) => `Sync failed: ${msg}`,
     permissions: 'Mac permissions'
   },
 

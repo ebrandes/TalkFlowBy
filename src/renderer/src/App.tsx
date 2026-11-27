@@ -164,6 +164,7 @@ function Shell({ app, folders }: { app: ReturnType<typeof useApp>; folders: Fold
           <SettingsView settings={app.settings} model={app.model} onChange={app.setSettings} onClose={() => setShowSettings(false)} />
         ) : app.selected ? (
           <NoteView
+            key={app.revision}
             path={app.selected}
             onPreview={setPreview}
             onToast={showToast}

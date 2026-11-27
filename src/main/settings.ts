@@ -50,7 +50,8 @@ function defaults(): Stored {
     transcriptionQuality: defaultQuality(process.platform, process.arch),
     mutedApps: [],
     checkUpdates: true,
-    openAtLogin: true
+    openAtLogin: true,
+    syncRemote: ''
   }
 }
 
