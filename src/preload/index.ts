@@ -1,3 +1,4 @@
+import type { AnswerNoteInput } from '../shared/answer-note'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { AskResult, FailedRecording, OpenTask, LibraryNode, ModelStatus, PipelineStatus, Settings, SyncStatus, Track } from '../shared/types'
 import type { RecordingState } from '../shared/recording'
@@ -47,7 +48,9 @@ const api = {
   },
   ai: {
     /** Pergunta sobre uma nota (`path`) ou sobre todas as notas (`null`). */
-    ask: (question: string, path: string | null): Promise<AskResult> => ipcRenderer.invoke('ai:ask', question, path)
+    ask: (question: string, path: string | null): Promise<AskResult> => ipcRenderer.invoke('ai:ask', question, path),
+    /** Salva a resposta como nota nova em Notas; devolve o caminho dela. */
+    saveNote: (input: AnswerNoteInput): Promise<string> => ipcRenderer.invoke('ai:saveNote', input)
   },
   sync: {
     status: (): Promise<SyncStatus> => ipcRenderer.invoke('sync:status'),

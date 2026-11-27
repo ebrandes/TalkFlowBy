@@ -1,3 +1,4 @@
+import type { AnswerNoteInput } from '../shared/answer-note'
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import type { OpenTask, Settings, Track } from '../shared/types'
 import { askNotes } from './ask'
@@ -39,6 +40,13 @@ export function registerIpc(c: Controller): void {
   ipcMain.handle('library:read', (_e, rel: string) => lib.readNote(root(), rel))
   // Toda mudança nas notas agenda uma sincronização (um minuto depois, para juntar as edições).
   const edited = <T>(p: Promise<T>): Promise<T> => p.finally(() => c.sync.soon())
+  ipcMain.handle('ai:saveNote', async (_e, input: AnswerNoteInput) => {
+    const s = getSettings()
+    const when = new Date().toLocaleString(s.uiLanguage === 'pt' ? 'pt-BR' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })
+    const rel = await edited(lib.saveAnswerNote(root(), s.folders.notes, input, { asked: tr().ask.askedAt(when), sources: tr().ask.sources }))
+    c.send('library:changed', {})
+    return rel
+  })
   ipcMain.handle('library:write', (_e, rel: string, content: string) => edited(lib.writeNote(root(), rel, content)))
   ipcMain.handle('library:create', (_e, title?: string) => edited(lib.createNote(root(), getSettings().folders.notes, title ?? tr().main.newNote)))
   ipcMain.handle('library:rename', async (_e, rel: string, title: string) => {

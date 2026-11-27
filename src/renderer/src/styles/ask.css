@@ -256,8 +256,10 @@
   border-top: 1px solid var(--rule);
 }
 
-.ask-foot .btn {
+.ask-actions {
+  display: flex;
   flex: none;
+  gap: var(--space-2);
 }
 
 .ask-sources {

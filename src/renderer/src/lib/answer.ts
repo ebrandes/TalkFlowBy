@@ -99,3 +99,24 @@ export function toMarkdown(result: AskResult): string {
   })
   return body.replace(/\]\[/g, '] [')
 }
+
+/** Caminho da nota (relativo à raiz) para um link .md relativo dentro de `from`; nulo se não for link de nota. */
+export function noteFromLink(from: string, href: string): string | null {
+  if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('#')) return null
+  let path: string
+  try {
+    path = decodeURIComponent(href.split('#')[0])
+  } catch {
+    return null
+  }
+  if (!/\.md$/i.test(path)) return null
+  const parts = path.startsWith('/') ? [] : from.split('/').slice(0, -1)
+  for (const seg of path.split('/')) {
+    if (seg === '' || seg === '.') continue
+    if (seg === '..') {
+      if (!parts.length) return null
+      parts.pop()
+    } else parts.push(seg)
+  }
+  return parts.join('/')
+}
