@@ -2,7 +2,7 @@ import { Copy, FileText, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { AskResult } from '../../../shared/types'
 import { useT } from '../i18n'
-import { noteTitle, parseBlocks, parseInline, type Inline } from '../lib/answer'
+import { noteTitle, parseBlocks, parseInline, toMarkdown, type Inline } from '../lib/answer'
 
 export type AskScope = 'note' | 'all'
 
@@ -226,13 +226,4 @@ function Sources({ result, onOpenNote }: { result: AskResult; onOpenNote: (path:
       ))}
     </div>
   )
-}
-
-/** Resposta para colar em outro lugar: citações viram os nomes das notas. */
-export function toMarkdown(result: AskResult): string {
-  const body = result.answer.replace(/\[(\d{1,3})\]/g, (all, n: string) => {
-    const path = result.notes[Number(n) - 1]
-    return path ? `[${noteTitle(path)}]` : all
-  })
-  return body.replace(/\]\[/g, '] [')
 }

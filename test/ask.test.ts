@@ -3,8 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { buildAskPrompt, citedIds, compactNote, loadNotes, packNotes, withoutTranscript } from '../src/main/ask'
-import { toMarkdown } from '../src/renderer/src/components/AskDialog'
-import { parseBlocks, parseInline } from '../src/renderer/src/lib/answer'
+import { parseBlocks, parseInline, toMarkdown } from '../src/renderer/src/lib/answer'
 
 const meeting = (subject: string, transcript: string): string =>
   `---\ndata: 2026-11-17\n---\n\n# ${subject}\n\n## Resumo\n\nFalamos de ${subject}.\n\n![captura](shots/a.jpg)\n\n## Transcrição\n\n${transcript}\n\n## Fluxo\n\npassos`

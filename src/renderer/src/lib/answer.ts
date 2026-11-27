@@ -1,3 +1,5 @@
+import type { AskResult } from '../../../shared/types'
+
 // Markdown curto da resposta do Haiku, em blocos simples. Sem HTML: só texto, listas, títulos e código.
 
 export type Block =
@@ -87,4 +89,13 @@ export function parseInline(text: string): Inline[] {
 /** Título legível de uma nota a partir do caminho. */
 export function noteTitle(path: string): string {
   return path.split('/').pop()!.replace(/\.md$/i, '')
+}
+
+/** Resposta para colar em outro lugar: citações viram os nomes das notas. */
+export function toMarkdown(result: AskResult): string {
+  const body = result.answer.replace(/\[(\d{1,3})\]/g, (all, n: string) => {
+    const path = result.notes[Number(n) - 1]
+    return path ? `[${noteTitle(path)}]` : all
+  })
+  return body.replace(/\]\[/g, '] [')
 }
