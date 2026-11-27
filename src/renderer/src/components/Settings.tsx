@@ -302,6 +302,9 @@ function shortcutRows(t: ReturnType<typeof useT>['settings'], platform: string):
     [t.shortcutCapture, shortcutLabel(SHORTCUTS.capture, platform)],
     [t.shortcutNewNote, `${mod}N`],
     [t.shortcutFind, `${mod}K`],
+    [t.shortcutFindInNote, `${mod}F`],
+    [t.shortcutCopyMd, platform === 'darwin' ? '⌘⇧C' : 'Ctrl+Shift+C'],
+    [t.shortcutAsk, `${mod}J`],
     [t.shortcutSettings, `${mod},`]
   ]
 }
