@@ -70,7 +70,18 @@ export const pt: Dict = {
     openClaude: 'Abrir no Claude',
     copied: 'Copiado',
     copiedForClaude: 'Nota copiada. Se ela não aparecer no Claude, cole com Ctrl+V ou ⌘V.',
-    noTranscript: 'Esta nota não tem transcrição.'
+    noTranscript: 'Esta nota não tem transcrição.',
+    copyMarkdown: 'Copiar Markdown (Ctrl+Shift+C / ⌘⇧C)',
+    copiedMarkdown: 'Markdown da nota copiado'
+  },
+
+  find: {
+    placeholder: 'Buscar na nota',
+    count: (i, n) => `${i} de ${n}`,
+    none: 'Nada encontrado',
+    prev: 'Anterior (Shift+Enter)',
+    next: 'Próximo (Enter)',
+    close: 'Fechar (Esc)'
   },
 
   confirm: {

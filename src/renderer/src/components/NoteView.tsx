@@ -1,5 +1,5 @@
-import { FolderOpen, Pin, PinOff, RefreshCw, Trash2, UserPen } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { FileCode2, FolderOpen, Pin, PinOff, RefreshCw, Trash2, UserPen } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useT } from '../i18n'
 import { joinFrontmatter, parseMeetingName, splitFrontmatter, summaryPreview } from '../lib/notes'
 import { dropPending, flush, scheduleSave } from '../lib/saver'
@@ -8,6 +8,7 @@ import { NameDialog } from './NameDialog'
 import { hasOthers, renameOthers } from '../../../shared/speakers'
 import type { Settings } from '../../../shared/types'
 import { Editor } from './Editor'
+import { FindBar } from './FindBar'
 import { ShareMenu } from './ShareMenu'
 import { Stamp } from './Stamp'
 
@@ -32,6 +33,9 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
   const [revision, setRevision] = useState(0)
   const [summarizing, setSummarizing] = useState(false)
   const [naming, setNaming] = useState(false)
+  const [finding, setFinding] = useState(false)
+  const editorBox = useRef<HTMLDivElement>(null)
+  const markdownRef = useRef('')
 
   const name = path.split('/').pop()!.replace(/\.md$/i, '')
   const meeting = parseMeetingName(name)
@@ -100,6 +104,32 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
     } else onToast(res.error)
   }
 
+  const copyMarkdown = async (): Promise<void> => {
+    if (!markdownRef.current) return
+    await navigator.clipboard.writeText(markdownRef.current)
+    onToast(t.note.copiedMarkdown)
+  }
+
+  // Atalhos da nota: Ctrl+F / ⌘F abre a busca; Ctrl+Shift+C / ⌘⇧C copia o Markdown inteiro.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      const mod = window.talkflow.platform === 'darwin' ? e.metaKey : e.ctrlKey
+      if (!mod || e.altKey) return
+      const key = e.key.toLowerCase()
+      if (key === 'f' && !e.shiftKey) {
+        e.preventDefault()
+        setFinding(true)
+        window.dispatchEvent(new Event('tfb-find-focus'))
+      } else if (key === 'c' && e.shiftKey) {
+        e.preventDefault()
+        void copyMarkdown()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   if (error) {
     return (
       <div className="doc">
@@ -111,6 +141,8 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
 
   const meta = splitFrontmatter(`${loaded.front}\n`).meta
   const noSummary = loaded.body.includes('O resumo não foi gerado') || loaded.body.includes('The summary was not generated')
+  const fullMarkdown = joinFrontmatter(loaded.front, body)
+  markdownRef.current = fullMarkdown
   const onChange = (markdown: string): void => {
     setBody(markdown)
     scheduleSave(loaded.path, joinFrontmatter(loaded.front, markdown))
@@ -119,6 +151,7 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
   return (
     <div className="doc">
       <div className="doc-col">
+        {finding && <FindBar root={editorBox} onClose={() => setFinding(false)} />}
         <div className="doc-head">
           {meeting ? (
             <Stamp
@@ -155,7 +188,10 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
             >
               {pinned ? <PinOff size={17} strokeWidth={1.75} /> : <Pin size={17} strokeWidth={1.75} />}
             </button>
-            <ShareMenu markdown={joinFrontmatter(loaded.front, body)} body={body} onToast={onToast} />
+            <button className="icon-btn" title={t.note.copyMarkdown} aria-label={t.note.copyMarkdown} onClick={() => void copyMarkdown()}>
+              <FileCode2 size={17} strokeWidth={1.75} />
+            </button>
+            <ShareMenu markdown={fullMarkdown} body={body} onToast={onToast} />
             <button
               className="icon-btn"
               title={t.note.reveal}
@@ -174,7 +210,9 @@ export function NoteView({ path, onDeleted, onPreview, onToast, pinned, onPinned
             </button>
           </div>
         </div>
-        <Editor key={revision} docKey={path} value={loaded.body} onChange={onChange} />
+        <div ref={editorBox}>
+          <Editor key={revision} docKey={path} value={loaded.body} onChange={onChange} />
+        </div>
         <ConfirmDialog
           open={confirming}
           title={t.confirm.trashOne}
